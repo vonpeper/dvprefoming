@@ -28,9 +28,11 @@ export default function TeachersSection() {
                 {/* Large Portrait Media Placeholder */}
                 <div className="w-full border-4 border-text-main shadow-lg">
                   <MediaPlaceholder
+                    src={teacher.imageUrl}
+                    alt={teacher.fullName}
                     aspectRatio="3:4"
                     title={teacher.fullName}
-                    description="RETRATO DOCUMENTAL DEL INSTRUCTOR PENDIENTE"
+                    description="RETRATO DOCUMENTAL DEL INSTRUCTOR"
                     variant={variantHash}
                     className="w-full"
                   />

@@ -32,11 +32,12 @@ export default function ManifestoSection() {
         {/* Right Column: Dynamic placeholder to represent backstage photo */}
         <div className="lg:col-span-4 w-full">
           <MediaPlaceholder
+            src="/images/hero/manifesto-rehearsal.jpg"
             aspectRatio="1:1"
             title="ENSAYO EN BACKSTAGE"
-            description="FOTOGRAFÍA DE ENSAYO FALTANTE"
+            description="EXPERIENCIA FORMATIVA EN SALÓN DE ENSAYOS"
             variant="concrete"
-            className="w-full border-2 border-text-main"
+            className="w-full border-2 border-text-main shadow-lg"
           />
         </div>
 

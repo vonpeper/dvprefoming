@@ -27,10 +27,16 @@ export default function SiteHeader() {
           {/* Logo / Identity */}
           <Link
             href="/"
-            className="font-display text-2xl md:text-3xl font-extrabold tracking-tight text-text-main hover:text-accent-red transition-colors focus:outline-none focus:ring-1 focus:ring-accent-red px-1"
+            className="flex items-center gap-3 font-display text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-text-main hover:text-accent-red transition-colors focus:outline-none focus:ring-1 focus:ring-accent-red px-1 group"
             aria-label="Página de inicio de DV Performing Arts"
           >
-            DV PERFORMING ARTS
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/brand/logo-badge.png"
+              alt="DV Logo"
+              className="h-9 w-auto object-contain transition-transform group-hover:scale-105"
+            />
+            <span className="font-display">DV PERFORMING ARTS</span>
           </Link>
 
           {/* Desktop Navigation */}

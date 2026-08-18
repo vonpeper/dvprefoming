@@ -12,6 +12,7 @@ export interface Program {
   description: string;
   ageGroup: string; // e.g. "Niños", "Jóvenes", "Adultos"
   scheduleDescription: string; // e.g. "Lunes y Miércoles 17:00 - 19:00"
+  imageUrl?: string;
   status: EntityStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -23,6 +24,7 @@ export interface Teacher {
   fullName: string;
   bio: string;
   specialties: string[]; // e.g. ["Danza Clásica", "Teatro Musical"]
+  imageUrl?: string;
   status: EntityStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -36,6 +38,7 @@ export interface Production {
   director: string;
   castDescription: string;
   durationMinutes: number;
+  imageUrl?: string;
   status: EntityStatus;
   createdAt: Date;
   updatedAt: Date;

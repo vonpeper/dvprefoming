@@ -52,6 +52,7 @@ export default function HomeHero() {
           {/* Main Large Visual Block */}
           <div className="w-full relative z-0 md:pl-8 lg:pl-0">
             <MediaPlaceholder
+              src="/images/hero/hero-stage.jpg"
               aspectRatio="3:4"
               title="DV PERFORMING ARTS"
               description="ACADEMIA DE TEATRO MUSICAL & ARTES ESCÉNICAS"

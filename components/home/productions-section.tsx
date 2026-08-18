@@ -29,9 +29,11 @@ export default function ProductionsSection() {
                 {/* Poster Artwork Area */}
                 <div className="w-full relative border-b-4 border-text-main">
                   <MediaPlaceholder
+                    src={production.imageUrl}
+                    alt={production.title}
                     aspectRatio="3:4"
                     title={production.title}
-                    description="PÓSTER OFICIAL DE CARTELERA PENDIENTE"
+                    description="PÓSTER OFICIAL DE CARTELERA"
                     variant={variantHash}
                   />
                   {/* Absolute date tag at top right of poster */}

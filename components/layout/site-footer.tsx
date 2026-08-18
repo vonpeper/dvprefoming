@@ -7,11 +7,16 @@ export default function SiteFooter() {
       <div className="mx-auto max-w-container-max grid grid-cols-1 md:grid-cols-4 gap-12">
         {/* Brand identity column */}
         <div className="flex flex-col gap-4">
-          <span className="font-display text-xl tracking-tight text-text-main font-extrabold">
-            DV PERFORMING ARTS
-          </span>
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/brand/logo-white.png"
+              alt="DV Performing Arts"
+              className="h-10 w-auto object-contain"
+            />
+          </div>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            Plataforma en desarrollo para la academia de artes escénicas de León, Guanajuato. Proyecto de reconstrucción técnica.
+            Academia de Teatro Musical y Artes Escénicas en León, Guanajuato. Disciplina, compromiso y pasión en el escenario.
           </p>
           <div className="font-mono text-[9px] text-text-muted mt-2 uppercase">
             &copy; 2026 DV PERFORMING ARTS.

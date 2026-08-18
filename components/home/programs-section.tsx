@@ -87,9 +87,11 @@ export default function ProgramsSection() {
                   {/* Large Visual block */}
                   <div className="w-full lg:w-1/2">
                     <MediaPlaceholder
+                      src={program.imageUrl}
+                      alt={program.name}
                       aspectRatio="16:9"
-                      title={program.name.split(" ")[0]}
-                      description="FOTOGRAFÍA OFICIAL DE CLASE PENDIENTE"
+                      title={program.name}
+                      description="FOTOGRAFÍA OFICIAL DE PROGRAMA"
                       variant={isEven ? "concrete" : "red"}
                       className="w-full border-2 border-text-main shadow-lg"
                     />

@@ -38,8 +38,10 @@ export default function ShowreelSection() {
           >
             {/* Aspect Video Placeholder */}
             <MediaPlaceholder
+              src="/images/productions/galeria-show.jpg"
+              alt="Muestra escénica DV Performing Arts"
               aspectRatio="16:9"
-              title="SHOWREEL MULTIMEDIA"
+              title="SHOWREEL OFICIAL"
               description="REPRODUCTOR DE VÍDEO INTERACTIVO - CLIC PARA REPRODUCIR"
               variant="dark"
               className="w-full transition-transform duration-500 group-hover:scale-105"
