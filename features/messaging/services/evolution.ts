@@ -98,6 +98,7 @@ export async function sendAuditionConfirmation(data: AuditionNotificationData): 
 ¡Hola *${data.fullName.trim()}*! Hemos recibido con éxito tu postulación para audicionar en DV Performing Arts.
 
 📋 *Folio Único de Aspirante:* \`${data.folio}\`
+🎬 *Obra / Montaje:* ${data.productionName || "Si No Es Ahora (El Musical)"}
 🎭 *Disciplina / Taller:* ${data.programName}
 📍 *Sede:* Paseo de los Insurgentes #1506, Col. Jardines del Moral, CP 37160, León, Gto.
 ⏰ *Turno / Horario:* ${data.auditionTime || "Horario de clases (L-V 16:00 - 20:00 / Sáb 10:00 - 15:00)"}
@@ -125,9 +126,10 @@ _DV Performing Arts &bull; Disciplina, Compromiso y Pasión._`;
 export async function sendAuditionReminder(data: AuditionNotificationData): Promise<SendMessageResult> {
   const messageBody = `🔔 *RECORDATORIO DE AUDICIÓN &bull; DV PERFORMING ARTS*
 
-Estimado/a *${data.fullName.trim()}*, te recordamos que tu audición para *${data.programName}* está programada:
+Estimado/a *${data.fullName.trim()}*, te recordamos que tu audición para la obra *${data.productionName || "Si No Es Ahora"}* (${data.programName}) está programada:
 
 📋 *Folio de Acceso:* \`${data.folio}\`
+🎬 *Obra:* ${data.productionName || "Si No Es Ahora"}
 📅 *Fecha:* ${data.auditionDate || "Próxima sesión de audiciones"}
 ⏰ *Horario:* ${data.auditionTime || "16:00 hrs"}
 📍 *Ubicación:* Paseo de los Insurgentes #1506, Col. Jardines del Moral, León, Gto.

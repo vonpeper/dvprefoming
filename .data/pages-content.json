@@ -1,0 +1,215 @@
+{
+  "hero": {
+    "badgeText": "[ESTUDIO DE ENTRENAMIENTO] • ACTO I",
+    "headline": "DISCIPLINA\nESCENARIO\nMOVIMIENTO.",
+    "subtitle": "Academia de Teatro Musical en León, Gto. Teatro, Canto y Danza para formar artistas que transforman a través de la disciplina, el compromiso y la pasión.",
+    "primaryCtaText": "Ver Programas",
+    "secondaryCtaText": "Audiciones Abiertas",
+    "heroImage": "/images/hero/hero-stage.jpg",
+    "auditionNotice": "Audiciones abiertas para el musical “Si no es ahora”. Inicia tu registro."
+  },
+  "manifesto": {
+    "tag": "[DECLARACIÓN] • NUESTRO MANIFIESTO",
+    "title": "TRANSFORMAMOS A TRAVÉS DEL TEATRO MUSICAL.",
+    "subtitle": "MISIÓN & FILOSOFÍA EDUCATIVA",
+    "description": "Enseñamos a nuestros estudiantes que la disciplina, el compromiso y la pasión son los sellos distintivos de una formación escénica exitosa, rigurosa y con propósito en León, Guanajuato.",
+    "image": "/images/hero/manifesto-rehearsal.jpg"
+  },
+  "contact": {
+    "address": "Paseo de los Insurgentes #1506, Col. Jardines del Moral, CP 37160, León, Gto.",
+    "phone": "477 655 8156",
+    "whatsapp": "477 655 8156",
+    "email": "contacto@dvperformingarts.com",
+    "hoursWeekday": "Lunes a Viernes 16:00 - 20:00",
+    "hoursSaturday": "Sábados 10:00 - 15:00"
+  },
+  "programs": [
+    {
+      "id": "prog_teatro_musical",
+      "slug": "teatro-musical-integral",
+      "name": "Teatro Musical Integral",
+      "description": "Entrenamiento escénico completo que combina actuación, técnica vocal y danza. Diseñado para formar artistas multidisciplinarios con proyección escénica y preparación para producciones en vivo.",
+      "ageGroup": "Infantil, Juvenil y Adultos",
+      "scheduleDescription": "Lunes a Viernes 16:00 - 20:00 / Sábados 10:00 - 15:00",
+      "imageUrl": "/images/programs/teatro-musical.png",
+      "status": "PUBLISHED",
+      "createdAt": "2026-08-06T12:00:00.000Z",
+      "updatedAt": "2026-08-06T12:00:00.000Z"
+    },
+    {
+      "id": "prog_canto_vocal",
+      "slug": "canto-y-tecnica-vocal",
+      "name": "Canto & Técnica Vocal",
+      "description": "Vocal coaching individual y grupal basado en Speech Level Singing, colocación, salud vocal, afinación, ensamble armónico y preparación de repertorio solista y coral.",
+      "ageGroup": "Todas las edades (Principiante a Avanzado)",
+      "scheduleDescription": "Lunes a Jueves 16:00 - 19:30",
+      "imageUrl": "/images/programs/canto-vocal.png",
+      "status": "PUBLISHED",
+      "createdAt": "2026-08-06T12:00:00.000Z",
+      "updatedAt": "2026-08-06T12:00:00.000Z"
+    },
+    {
+      "id": "prog_danza_urbana",
+      "slug": "danza-urbana-hip-hop",
+      "name": "Danza Urbana & Hip Hop",
+      "description": "Entrenamiento en danzas urbanas, club style, mega crew, coordinación y coreografía escénica de alto rendimiento bajo dirección de campeones y coreógrafos nacionales.",
+      "ageGroup": "Juvenil y Adultos",
+      "scheduleDescription": "Martes y Jueves 17:00 - 20:00",
+      "imageUrl": "/images/programs/danza-hiphop.png",
+      "status": "PUBLISHED",
+      "createdAt": "2026-08-06T12:00:00.000Z",
+      "updatedAt": "2026-08-06T12:00:00.000Z"
+    },
+    {
+      "id": "prog_actuacion_escenica",
+      "slug": "actuacion-y-direccion-escenica",
+      "name": "Actuación & Dirección Escénica",
+      "description": "Formación actoral rigurosa con métodos contemporáneos (Linklater, Feldenkrais, Técnica Alexander), análisis de texto, construcción de personaje y talleres de alto rendimiento.",
+      "ageGroup": "Adolescentes y Adultos",
+      "scheduleDescription": "Lunes, Miércoles y Viernes 16:30 - 19:30",
+      "imageUrl": "/images/programs/actuacion-escenica.jpg",
+      "status": "PUBLISHED",
+      "createdAt": "2026-08-06T12:00:00.000Z",
+      "updatedAt": "2026-08-06T12:00:00.000Z"
+    }
+  ],
+  "teachers": [
+    {
+      "id": "teacher_diego_vieyra",
+      "slug": "diego-vieyra",
+      "fullName": "Diego Vieyra",
+      "bio": "Director General y Fundador de DV Performing Arts. Técnico Instrumentista en Canto (Conservatorio del Edomex) con certificaciones en The Integrated Conservatory (Musical Theatre, Acting & Dance) por AMDA New York y PAA Londres. Co-fundador del Instituto Mexicano de Certificación en Artes Escénicas. Ha compartido escenario con grandes artistas y dirigido producciones como Rent, Spring Awakening, Hoy no me puedo levantar y Matilda.",
+      "specialties": [
+        "Dirección General",
+        "Dirección Escénica",
+        "Técnica Vocal",
+        "Teatro Musical"
+      ],
+      "imageUrl": "/images/teachers/diego-vieyra.jpg",
+      "status": "PUBLISHED",
+      "createdAt": "2026-08-06T12:00:00.000Z",
+      "updatedAt": "2026-08-06T12:00:00.000Z"
+    },
+    {
+      "id": "teacher_marena_segura",
+      "slug": "marena-segura",
+      "fullName": "Marena Segura (MArs Rising)",
+      "bio": "Directora Vocal y Arreglista de DV Performing Arts. Egresada de Berklee College of Music en Professional Music (Composición y Negocios Musicales). TEDx Performer, arreglista vocal independiente con alumnos colocados en La Voz México, La Voz Brasil y las principales obras de teatro musical de la CDMX. Co-fundadora del Instituto Mexicano de Certificación en Artes Escénicas.",
+      "specialties": [
+        "Dirección Vocal",
+        "Arreglos Vocales",
+        "Composición",
+        "Berklee Alumni"
+      ],
+      "imageUrl": "/images/teachers/marena-segura.jpg",
+      "status": "PUBLISHED",
+      "createdAt": "2026-08-06T12:00:00.000Z",
+      "updatedAt": "2026-08-06T12:00:00.000Z"
+    },
+    {
+      "id": "teacher_fanny_monroy",
+      "slug": "fanny-monroy",
+      "fullName": "Fanny Monroy",
+      "bio": "Licenciada en Psicología con enfoque arteterapéutico, coreógrafa y maestra de baile. Ganadora Nacional en Infinity Championship (Categoría Hip Hop Mega Crew) y coreógrafa en ONP. Ha participado en producciones internacionales como el Festival Jorearte en España. Coreógrafa residente en los Talleres de Alto Rendimiento de DV Performing Arts.",
+      "specialties": [
+        "Hip Hop",
+        "Danzas Urbanas",
+        "Club Style",
+        "Coreografía Escénica"
+      ],
+      "imageUrl": "/images/teachers/fanny-monroy.jpg",
+      "status": "PUBLISHED",
+      "createdAt": "2026-08-06T12:00:00.000Z",
+      "updatedAt": "2026-08-06T12:00:00.000Z"
+    },
+    {
+      "id": "teacher_andres_rodriguez",
+      "slug": "andres-rodriguez",
+      "fullName": "Andrés Rodríguez",
+      "bio": "Director de escena en teatro musical infantil y maestro de teatro principiante en DV Performing Arts. Graduado del Centro de Estudios para el Uso de la Voz (CEUVOZ) respaldado por el INBAL. Formado en técnicas Linklater, Feldenkrais y Técnica Alexander, con amplia trayectoria en festivales culturales y montajes teatrales en múltiples estados de México.",
+      "specialties": [
+        "Teatro Infantil",
+        "Uso de la Voz (INBAL/CEUVOZ)",
+        "Técnica Linklater",
+        "Actuación Principiante"
+      ],
+      "imageUrl": "/images/teachers/andres-rodriguez.jpg",
+      "status": "PUBLISHED",
+      "createdAt": "2026-08-06T12:00:00.000Z",
+      "updatedAt": "2026-08-06T12:00:00.000Z"
+    },
+    {
+      "id": "teacher_angel_piedra",
+      "slug": "angel-piedra",
+      "fullName": "Angel Piedra",
+      "bio": "Licenciada en Artes Escénicas por la Universidad de Guanajuato con mención laureada por trayectoria sobresaliente. Con más de 20 años de experiencia, se ha formado con compañías internacionales como Odin Teatret (Dinamarca) y Peeping Tom (Bélgica). Actriz en más de 25 montajes, incluyendo Los Miserables, Hairspray, Cats y Amor sin Barreras. Profesora de Teatro Avanzado en DV Performing Arts.",
+      "specialties": [
+        "Teatro Avanzado",
+        "Alto Rendimiento",
+        "Artes Escénicas",
+        "Dirección Teatral"
+      ],
+      "imageUrl": "/images/teachers/angel-piedra.jpg",
+      "status": "PUBLISHED",
+      "createdAt": "2026-08-06T12:00:00.000Z",
+      "updatedAt": "2026-08-06T12:00:00.000Z"
+    },
+    {
+      "id": "teacher_carolina_torres",
+      "slug": "carolina-torres",
+      "fullName": "Carolina Torres Ramos",
+      "bio": "Egresada de la Escuela de Música de León y la Universidad de Guanajuato. Becaria del programa internacional Vincerò Academy. Ha sido solista con la Compañía de Ópera del Teatro del Bicentenario en Madama Butterfly, Tosca, La Traviata y Rigoletto, y en múltiples ediciones del Festival Internacional Cervantino. Maestra de técnica de canto lírico y preparación escénica.",
+      "specialties": [
+        "Canto Lírico",
+        "Ópera",
+        "Festival Cervantino",
+        "Repertorio Clásico"
+      ],
+      "imageUrl": "/images/teachers/caro-torres.jpg",
+      "status": "PUBLISHED",
+      "createdAt": "2026-08-06T12:00:00.000Z",
+      "updatedAt": "2026-08-06T12:00:00.000Z"
+    }
+  ],
+  "productions": [
+    {
+      "id": "prod_si_no_es_ahora",
+      "slug": "si-no-es-ahora",
+      "title": "Si No Es Ahora (El Musical)",
+      "synopsis": "Puesta en escena original de gran formato de la academia DV Performing Arts. Una historia vibrante sobre la juventud, las decisiones decisivas y el poder transformador de la música sobre el escenario.",
+      "director": "Diego Vieyra & Fanny Monroy",
+      "castDescription": "Elenco de Alto Rendimiento y Ensamble DV",
+      "durationMinutes": 110,
+      "imageUrl": "/images/productions/si-no-es-ahora.jpg",
+      "status": "PUBLISHED",
+      "createdAt": "2026-08-06T12:00:00.000Z",
+      "updatedAt": "2026-08-06T12:00:00.000Z"
+    },
+    {
+      "id": "prod_into_the_woods",
+      "slug": "into-the-woods",
+      "title": "Into The Woods",
+      "synopsis": "La legendaria obra maestra de Stephen Sondheim que entrelaza los cuentos de hadas clásicos en una profunda reflexión sobre los deseos, la madurez y sus consecuencias.",
+      "director": "Dirección Colegiada DV",
+      "castDescription": "Elenco Avanzado y Solistas Invitados",
+      "durationMinutes": 135,
+      "imageUrl": "/images/productions/into-the-woods.jpg",
+      "status": "PUBLISHED",
+      "createdAt": "2026-08-06T12:00:00.000Z",
+      "updatedAt": "2026-08-06T12:00:00.000Z"
+    },
+    {
+      "id": "prod_hoy_no_me_puedo_levantar",
+      "slug": "hoy-no-me-puedo-levantar",
+      "title": "Hoy No Me Puedo Levantar",
+      "synopsis": "El emocionante homenaje a la música de Mecano ambientado en la efervescencia de la Movida Madrileña, explorando la amistad, el amor y los sueños de triunfar en el mundo del arte.",
+      "director": "Diego Vieyra",
+      "castDescription": "Compañía Juvenil de Teatro Musical",
+      "durationMinutes": 120,
+      "imageUrl": "/images/productions/hoy-no-me-puedo-levantar.jpg",
+      "status": "PUBLISHED",
+      "createdAt": "2026-08-06T12:00:00.000Z",
+      "updatedAt": "2026-08-06T12:00:00.000Z"
+    }
+  ]
+}

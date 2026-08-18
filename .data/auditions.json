@@ -1,5 +1,22 @@
 [
   {
+    "id": "aud_1787040727908_z5lhm",
+    "folio": "AUD-2026-DV-0003",
+    "fullName": "Rodrigo Montes",
+    "email": "rodrigo@test.com",
+    "phone": "4779876543",
+    "productionId": "prod_si_no_es_ahora",
+    "productionName": "Si No Es Ahora (El Musical)",
+    "programId": "prog_actuacion_escenica",
+    "programName": "Actuación & Dirección Escénica",
+    "preferredSchedule": "Turno Sabatino (10:00 - 15:00)",
+    "experienceNotes": "Taller de actuación teatral 2025",
+    "status": "PENDING_REVIEW",
+    "whatsappNotified": true,
+    "createdAt": "2026-08-18T08:12:07.908Z",
+    "updatedAt": "2026-08-18T08:12:07.909Z"
+  },
+  {
     "id": "aud_1787040377388_h4q16",
     "folio": "AUD-2026-DV-0002",
     "fullName": "Mariana Valenzuela",

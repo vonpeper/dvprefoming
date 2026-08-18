@@ -40,7 +40,11 @@ export interface Production {
   director: string;
   castDescription: string;
   durationMinutes: number;
+  season?: string; // e.g. "Temporada 2026"
   imageUrl?: string;
+  productionStatus?: "AUDITIONS_OPEN" | "IN_SEASON" | "UPCOMING" | "ARCHIVED";
+  isAuditionActive?: boolean; // If true, this production is the active call for auditions
+  auditionDates?: string; // e.g. "Sábados de Marzo 2026"
   status: EntityStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -54,6 +58,8 @@ export interface AuditionRegistration {
   phone: string;
   birthDate?: string | Date;
   age?: number | string;
+  productionId?: string; // Target play e.g. "prod_si_no_es_ahora"
+  productionName?: string; // Target play name e.g. "Si No Es Ahora (El Musical)"
   programId: string; // Reference to Program.id
   programName?: string; // e.g. "Teatro Musical Integral"
   preferredSchedule?: string; // e.g. "Turno Vespertino 16:00 - 20:00"

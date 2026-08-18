@@ -1,23 +1,28 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { AuditionRegistration } from "@/types/mock";
+import { AuditionRegistration, Production } from "@/types/mock";
 
 export default function AuditionsDashboardPage() {
   const [auditions, setAuditions] = useState<AuditionRegistration[]>([]);
+  const [productions, setProductions] = useState<Production[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [programFilter, setProgramFilter] = useState("ALL");
+  const [productionFilter, setProductionFilter] = useState("ALL");
   const [selectedAudition, setSelectedAudition] = useState<AuditionRegistration | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
   const loadAuditions = () => {
-    fetch("/api/auditions/list")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.auditions) setAuditions(data.auditions);
+    Promise.all([
+      fetch("/api/auditions/list").then((res) => res.json()),
+      fetch("/api/productions").then((res) => res.json()),
+    ])
+      .then(([audData, prodData]) => {
+        if (audData?.auditions) setAuditions(audData.auditions);
+        if (prodData?.productions) setProductions(prodData.productions);
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
@@ -68,10 +73,11 @@ export default function AuditionsDashboardPage() {
   };
 
   const exportCSV = () => {
-    const headers = ["Folio", "Nombre", "Telefono", "Email", "Edad", "Programa", "Horario", "Estatus", "Fecha Registro"];
+    const headers = ["Folio", "Nombre", "Obra", "Telefono", "Email", "Edad", "Programa", "Horario", "Estatus", "Fecha Registro"];
     const rows = auditions.map((a) => [
       a.folio,
       `"${a.fullName}"`,
+      `"${a.productionName || "Si No Es Ahora"}"`,
       `"${a.phone}"`,
       `"${a.email}"`,
       `"${a.age || ""}"`,
@@ -95,12 +101,17 @@ export default function AuditionsDashboardPage() {
     const matchesSearch =
       a.folio.toLowerCase().includes(searchTerm.toLowerCase()) ||
       a.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (a.productionName && a.productionName.toLowerCase().includes(searchTerm.toLowerCase())) ||
       a.phone.includes(searchTerm);
 
     const matchesStatus = statusFilter === "ALL" || a.status === statusFilter;
     const matchesProgram = programFilter === "ALL" || a.programId === programFilter;
+    const matchesProduction =
+      productionFilter === "ALL" ||
+      a.productionId === productionFilter ||
+      a.productionName === productionFilter;
 
-    return matchesSearch && matchesStatus && matchesProgram;
+    return matchesSearch && matchesStatus && matchesProgram && matchesProduction;
   });
 
   return (
@@ -122,7 +133,7 @@ export default function AuditionsDashboardPage() {
             </span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Gestión de postulaciones oficiales, folios de acceso y mensajería automática por WhatsApp (Evolution API).
+            Gestión de postulaciones oficiales, folios de acceso, obra en curso y mensajería automática por WhatsApp.
           </p>
         </div>
 
@@ -140,7 +151,7 @@ export default function AuditionsDashboardPage() {
       </div>
 
       {/* Filters Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-[#161B22] p-4 rounded-xl border border-[#30363D]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-[#161B22] p-4 rounded-xl border border-[#30363D]">
         {/* Search */}
         <div>
           <input
@@ -150,6 +161,22 @@ export default function AuditionsDashboardPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-[#0D1117] border border-[#30363D] rounded-lg px-3.5 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-red-500 font-sans"
           />
+        </div>
+
+        {/* Production Filter */}
+        <div>
+          <select
+            value={productionFilter}
+            onChange={(e) => setProductionFilter(e.target.value)}
+            className="w-full bg-[#0D1117] border border-[#30363D] rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none font-bold text-red-400"
+          >
+            <option value="ALL">Todas las Obras</option>
+            {productions.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.title} {p.isAuditionActive ? "★ (Activa)" : ""}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Status filter */}
@@ -191,10 +218,10 @@ export default function AuditionsDashboardPage() {
               <tr>
                 <th className="py-3 px-4">Folio Oficial</th>
                 <th className="py-3 px-4">Aspirante</th>
+                <th className="py-3 px-4">Obra / Montaje</th>
                 <th className="py-3 px-4">WhatsApp / Teléfono</th>
                 <th className="py-3 px-4">Disciplina</th>
                 <th className="py-3 px-4">Turno</th>
-                <th className="py-3 px-4">WhatsApp Notif.</th>
                 <th className="py-3 px-4">Estatus</th>
                 <th className="py-3 px-4 text-right">Acciones</th>
               </tr>
@@ -209,6 +236,13 @@ export default function AuditionsDashboardPage() {
                   <td className="py-3.5 px-4">
                     <div className="font-semibold text-white">{aud.fullName}</div>
                     <div className="text-[10px] text-slate-400">{aud.email || "Sin correo"}</div>
+                  </td>
+
+                  {/* Obra */}
+                  <td className="py-3.5 px-4">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                      🎭 {aud.productionName || "Si No Es Ahora"}
+                    </span>
                   </td>
 
                   {/* WhatsApp */}
@@ -231,13 +265,6 @@ export default function AuditionsDashboardPage() {
                   {/* Preferred Schedule */}
                   <td className="py-3.5 px-4 text-slate-400 text-[11px]">
                     {aud.preferredSchedule || "Vespertino"}
-                  </td>
-
-                  {/* WhatsApp Notified Badge */}
-                  <td className="py-3.5 px-4">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                      <span>✓</span> Enviado
-                    </span>
                   </td>
 
                   {/* Status Badge */}
@@ -323,19 +350,19 @@ export default function AuditionsDashboardPage() {
 
             {/* Applicant Details Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="p-3.5 bg-[#0D1117] rounded-xl border border-[#30363D] flex flex-col gap-1">
-                <span className="text-slate-400 font-mono text-[10px] uppercase font-bold">Teléfono / WhatsApp</span>
-                <span className="text-white font-mono font-bold text-sm">{selectedAudition.phone}</span>
-              </div>
-
-              <div className="p-3.5 bg-[#0D1117] rounded-xl border border-[#30363D] flex flex-col gap-1">
-                <span className="text-slate-400 font-mono text-[10px] uppercase font-bold">Correo Electrónico</span>
-                <span className="text-white font-mono">{selectedAudition.email || "No provisto"}</span>
+              <div className="p-3.5 bg-[#0D1117] rounded-xl border border-purple-500/30 flex flex-col gap-1">
+                <span className="text-purple-400 font-mono text-[10px] uppercase font-bold">Obra en Convocatoria</span>
+                <span className="text-white font-bold text-sm">🎭 {selectedAudition.productionName || "Si No Es Ahora"}</span>
               </div>
 
               <div className="p-3.5 bg-[#0D1117] rounded-xl border border-[#30363D] flex flex-col gap-1">
                 <span className="text-slate-400 font-mono text-[10px] uppercase font-bold">Disciplina de Interés</span>
                 <span className="text-white font-bold">{selectedAudition.programName || selectedAudition.programId}</span>
+              </div>
+
+              <div className="p-3.5 bg-[#0D1117] rounded-xl border border-[#30363D] flex flex-col gap-1">
+                <span className="text-slate-400 font-mono text-[10px] uppercase font-bold">Teléfono / WhatsApp</span>
+                <span className="text-white font-mono font-bold text-sm">{selectedAudition.phone}</span>
               </div>
 
               <div className="p-3.5 bg-[#0D1117] rounded-xl border border-[#30363D] flex flex-col gap-1">

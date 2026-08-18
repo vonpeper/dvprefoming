@@ -1,15 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import SectionHeading from "@/components/ui/section-heading";
 import EditorialLabel from "@/components/ui/editorial-label";
+import { Production } from "@/types/mock";
 
 export default function AuditionFeature() {
+  const [productions, setProductions] = useState<Production[]>([]);
+  const [activeProduction, setActiveProduction] = useState<Production | null>(null);
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     phone: "",
     age: "",
+    productionId: "prod_si_no_es_ahora",
+    productionName: "Si No Es Ahora (El Musical)",
     programId: "prog_teatro_musical",
     programName: "Teatro Musical Integral",
     preferredSchedule: "Turno Vespertino (16:00 - 20:00)",
@@ -20,10 +26,29 @@ export default function AuditionFeature() {
   const [submittedData, setSubmittedData] = useState<{
     folio: string;
     fullName: string;
+    productionName: string;
     programName: string;
     phone: string;
   } | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    fetch("/api/productions")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.productions && data.productions.length > 0) {
+          setProductions(data.productions);
+          const active = data.activeAudition || data.productions[0];
+          setActiveProduction(active);
+          setFormData((prev) => ({
+            ...prev,
+            productionId: active.id,
+            productionName: active.title,
+          }));
+        }
+      })
+      .catch((err) => console.error(err));
+  }, []);
 
   const programOptions = [
     { id: "prog_teatro_musical", name: "Teatro Musical Integral (Canto, Danza & Actuación)" },
@@ -71,6 +96,7 @@ export default function AuditionFeature() {
       setSubmittedData({
         folio: data.audition.folio,
         fullName: data.audition.fullName,
+        productionName: data.audition.productionName || formData.productionName,
         programName: data.audition.programName || formData.programName,
         phone: data.audition.phone,
       });
@@ -81,6 +107,8 @@ export default function AuditionFeature() {
         email: "",
         phone: "",
         age: "",
+        productionId: activeProduction ? activeProduction.id : "prod_si_no_es_ahora",
+        productionName: activeProduction ? activeProduction.title : "Si No Es Ahora (El Musical)",
         programId: "prog_teatro_musical",
         programName: "Teatro Musical Integral",
         preferredSchedule: "Turno Vespertino (16:00 - 20:00)",
@@ -110,24 +138,24 @@ export default function AuditionFeature() {
           
           {/* Signal graphic tag */}
           <div className="absolute top-0 right-4 transform -translate-y-1/2 bg-accent-red text-text-main px-3 py-1 font-mono text-[9px] uppercase tracking-widest font-bold z-10">
-            CONVOCATORIA ABIERTA &bull; TEMPORADA 2026
+            CONVOCATORIA ACTIVA &bull; {activeProduction?.season || "TEMPORADA 2026"}
           </div>
 
           {/* Left Column: Information & Requirements */}
           <div className="flex-1 flex flex-col justify-between gap-8">
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3">
-                <EditorialLabel text="Formulario Oficial" variant="accent" />
+                <EditorialLabel text="Convocatoria Abierta" variant="accent" />
                 <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em]">
-                  dvperformingarts.com/contacto
+                  {activeProduction?.auditionDates || "dvperformingarts.com/contacto"}
                 </span>
               </div>
 
               <h3 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold uppercase tracking-tighter text-text-main leading-[0.82]">
-                Audiciones: &ldquo;Si No Es Ahora&rdquo;
+                Audiciones: &ldquo;{activeProduction?.title || "Si No Es Ahora"}&rdquo;
               </h3>
               <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-sans font-bold uppercase tracking-widest max-w-xl">
-                Completa tu registro oficial en línea. Al enviar tu solicitud, el sistema generará tu **Folio Único de Aspirante** y recibirás automáticamente por WhatsApp la confirmación de tu cita, horario y recomendaciones para el día de tu audición.
+                {activeProduction?.synopsis || "Buscamos cantantes, actores y bailarines apasionados para formar parte del elenco y ensamble de nuestras producciones en León, Gto."}
               </p>
             </div>
 
@@ -135,11 +163,11 @@ export default function AuditionFeature() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-[9px] font-mono uppercase tracking-widest text-text-muted border-t border-b border-border-editorial-light py-6">
               <div className="flex items-start gap-2.5">
                 <span className="w-2 h-2 bg-accent-red mt-0.5 shrink-0" />
-                <span><strong>Disciplinas:</strong> Teatro Musical, Canto, Danza Urbana y Actuación</span>
+                <span><strong>Obra:</strong> {activeProduction?.title || "Si No Es Ahora"}</span>
               </div>
               <div className="flex items-start gap-2.5">
                 <span className="w-2 h-2 bg-accent-red mt-0.5 shrink-0" />
-                <span><strong>Edades:</strong> Grupos Infantiles, Juveniles y Adultos</span>
+                <span><strong>Disciplinas:</strong> Teatro Musical, Canto, Danza Urbana y Actuación</span>
               </div>
               <div className="flex items-start gap-2.5">
                 <span className="w-2 h-2 bg-accent-red mt-0.5 shrink-0" />
@@ -147,7 +175,7 @@ export default function AuditionFeature() {
               </div>
               <div className="flex items-start gap-2.5">
                 <span className="w-2 h-2 bg-accent-red mt-0.5 shrink-0" />
-                <span><strong>WhatsApp:</strong> Notificación y recordatorio automático</span>
+                <span><strong>WhatsApp:</strong> Notificación con folio y cita automática</span>
               </div>
             </div>
 
@@ -174,6 +202,9 @@ export default function AuditionFeature() {
                   <h4 className="font-display text-2xl font-extrabold uppercase tracking-tight text-text-main">
                     {submittedData.fullName}
                   </h4>
+                  <span className="font-mono text-xs text-text-muted">
+                    Obra: {submittedData.productionName} &bull; {submittedData.programName}
+                  </span>
                 </div>
 
                 {/* Folio Highlight Card */}
@@ -185,13 +216,13 @@ export default function AuditionFeature() {
                     {submittedData.folio}
                   </span>
                   <span className="font-mono text-[8px] text-accent-red uppercase">
-                    Presenta este código en recepción
+                    Presenta este código en recepción al acudir a tu cita
                   </span>
                 </div>
 
                 <div className="p-3.5 bg-[#0A0A0C] border border-border-editorial text-left w-full flex flex-col gap-1.5 font-sans text-xs text-text-muted">
                   <div className="flex items-center gap-2 text-text-main font-bold font-mono text-[10px] uppercase text-green-400">
-                    <span>📱 Notificación Enviada por WhatsApp</span>
+                    <span>📱 Confirmación Enviada por WhatsApp</span>
                   </div>
                   <p className="text-[11px] leading-relaxed">
                     Hemos enviado los detalles de tu cita y las recomendaciones a tu número <strong>{submittedData.phone}</strong>.
@@ -224,10 +255,35 @@ export default function AuditionFeature() {
                   </div>
                 )}
 
+                {/* Obra en Convocatoria (Selector Dinámico) */}
+                <div className="flex flex-col gap-1">
+                  <label className="font-mono text-[9px] uppercase tracking-widest text-accent-red font-bold flex items-center gap-1.5">
+                    <span>🎭 Obra / Puesta en Escena *</span>
+                  </label>
+                  <select
+                    value={formData.productionId}
+                    onChange={(e) => {
+                      const selected = productions.find((p) => p.id === e.target.value);
+                      setFormData({
+                        ...formData,
+                        productionId: e.target.value,
+                        productionName: selected ? selected.title : "Si No Es Ahora",
+                      });
+                    }}
+                    className="w-full bg-[#08080A] border-2 border-accent-red/60 px-3 py-2.5 text-xs text-text-main font-bold focus:outline-none focus:border-accent-red transition-colors font-sans cursor-pointer"
+                  >
+                    {productions.map((prod) => (
+                      <option key={prod.id} value={prod.id} className="bg-[#121215] text-text-main font-bold">
+                        {prod.title} ({prod.season || "2026"}) {prod.isAuditionActive ? "★ Convocatoria Activa" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* Nombre Completo */}
                 <div className="flex flex-col gap-1">
                   <label className="font-mono text-[9px] uppercase tracking-widest text-text-muted font-bold">
-                    Nombre Completo *
+                    Nombre Completo del Aspirante *
                   </label>
                   <input
                     type="text"
@@ -349,7 +405,7 @@ export default function AuditionFeature() {
                   {loading ? (
                     <>
                       <span className="w-4 h-4 border-2 border-text-main border-t-transparent rounded-full animate-spin" />
-                      <span>Procesando Folio...</span>
+                      <span>Procesando Folio y Notificación...</span>
                     </>
                   ) : (
                     <span>Enviar Registro de Audición</span>

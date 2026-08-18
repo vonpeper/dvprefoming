@@ -262,3 +262,124 @@ export function saveStoredWebsiteContent(content: WebsiteContent) {
   ensureDirectoryExists();
   fs.writeFileSync(PAGES_FILE, JSON.stringify(content, null, 2), "utf-8");
 }
+
+// ---------------------------------------------------------------------------
+// Productions & Cartelera Storage (Connected to Auditions & Home)
+// ---------------------------------------------------------------------------
+export function getStoredProductions(): Production[] {
+  const content = getStoredWebsiteContent();
+  // Ensure default productions have status & isAuditionActive flags
+  return content.productions.map((p, idx) => ({
+    ...p,
+    season: p.season || "Temporada 2026",
+    productionStatus: p.productionStatus || (idx === 0 ? "AUDITIONS_OPEN" : "IN_SEASON"),
+    isAuditionActive: p.isAuditionActive !== undefined ? p.isAuditionActive : idx === 0,
+    auditionDates: p.auditionDates || "Convocatoria Abierta",
+  }));
+}
+
+export function saveProduction(prod: Partial<Production> & { title: string }): Production {
+  const content = getStoredWebsiteContent();
+  const productions = getStoredProductions();
+  const now = new Date();
+
+  // If this production is set as active for auditions, deactivate other productions
+  if (prod.isAuditionActive) {
+    productions.forEach((p) => {
+      p.isAuditionActive = false;
+      if (p.productionStatus === "AUDITIONS_OPEN") {
+        p.productionStatus = "IN_SEASON";
+      }
+    });
+  }
+
+  let savedProd: Production;
+
+  if (prod.id) {
+    const idx = productions.findIndex((p) => p.id === prod.id);
+    if (idx !== -1) {
+      productions[idx] = {
+        ...productions[idx],
+        ...prod,
+        updatedAt: now,
+      } as Production;
+      savedProd = productions[idx];
+    } else {
+      savedProd = {
+        id: prod.id,
+        slug: prod.slug || prod.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
+        title: prod.title,
+        synopsis: prod.synopsis || "",
+        director: prod.director || "Diego Vieyra",
+        castDescription: prod.castDescription || "Alumnos y elenco de DV Performing Arts",
+        durationMinutes: prod.durationMinutes || 120,
+        season: prod.season || "Temporada 2026",
+        imageUrl: prod.imageUrl || "/images/productions/si-no-es-ahora.jpg",
+        productionStatus: prod.productionStatus || (prod.isAuditionActive ? "AUDITIONS_OPEN" : "IN_SEASON"),
+        isAuditionActive: prod.isAuditionActive ?? false,
+        auditionDates: prod.auditionDates || "Convocatoria Abierta",
+        status: "PUBLISHED",
+        createdAt: now,
+        updatedAt: now,
+      };
+      productions.unshift(savedProd);
+    }
+  } else {
+    const newId = `prod_${Date.now()}`;
+    const slug = prod.slug || prod.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    savedProd = {
+      id: newId,
+      slug,
+      title: prod.title,
+      synopsis: prod.synopsis || "",
+      director: prod.director || "Diego Vieyra",
+      castDescription: prod.castDescription || "Alumnos y elenco de DV Performing Arts",
+      durationMinutes: prod.durationMinutes || 120,
+      season: prod.season || "Temporada 2026",
+      imageUrl: prod.imageUrl || "/images/productions/si-no-es-ahora.jpg",
+      productionStatus: prod.productionStatus || (prod.isAuditionActive ? "AUDITIONS_OPEN" : "IN_SEASON"),
+      isAuditionActive: prod.isAuditionActive ?? false,
+      auditionDates: prod.auditionDates || "Convocatoria Abierta",
+      status: "PUBLISHED",
+      createdAt: now,
+      updatedAt: now,
+    };
+    productions.unshift(savedProd);
+  }
+
+  content.productions = productions;
+  saveStoredWebsiteContent(content);
+  return savedProd;
+}
+
+export function deleteProduction(id: string): boolean {
+  const content = getStoredWebsiteContent();
+  const productions = getStoredProductions();
+  const filtered = productions.filter((p) => p.id !== id);
+  if (filtered.length !== productions.length) {
+    content.productions = filtered;
+    saveStoredWebsiteContent(content);
+    return true;
+  }
+  return false;
+}
+
+export function setActiveAuditionProduction(id: string): Production | null {
+  const content = getStoredWebsiteContent();
+  const productions = getStoredProductions();
+  const target = productions.find((p) => p.id === id);
+  if (!target) return null;
+
+  productions.forEach((p) => {
+    p.isAuditionActive = p.id === id;
+    if (p.id === id) {
+      p.productionStatus = "AUDITIONS_OPEN";
+    }
+  });
+
+  content.productions = productions;
+  // Also update hero notice text dynamically!
+  content.hero.auditionNotice = `Audiciones abiertas para el musical “${target.title}”. Inicia tu registro.`;
+  saveStoredWebsiteContent(content);
+  return target;
+}

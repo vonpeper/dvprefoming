@@ -1,11 +1,27 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { mockProductions } from "@/data/mock";
+import { Production } from "@/types/mock";
 import SectionHeading from "@/components/ui/section-heading";
 import EditorialLabel from "@/components/ui/editorial-label";
 import MediaPlaceholder from "@/components/ui/media-placeholder";
 import ButtonLink from "@/components/ui/button-link";
 
 export default function ProductionsSection() {
+  const [productions, setProductions] = useState<Production[]>(mockProductions);
+
+  useEffect(() => {
+    fetch("/api/productions")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.productions && data.productions.length > 0) {
+          setProductions(data.productions);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <section id="producciones" className="relative w-full py-20 px-6 border-b-4 border-border-editorial" aria-labelledby="heading-producciones">
       <div className="mx-auto max-w-container-max">
@@ -19,7 +35,7 @@ export default function ProductionsSection() {
 
         {/* Poster Wall Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-          {mockProductions.map((production, index) => {
+          {productions.map((production, index) => {
             const variantHash = index % 3 === 0 ? "red" : index % 3 === 1 ? "dark" : "gray";
             return (
               <article
@@ -38,8 +54,14 @@ export default function ProductionsSection() {
                   />
                   {/* Absolute date tag at top right of poster */}
                   <div className="absolute top-4 right-4 bg-background-main border border-border-editorial px-2 py-1 font-mono text-[9px] text-text-main uppercase font-bold">
-                    TEMP-2026
+                    {production.season || "TEMP-2026"}
                   </div>
+
+                  {production.isAuditionActive && (
+                    <div className="absolute bottom-3 left-3 bg-accent-red text-text-main px-2.5 py-1 font-mono text-[9px] uppercase font-bold tracking-wider shadow">
+                      ★ Audiciones Abiertas
+                    </div>
+                  )}
                 </div>
 
                 {/* Poster Details */}
@@ -74,13 +96,13 @@ export default function ProductionsSection() {
                     </div>
                     <div>
                       <span className="text-accent-red font-bold mr-1">Duración:</span>
-                      <span>{production.durationMinutes > 0 ? `${production.durationMinutes} min.` : "Sin definir"}</span>
+                      <span>{production.durationMinutes > 0 ? `${production.durationMinutes} min.` : "120 min."}</span>
                     </div>
                   </div>
 
                   <div className="pt-2">
-                    <ButtonLink variant="primary" className="w-full">
-                      Ver Funciones
+                    <ButtonLink href="#audiciones" variant="primary" className="w-full">
+                      {production.isAuditionActive ? "Audicionar para esta Obra" : "Ver Cartelera"}
                     </ButtonLink>
                   </div>
 

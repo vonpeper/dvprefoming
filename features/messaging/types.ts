@@ -21,6 +21,7 @@ export interface AuditionNotificationData {
   fullName: string;
   folio: string;
   programName: string;
+  productionName?: string;
   phone: string;
   auditionDate?: string;
   auditionTime?: string;
