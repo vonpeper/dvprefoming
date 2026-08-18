@@ -3,6 +3,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import ImageUploader from "@/components/ui/image-uploader";
 
 interface EditorBlock {
   id: string;
@@ -645,50 +646,15 @@ function ArticleEditorContent() {
             </div>
           </div>
 
-          {/* Box 2: Featured Image */}
+          {/* Box 2: Featured Image with ImageUploader */}
           <div className="bg-[#161B22] border border-[#30363D] rounded-xl p-5 flex flex-col gap-4 shadow-sm">
-            <h3 className="font-bold text-sm text-white border-b border-[#30363D] pb-3">
-              Imagen Destacada (OpenGraph)
-            </h3>
-
-            {/* Preview Image */}
-            <div className="w-full h-44 relative bg-black/50 rounded-lg overflow-hidden border border-[#30363D]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={featuredImage} alt="Featured Preview" className="w-full h-full object-cover" />
-            </div>
-
-            {/* Image path input */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-slate-400 font-semibold">Ruta / URL de la Imagen</label>
-              <input
-                type="text"
-                value={featuredImage}
-                onChange={(e) => setFeaturedImage(e.target.value)}
-                className="bg-[#0D1117] border border-[#30363D] rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none font-mono text-[11px]"
-              />
-            </div>
-
-            {/* Quick Gallery Picker */}
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-mono text-slate-400 uppercase font-semibold">
-                Seleccionar de la galería:
-              </span>
-              <div className="grid grid-cols-4 gap-1.5">
-                {sampleImages.map((img, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setFeaturedImage(img)}
-                    className={`w-full h-12 rounded overflow-hidden border transition-all ${
-                      featuredImage === img ? "border-blue-500 scale-95" : "border-[#30363D] opacity-60 hover:opacity-100"
-                    }`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img} alt="Thumbnail" className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            </div>
+            <ImageUploader
+              label="Imagen Destacada (OpenGraph & Portada)"
+              value={featuredImage}
+              aspectRatio="16:9"
+              onChange={(newUrl) => setFeaturedImage(newUrl)}
+              description="Esta imagen aparecerá en el encabezado del artículo y al compartir en WhatsApp / Facebook."
+            />
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Production } from "@/types/mock";
+import ImageUploader from "@/components/ui/image-uploader";
 
 export default function ProductionsDashboardPage() {
   const [productions, setProductions] = useState<Production[]>([]);
@@ -380,40 +381,13 @@ export default function ProductionsDashboardPage() {
                 </div>
               </div>
 
-              {/* Poster Image */}
-              <div className="flex flex-col gap-2">
-                <label className="font-semibold text-slate-300">Póster Oficial / Imagen</label>
-                <div className="flex items-center gap-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={editingProd.imageUrl || "/images/productions/si-no-es-ahora.jpg"}
-                    alt="Poster Preview"
-                    className="w-16 h-24 object-cover rounded-lg border border-[#30363D]"
-                  />
-                  <input
-                    type="text"
-                    value={editingProd.imageUrl || ""}
-                    onChange={(e) => setEditingProd({ ...editingProd, imageUrl: e.target.value })}
-                    className="flex-1 bg-[#0D1117] border border-[#30363D] rounded-lg px-3.5 py-2 text-xs text-slate-200 font-mono"
-                  />
-                </div>
-
-                {/* Quick selection */}
-                <div className="flex flex-wrap gap-2 mt-1">
-                  <span className="text-[10px] text-slate-400 font-mono self-center">Galería rápida:</span>
-                  {galleryOptions.map((img, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setEditingProd({ ...editingProd, imageUrl: img })}
-                      className="w-10 h-10 rounded overflow-hidden border border-[#30363D] hover:border-purple-500 transition-all"
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={img} alt="Thumb" className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* Reusable Image Uploader for Poster */}
+              <ImageUploader
+                label="Póster Oficial / Imagen de Cartelera"
+                value={editingProd.imageUrl || "/images/productions/si-no-es-ahora.jpg"}
+                aspectRatio="3:4"
+                onChange={(newUrl) => setEditingProd({ ...editingProd, imageUrl: newUrl })}
+              />
 
               {/* Set Active Audition Checkbox */}
               <div className="p-4 bg-[#0D1117] border border-red-500/30 rounded-xl flex items-center gap-3 my-2">

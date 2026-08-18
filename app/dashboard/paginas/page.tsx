@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { WebsiteContent } from "@/lib/storage";
+import ImageUploader from "@/components/ui/image-uploader";
 
 export default function WebsiteContentEditorPage() {
   const [content, setContent] = useState<WebsiteContent | null>(null);
@@ -68,7 +69,7 @@ export default function WebsiteContentEditorPage() {
             Editor de Contenidos & Secciones Web
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Personaliza textos, fotografías oficiales, cartelera y datos de contacto de la landing page.
+            Personaliza textos, reemplaza fotografías con optimización automática WebP y administra datos oficiales.
           </p>
         </div>
 
@@ -187,25 +188,15 @@ export default function WebsiteContentEditorPage() {
               />
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-slate-300">Fotografía Principal de Escenario</label>
-              <div className="flex items-center gap-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={content.hero.heroImage}
-                  alt="Hero Preview"
-                  className="w-24 h-24 object-cover rounded-lg border border-[#30363D]"
-                />
-                <input
-                  type="text"
-                  value={content.hero.heroImage}
-                  onChange={(e) =>
-                    setContent({ ...content, hero: { ...content.hero, heroImage: e.target.value } })
-                  }
-                  className="flex-1 bg-[#0D1117] border border-[#30363D] rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none font-mono"
-                />
-              </div>
-            </div>
+            {/* Reusable Image Uploader for Hero */}
+            <ImageUploader
+              label="Fotografía Principal de Escenario (Hero)"
+              value={content.hero.heroImage}
+              aspectRatio="3:4"
+              onChange={(newUrl) =>
+                setContent({ ...content, hero: { ...content.hero, heroImage: newUrl } })
+              }
+            />
           </div>
         )}
 
@@ -252,25 +243,15 @@ export default function WebsiteContentEditorPage() {
               />
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-slate-300">Fotografía de Ensayo en Backstage</label>
-              <div className="flex items-center gap-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={content.manifesto.image}
-                  alt="Manifesto Preview"
-                  className="w-24 h-24 object-cover rounded-lg border border-[#30363D]"
-                />
-                <input
-                  type="text"
-                  value={content.manifesto.image}
-                  onChange={(e) =>
-                    setContent({ ...content, manifesto: { ...content.manifesto, image: e.target.value } })
-                  }
-                  className="flex-1 bg-[#0D1117] border border-[#30363D] rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none font-mono"
-                />
-              </div>
-            </div>
+            {/* Reusable Image Uploader for Manifesto */}
+            <ImageUploader
+              label="Fotografía de Ensayo en Backstage (Manifiesto)"
+              value={content.manifesto.image}
+              aspectRatio="1:1"
+              onChange={(newUrl) =>
+                setContent({ ...content, manifesto: { ...content.manifesto, image: newUrl } })
+              }
+            />
           </div>
         )}
 
@@ -286,7 +267,7 @@ export default function WebsiteContentEditorPage() {
                 <div key={prog.id} className="p-5 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col gap-4">
                   <div className="flex justify-between items-center">
                     <span className="font-mono text-xs text-purple-400 font-bold uppercase">{prog.id}</span>
-                    <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded font-mono">{prog.category}</span>
+                    <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded font-mono">{prog.category || "Taller"}</span>
                   </div>
 
                   <div className="flex flex-col gap-1">
@@ -317,20 +298,17 @@ export default function WebsiteContentEditorPage() {
                     />
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={prog.imageUrl} alt={prog.name} className="w-12 h-12 rounded object-cover border border-[#30363D]" />
-                    <input
-                      type="text"
-                      value={prog.imageUrl || ""}
-                      onChange={(e) => {
-                        const updated = [...content.programs];
-                        updated[idx].imageUrl = e.target.value;
-                        setContent({ ...content, programs: updated });
-                      }}
-                      className="flex-1 bg-[#161B22] border border-[#30363D] rounded-lg px-3 py-1.5 text-[11px] font-mono text-slate-200 focus:outline-none"
-                    />
-                  </div>
+                  {/* Reusable Image Uploader for Program */}
+                  <ImageUploader
+                    label="Póster / Portada del Taller"
+                    value={prog.imageUrl || ""}
+                    aspectRatio="16:9"
+                    onChange={(newUrl) => {
+                      const updated = [...content.programs];
+                      updated[idx].imageUrl = newUrl;
+                      setContent({ ...content, programs: updated });
+                    }}
+                  />
                 </div>
               ))}
             </div>
@@ -347,39 +325,36 @@ export default function WebsiteContentEditorPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {content.teachers.map((teacher, idx) => (
                 <div key={teacher.id} className="p-5 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col gap-4">
-                  <div className="flex items-center gap-3">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={teacher.imageUrl}
-                      alt={teacher.fullName}
-                      className="w-14 h-14 rounded-full object-cover border-2 border-purple-500/50 shrink-0"
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-semibold text-slate-300">Nombre del Docente</label>
+                    <input
+                      type="text"
+                      value={teacher.fullName}
+                      onChange={(e) => {
+                        const updated = [...content.teachers];
+                        updated[idx].fullName = e.target.value;
+                        setContent({ ...content, teachers: updated });
+                      }}
+                      className="w-full bg-[#161B22] border border-[#30363D] rounded px-3 py-1.5 text-xs text-white font-bold"
                     />
-                    <div className="flex-1 min-w-0">
-                      <input
-                        type="text"
-                        value={teacher.fullName}
-                        onChange={(e) => {
-                          const updated = [...content.teachers];
-                          updated[idx].fullName = e.target.value;
-                          setContent({ ...content, teachers: updated });
-                        }}
-                        className="w-full bg-[#161B22] border border-[#30363D] rounded px-2 py-1 text-xs text-white font-bold"
-                      />
-                      <input
-                        type="text"
-                        value={teacher.title}
-                        onChange={(e) => {
-                          const updated = [...content.teachers];
-                          updated[idx].title = e.target.value;
-                          setContent({ ...content, teachers: updated });
-                        }}
-                        className="w-full bg-transparent text-[11px] text-slate-400 mt-1 focus:outline-none"
-                      />
-                    </div>
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-[11px] font-semibold text-slate-400">Biografía Resumida</label>
+                    <label className="text-xs font-semibold text-slate-300">Cargo / Disciplina</label>
+                    <input
+                      type="text"
+                      value={teacher.title || ""}
+                      onChange={(e) => {
+                        const updated = [...content.teachers];
+                        updated[idx].title = e.target.value;
+                        setContent({ ...content, teachers: updated });
+                      }}
+                      className="w-full bg-[#161B22] border border-[#30363D] rounded px-3 py-1.5 text-xs text-slate-300"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-semibold text-slate-300">Biografía Resumida</label>
                     <textarea
                       rows={3}
                       value={teacher.bio}
@@ -392,19 +367,17 @@ export default function WebsiteContentEditorPage() {
                     />
                   </div>
 
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-mono text-slate-400 uppercase">Ruta de Foto</label>
-                    <input
-                      type="text"
-                      value={teacher.imageUrl || ""}
-                      onChange={(e) => {
-                        const updated = [...content.teachers];
-                        updated[idx].imageUrl = e.target.value;
-                        setContent({ ...content, teachers: updated });
-                      }}
-                      className="bg-[#161B22] border border-[#30363D] rounded px-2 py-1 text-[10px] font-mono text-slate-300"
-                    />
-                  </div>
+                  {/* Reusable Image Uploader for Teacher */}
+                  <ImageUploader
+                    label="Retrato Oficial del Maestro"
+                    value={teacher.imageUrl || ""}
+                    aspectRatio="3:4"
+                    onChange={(newUrl) => {
+                      const updated = [...content.teachers];
+                      updated[idx].imageUrl = newUrl;
+                      setContent({ ...content, teachers: updated });
+                    }}
+                  />
                 </div>
               ))}
             </div>
@@ -421,11 +394,6 @@ export default function WebsiteContentEditorPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {content.productions.map((prod, idx) => (
                 <div key={prod.id} className="p-5 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col gap-4">
-                  <div className="w-full h-44 rounded-lg overflow-hidden border border-[#30363D] bg-black">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={prod.imageUrl} alt={prod.title} className="w-full h-full object-cover" />
-                  </div>
-
                   <div className="flex flex-col gap-1">
                     <label className="text-xs font-semibold text-slate-300">Título de la Obra</label>
                     <input
@@ -454,19 +422,17 @@ export default function WebsiteContentEditorPage() {
                     />
                   </div>
 
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-mono text-slate-400 uppercase">Póster URL</label>
-                    <input
-                      type="text"
-                      value={prod.imageUrl || ""}
-                      onChange={(e) => {
-                        const updated = [...content.productions];
-                        updated[idx].imageUrl = e.target.value;
-                        setContent({ ...content, productions: updated });
-                      }}
-                      className="bg-[#161B22] border border-[#30363D] rounded px-2 py-1 text-[10px] font-mono text-slate-300"
-                    />
-                  </div>
+                  {/* Reusable Image Uploader for Production */}
+                  <ImageUploader
+                    label="Póster Oficial de la Obra"
+                    value={prod.imageUrl || ""}
+                    aspectRatio="3:4"
+                    onChange={(newUrl) => {
+                      const updated = [...content.productions];
+                      updated[idx].imageUrl = newUrl;
+                      setContent({ ...content, productions: updated });
+                    }}
+                  />
                 </div>
               ))}
             </div>

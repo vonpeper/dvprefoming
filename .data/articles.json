@@ -1,0 +1,26 @@
+[
+  {
+    "id": "article_disciplina_escenica",
+    "slug": "disciplina-compromiso-y-pasion-en-el-escenario",
+    "title": "Disciplina, compromiso y pasión: Los pilares de la formación escénica",
+    "content": "En DV Performing Arts concebimos el teatro musical como un catalizador de transformación personal y desarrollo profesional.",
+    "excerpt": "Cómo la preparación multidisciplinaria en canto, danza y actuación forja el carácter de los nuevos artistas.",
+    "authorName": "Diego Vieyra",
+    "publishedAt": "2026-08-06T12:00:00.000Z",
+    "status": "PUBLISHED",
+    "createdAt": "2026-08-06T12:00:00.000Z",
+    "updatedAt": "2026-08-06T12:00:00.000Z"
+  },
+  {
+    "id": "article_tecnica_vocal_berklee",
+    "slug": "claves-de-la-salud-y-tecnica-vocal-contemporanea",
+    "title": "Claves de la salud y técnica vocal contemporánea",
+    "content": "La colocación vocal, el control diafragmático y la dicción aplicada al repertorio de teatro musical moderno.",
+    "excerpt": "Estrategias prácticas para vocalistas y actores que buscan resistencia y versatilidad sobre el escenario.",
+    "authorName": "Marena Segura",
+    "publishedAt": "2026-08-06T12:00:00.000Z",
+    "status": "PUBLISHED",
+    "createdAt": "2026-08-06T12:00:00.000Z",
+    "updatedAt": "2026-08-06T12:00:00.000Z"
+  }
+]
