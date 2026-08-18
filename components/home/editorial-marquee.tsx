@@ -3,12 +3,12 @@ import React from "react";
 export default function EditorialMarquee() {
   const words = [
     "TEATRO MUSICAL",
-    "ENTRENAMIENTO ESCÉNICO",
-    "DANZA CONTEMPORÁNEA",
-    "TÉCNICA VOCAL",
-    "PRODUCCIONES EN CARTELERA",
-    "AUDICIONES 2026",
-    "BACKSTAGE EDITORIAL",
+    "CANTO & TÉCNICA VOCAL",
+    "DANZA URBANA & HIP HOP",
+    "ACTUACIÓN ESCÉNICA",
+    "AUDICIONES: SI NO ES AHORA",
+    "DISCIPLINA, COMPROMISO Y PASIÓN",
+    "LEÓN, GUANAJUATO",
   ];
 
   // Duplicate words array to enable seamless marquee looping

@@ -33,15 +33,15 @@ export default function HomeHero() {
 
           <div className="flex flex-col gap-6 max-w-md">
             <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-sans font-bold uppercase tracking-widest">
-              Formación escénica rigurosa sin solemnidad. Teatro, canto y danza como experiencias vivas en León, Guanajuato.
+              Academia de Teatro Musical en León, Gto. Teatro, Canto y Danza para formar artistas que transforman a través de la disciplina, el compromiso y la pasión.
             </p>
 
             <div className="flex flex-wrap gap-4">
               <ButtonLink href="#programas" variant="primary">
                 Ver Programas
               </ButtonLink>
-              <ButtonLink href="#contacto" variant="secondary">
-                Clase Muestra
+              <ButtonLink href="#audiciones" variant="secondary">
+                Audiciones Abiertas
               </ButtonLink>
             </div>
           </div>
@@ -53,16 +53,16 @@ export default function HomeHero() {
           <div className="w-full relative z-0 md:pl-8 lg:pl-0">
             <MediaPlaceholder
               aspectRatio="3:4"
-              title="STAGE BACKSTAGE"
-              description="FOTOGRAFÍA HERO PENDIENTE"
+              title="DV PERFORMING ARTS"
+              description="ACADEMIA DE TEATRO MUSICAL & ARTES ESCÉNICAS"
               variant="red"
               className="w-full max-w-[400px] mx-auto border-4 border-text-main shadow-[12px_12px_0px_0px_rgba(30,30,36,0.8)]"
             />
             
             {/* Superimposed label card to create layers/tension */}
             <div className="absolute -bottom-4 -left-2 md:left-2 bg-[#0A0A0C] border-2 border-border-editorial-light p-4 z-10 font-mono text-[9px] uppercase tracking-widest text-text-main max-w-[200px]">
-              <span className="text-accent-red block font-bold mb-1">REGISTRO DE CONTROL</span>
-              <span>Audiciones abiertas para la temporada otoñal. Espera convocatoria.</span>
+              <span className="text-accent-red block font-bold mb-1">CONVOCATORIA ACTIVA</span>
+              <span>Audiciones abiertas para el musical &ldquo;Si no es ahora&rdquo;. Inicia tu registro.</span>
             </div>
           </div>
         </div>

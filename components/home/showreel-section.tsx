@@ -93,7 +93,7 @@ export default function ShowreelSection() {
           <div className="relative w-full max-w-4xl bg-[#08080A] border-4 border-text-main z-10 shadow-2xl flex flex-col">
             {/* Top Bar inside player */}
             <div className="flex justify-between items-center px-4 py-3 border-b-2 border-border-editorial font-mono text-[9px] tracking-widest uppercase text-text-muted">
-              <span>[REPRODUCIENDO SHOWREEL PROVISIONAL]</span>
+              <span>[REPRODUCIENDO SHOWREEL OFICIAL &bull; DV PERFORMING ARTS]</span>
               <button
                 onClick={() => setIsPlaying(false)}
                 className="px-2 py-1 border border-border-editorial hover:border-accent-red hover:text-accent-red transition-colors text-text-main cursor-pointer"
@@ -104,20 +104,19 @@ export default function ShowreelSection() {
 
             {/* Video Player Box */}
             <div className="w-full aspect-video bg-black flex items-center justify-center relative">
-              {/* Using a high-quality free stock video for testing to show real motion! */}
-              <video
-                src="https://assets.mixkit.co/videos/preview/mixkit-woman-dancing-under-neon-lights-41983-large.mp4"
-                className="w-full h-full object-cover"
-                autoPlay
-                controls
-                loop
+              <iframe
+                src="https://www.youtube-nocookie.com/embed/NEImqBBcx1o?autoplay=1&rel=0"
+                title="DV Performing Arts Showreel"
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
               />
             </div>
 
             {/* Bottom details */}
             <div className="p-4 border-t border-border-editorial font-mono text-[8px] sm:text-[9px] text-text-muted uppercase flex justify-between items-center">
-              <span>DV PERFORMING ARTS &bull; BACKSTAGE REEL</span>
-              <span>ESTATUS: SIMULACIÓN ACTIVA</span>
+              <span>DV PERFORMING ARTS &bull; EXPERIENCIA ESCÉNICA</span>
+              <span>LEÓN, GUANAJUATO</span>
             </div>
           </div>
         </div>

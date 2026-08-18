@@ -7,12 +7,13 @@ import EditorialLabel from "@/components/ui/editorial-label";
 import MediaPlaceholder from "@/components/ui/media-placeholder";
 
 export default function ProgramsSection() {
-  const [activeFilter, setActiveFilter] = useState<"ALL" | "TEATRO" | "DANZA">("ALL");
+  const [activeFilter, setActiveFilter] = useState<"ALL" | "TEATRO" | "CANTO" | "DANZA">("ALL");
 
   // Filter programs based on state
   const filteredPrograms = mockPrograms.filter((program) => {
     if (activeFilter === "ALL") return true;
-    if (activeFilter === "TEATRO") return program.name.toLowerCase().includes("teatro");
+    if (activeFilter === "TEATRO") return program.name.toLowerCase().includes("teatro") || program.name.toLowerCase().includes("actuación");
+    if (activeFilter === "CANTO") return program.name.toLowerCase().includes("canto");
     if (activeFilter === "DANZA") return program.name.toLowerCase().includes("danza");
     return true;
   });
@@ -47,7 +48,17 @@ export default function ProgramsSection() {
                 : "bg-transparent text-text-muted hover:text-text-main border-2 border-border-editorial-light"
             }`}
           >
-            [ DISCIPLINAS TEATRO ]
+            [ TEATRO & ACTUACIÓN ]
+          </button>
+          <button
+            onClick={() => setActiveFilter("CANTO")}
+            className={`px-4 py-2 font-mono text-[10px] uppercase tracking-widest transition-all duration-200 cursor-pointer ${
+              activeFilter === "CANTO"
+                ? "bg-accent-red text-text-main font-bold border-2 border-accent-red"
+                : "bg-transparent text-text-muted hover:text-text-main border-2 border-border-editorial-light"
+            }`}
+          >
+            [ CANTO & VOZ ]
           </button>
           <button
             onClick={() => setActiveFilter("DANZA")}
@@ -57,7 +68,7 @@ export default function ProgramsSection() {
                 : "bg-transparent text-text-muted hover:text-text-main border-2 border-border-editorial-light"
             }`}
           >
-            [ CUERPO Y DANZA ]
+            [ DANZA & HIP HOP ]
           </button>
         </div>
 

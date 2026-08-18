@@ -15,17 +15,17 @@ export default function ManifestoSection() {
           </div>
 
           <h3 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter uppercase text-text-main leading-[0.82]">
-            EL ESCENARIO NO ES UN PASATIEMPO.
+            TRANSFORMAMOS A TRAVÉS
             <br />
-            ES UN <span className="bg-accent-red text-text-main px-2 py-0.5">ESPACIO DE CONFRONTACIÓN</span>.
+            DEL <span className="bg-accent-red text-text-main px-2 py-0.5">TEATRO MUSICAL</span>.
           </h3>
 
           <p className="text-sm text-text-muted leading-relaxed max-w-xl font-sans font-bold uppercase tracking-widest">
-            Creemos en la formación artística rigurosa. Moldeamos el carácter, la empatía y la presencia de la nueva generación creativa de León. Técnica, disciplina y sudor detrás del telón.
+            Enseñamos a nuestros estudiantes que la disciplina, el compromiso y la pasión son los sellos distintivos de una formación escénica exitosa, rigurosa y con propósito en León, Guanajuato.
           </p>
 
           <div className="border-t border-border-editorial-light pt-6 text-[10px] font-mono text-text-muted uppercase tracking-wider">
-            <span>REGISTRO DE PROPUESTA VISUAL EN DESARROLLO &bull; ACTO II</span>
+            <span>MISIÓN & FILOSOFÍA EDUCATIVA &bull; DV PERFORMING ARTS</span>
           </div>
         </div>
 

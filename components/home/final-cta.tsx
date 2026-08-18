@@ -22,30 +22,29 @@ export default function FinalCta() {
         </h2>
 
         <p className="text-xs sm:text-sm text-text-main/80 leading-relaxed max-w-xl font-sans font-bold uppercase tracking-widest mb-4">
-          Solicita informes sobre nuestras disciplinas, costos y agenda una sesión muestra en nuestras instalaciones de León, Guanajuato.
+          Solicita informes sobre nuestras disciplinas, inscripciones y agenda una sesión en nuestras instalaciones en Paseo de los Insurgentes #1506, Jardines del Moral, León, Gto.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4">
-          {/* Button link to email with inverted background color theme */}
           <ButtonLink
-            href="mailto:info-pendiente@dvperformingarts.com"
+            href="https://wa.me/524776558156?text=Hola%20DV%20Performing%20Arts,%20me%20gustaría%20solicitar%20informes%20de%20clases%20e%20inscripciones"
             variant="secondary"
             className="bg-background-main text-text-main border-background-main hover:bg-transparent hover:text-background-main hover:border-background-main"
           >
-            Solicitar Información
+            WhatsApp: 477 655 8156
           </ButtonLink>
           <ButtonLink
-            href="#programas"
+            href="mailto:contacto@dvperformingarts.com"
             variant="secondary"
             className="bg-transparent text-text-main border-text-main hover:bg-text-main hover:text-accent-red"
           >
-            Ver Programas Académicos
+            contacto@dvperformingarts.com
           </ButtonLink>
         </div>
 
         {/* Technical Notice */}
-        <span className="font-mono text-[8px] text-text-main/50 mt-8 uppercase tracking-widest block">
-          * LOS ENLACES DE CONTACTO APUNTAN A BUZONES DE PRUEBA Y SECCIONES INTERNAS
+        <span className="font-mono text-[8px] text-text-main/70 mt-8 uppercase tracking-widest block">
+          ATENCIÓN A NUESTROS ARTISTAS &bull; HORARIOS: L-V 16:00 - 20:00 | SÁB 10:00 - 15:00
         </span>
 
       </div>

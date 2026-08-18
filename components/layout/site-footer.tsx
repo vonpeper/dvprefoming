@@ -47,38 +47,63 @@ export default function SiteFooter() {
           </ul>
         </div>
 
-        {/* Contact column with neutral placeholders */}
+        {/* Contact column */}
         <div className="flex flex-col gap-4">
           <span className="font-mono text-[10px] tracking-widest text-accent-red uppercase font-semibold">
             Ubicación y Contacto
           </span>
           <ul className="flex flex-col gap-2.5 text-xs text-text-muted font-sans">
-            <li className="italic">
-              <strong>Dirección:</strong> León, Guanajuato (Calle y número pendientes de información).
+            <li>
+              <strong className="text-text-main">Dirección:</strong> Paseo de los Insurgentes #1506, Col. Jardines del Moral, CP 37160, León, Gto.
             </li>
-            <li className="italic">
-              <strong>Teléfono:</strong> Teléfono de contacto pendiente de entrega.
+            <li>
+              <strong className="text-text-main">Teléfono:</strong>{" "}
+              <a href="tel:4776558156" className="hover:text-accent-red transition-colors">
+                477 655 8156
+              </a>
             </li>
-            <li className="italic">
-              <strong>Email:</strong> Correo institucional pendiente de entrega.
+            <li>
+              <strong className="text-text-main">Email:</strong>{" "}
+              <a href="mailto:contacto@dvperformingarts.com" className="hover:text-accent-red transition-colors">
+                contacto@dvperformingarts.com
+              </a>
+            </li>
+            <li>
+              <strong className="text-text-main">Horarios:</strong> L-V 16:00 - 20:00 | Sáb 10:00 - 15:00
             </li>
           </ul>
         </div>
 
-        {/* Social Media column with placeholders */}
+        {/* Social Media column */}
         <div className="flex flex-col gap-4">
           <span className="font-mono text-[10px] tracking-widest text-accent-red uppercase font-semibold">
-            Redes Sociales
+            Canales Directos
           </span>
           <ul className="flex flex-col gap-2.5 text-xs text-text-muted font-sans">
-            <li className="italic">
-              <span className="opacity-50">Instagram (Enlace por confirmar)</span>
+            <li>
+              <a
+                href="https://wa.me/524776558156?text=Hola%20DV%20Performing%20Arts,%20me%20gustaría%20solicitar%20informes"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-accent-red transition-colors font-medium flex items-center gap-1.5"
+              >
+                <span>WhatsApp: 477 655 8156</span>
+              </a>
             </li>
-            <li className="italic">
-              <span className="opacity-50">Facebook (Enlace por confirmar)</span>
+            <li>
+              <a
+                href="https://dvperformingarts.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-accent-red transition-colors"
+              >
+                Sitio Web: dvperformingarts.com
+              </a>
             </li>
-            <li className="italic">
-              <span className="opacity-50">WhatsApp (Enlace por confirmar)</span>
+            <li>
+              <Link href="#audiciones" className="hover:text-accent-red transition-colors">
+                Convocatoria: &ldquo;Si no es ahora&rdquo;
+              </Link>
             </li>
           </ul>
         </div>

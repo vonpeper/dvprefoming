@@ -28,17 +28,17 @@ export default function AuditionFeature() {
           <div className="flex-1 flex flex-col justify-between gap-6">
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3">
-                <EditorialLabel text="Activo" variant="outline" />
+                <EditorialLabel text="Convocatoria Abierta" variant="accent" />
                 <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em]">
-                  Ingreso Escénico Provisorio
+                  Temporada de Teatro Musical
                 </span>
               </div>
 
               <h3 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold uppercase tracking-tighter text-text-main leading-[0.82]">
-                Convocatoria Abierta: Simulador de Admisión
+                Audiciones: &ldquo;Si No Es Ahora&rdquo;
               </h3>
               <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-sans font-bold uppercase tracking-widest max-w-xl">
-                Prueba nuestro simulador interactivo de admisiones. Registra tus datos para ver en tiempo real cómo el backend atómico de Next.js procesará tu folio de seguimiento único.
+                Buscamos cantantes, actores y bailarines apasionados para formar parte del elenco y ensamble de nuestra próxima producción musical en León, Gto.
               </p>
             </div>
 
@@ -46,41 +46,43 @@ export default function AuditionFeature() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[9px] font-mono uppercase tracking-widest text-text-muted">
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 bg-accent-red" />
-                <span>Requisitos de disciplina y edad</span>
+                <span>Teatro Musical, Canto & Danza</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 bg-accent-red" />
-                <span>Fechas oficiales de evaluación</span>
+                <span>Edades: Niños, Jóvenes y Adultos</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 bg-accent-red" />
-                <span>Carga de portafolios y CV</span>
+                <span>Sede: Jardines del Moral, León</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 bg-accent-red" />
-                <span>Folios atómicos transaccionales</span>
+                <span>Atención: 477 655 8156</span>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Inactive/Deactivated Simulator Message */}
+          {/* Right Column: Direct Registration Card */}
           <div className="w-full lg:w-[420px] flex flex-col bg-[#121215] border-2 border-border-editorial-light p-6 justify-center items-center gap-4 text-center min-h-[300px]">
             <span className="font-mono text-[10px] tracking-widest text-accent-red uppercase font-bold border-b border-border-editorial w-full block">
-              SISTEMA DE ADMISIÓN
+              REGISTRO DE ASPIRANTES
             </span>
-            <div className="text-3xl">⚠️</div>
-            <span className="font-mono text-[9px] text-accent-yellow uppercase font-bold tracking-widest">
-              SIMULADOR DE AUDICIONES DESACTIVADO
+            <div className="text-3xl">🎭</div>
+            <span className="font-mono text-[9px] text-text-main uppercase font-bold tracking-widest">
+              POSTULACIÓN DIRECTA
             </span>
-            <p className="text-[10px] font-sans text-text-muted uppercase tracking-wider leading-relaxed max-w-[260px]">
-              El prototipo interactivo de admisiones ha sido desactivado temporalmente por auditoría técnica.
+            <p className="text-[10px] font-sans text-text-muted uppercase tracking-wider leading-relaxed max-w-[280px]">
+              Envía tu información de contacto y disciplina de interés a nuestro equipo de coordinación artística.
             </p>
-            <button
-              disabled
-              className="w-full mt-4 py-3.5 bg-background-main text-text-muted border-2 border-border-editorial-light font-sans text-[11px] uppercase tracking-[0.18em] font-bold cursor-not-allowed"
+            <a
+              href="https://wa.me/524776558156?text=Hola%20DV%20Performing%20Arts,%20deseo%20registrarme%20para%20la%20audición%20del%20musical%20Si%20no%20es%20ahora"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full mt-4 py-3.5 bg-accent-red text-text-main border-2 border-accent-red hover:bg-transparent hover:text-accent-red transition-colors font-sans text-[11px] uppercase tracking-[0.18em] font-bold block text-center"
             >
-              Registro Inactivo
-            </button>
+              Registrarme por WhatsApp
+            </a>
           </div>
 
         </div>
