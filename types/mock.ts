@@ -9,6 +9,7 @@ export interface Program {
   id: string;
   slug: string;
   name: string;
+  category?: string;
   description: string;
   ageGroup: string; // e.g. "Niños", "Jóvenes", "Adultos"
   scheduleDescription: string; // e.g. "Lunes y Miércoles 17:00 - 19:00"
@@ -22,6 +23,7 @@ export interface Teacher {
   id: string;
   slug: string;
   fullName: string;
+  title?: string; // e.g. "Director Fundador & Maestro de Canto"
   bio: string;
   specialties: string[]; // e.g. ["Danza Clásica", "Teatro Musical"]
   imageUrl?: string;
@@ -46,14 +48,19 @@ export interface Production {
 
 export interface AuditionRegistration {
   id: string;
-  folio: string; // Structured sequence string, generated transactionally in the future
+  folio: string; // Structured sequence string (e.g. AUD-2026-DV-0042)
   fullName: string;
   email: string;
   phone: string;
-  birthDate: Date;
+  birthDate?: string | Date;
+  age?: number | string;
   programId: string; // Reference to Program.id
+  programName?: string; // e.g. "Teatro Musical Integral"
+  preferredSchedule?: string; // e.g. "Turno Vespertino 16:00 - 20:00"
   experienceNotes: string;
-  status: "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "DRAFT";
+  status: "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "CONFIRMED" | "DRAFT";
+  whatsappNotified?: boolean;
+  notes?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -62,9 +69,15 @@ export interface Article {
   id: string;
   slug: string;
   title: string;
-  content: string; // Rich-text or markdown body from Manifiesto 21
+  content: string; // Structured blocks JSON or HTML
   excerpt: string;
   authorName: string;
+  category?: string;
+  featuredImage?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  ogImage?: string;
+  tags?: string[];
   publishedAt: Date | null;
   status: EntityStatus;
   createdAt: Date;

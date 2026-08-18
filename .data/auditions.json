@@ -1,0 +1,30 @@
+[
+  {
+    "id": "aud_1787040377388_h4q16",
+    "folio": "AUD-2026-DV-0002",
+    "fullName": "Mariana Valenzuela",
+    "email": "mariana@test.com",
+    "phone": "4771234567",
+    "programId": "prog_teatro_musical",
+    "programName": "Teatro Musical Integral",
+    "preferredSchedule": "Turno Vespertino (16:00 - 20:00)",
+    "experienceNotes": "3 años de canto coral y danza jazz",
+    "status": "PENDING_REVIEW",
+    "whatsappNotified": true,
+    "createdAt": "2026-08-18T08:06:17.388Z",
+    "updatedAt": "2026-08-18T08:06:17.388Z"
+  },
+  {
+    "id": "audition_registro_activo",
+    "folio": "AUD-2026-DV-001",
+    "fullName": "Aspirante a Teatro Musical",
+    "email": "contacto@dvperformingarts.com",
+    "phone": "4776558156",
+    "birthDate": "2026-08-06T12:00:00.000Z",
+    "programId": "prog_teatro_musical",
+    "experienceNotes": "Audición abierta para 'Si no es ahora' y talleres de alto rendimiento.",
+    "status": "APPROVED",
+    "createdAt": "2026-08-06T12:00:00.000Z",
+    "updatedAt": "2026-08-06T12:00:00.000Z"
+  }
+]

@@ -1,0 +1,189 @@
+import { MessagePayload, SendMessageResult, AuditionNotificationData, EvolutionInstanceStatus } from "../types";
+
+/**
+ * Format phone number to international E.164 without leading plus
+ * For Mexico (10 digits starting with e.g. 477), formats to 52477XXXXXXX
+ */
+export function formatMexicanPhoneNumber(phone: string): string {
+  let cleaned = phone.replace(/\D/g, "");
+  
+  // If 10 digits (Mexican local number), prepend 52
+  if (cleaned.length === 10) {
+    cleaned = `52${cleaned}`;
+  }
+  // If 12 digits starting with 521, remove the 1 for modern WhatsApp API (52XXXXXXXXXX)
+  else if (cleaned.length === 13 && cleaned.startsWith("521")) {
+    cleaned = `52${cleaned.substring(3)}`;
+  }
+  
+  return cleaned;
+}
+
+/**
+ * Sends a WhatsApp text message via Evolution API (or simulated in development)
+ */
+export async function sendWhatsAppMessage(payload: MessagePayload): Promise<SendMessageResult> {
+  const apiUrl = process.env.EVOLUTION_API_URL?.trim();
+  const apiKey = process.env.EVOLUTION_API_KEY?.trim();
+  const instance = process.env.EVOLUTION_INSTANCE?.trim() || "dv_instance";
+
+  const formattedNumber = formatMexicanPhoneNumber(payload.to);
+  const now = new Date().toISOString();
+
+  // If credentials are not configured or are placeholder, perform clean simulated response
+  if (!apiUrl || apiUrl.includes("example.com") || !apiKey || apiKey.includes("apikey_")) {
+    console.log(`[EVOLUTION API SIMULATED] Message sent to ${formattedNumber}:`);
+    console.log(payload.body);
+    return {
+      success: true,
+      messageId: `sim_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      simulated: true,
+      timestamp: now,
+    };
+  }
+
+  try {
+    const cleanUrl = apiUrl.replace(/\/$/, "");
+    const endpoint = `${cleanUrl}/message/sendText/${instance}`;
+
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": apiKey,
+      },
+      body: JSON.stringify({
+        number: formattedNumber,
+        text: payload.body,
+        options: {
+          delay: 1200,
+          presence: "composing",
+        },
+      }),
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error(`[EVOLUTION API ERROR] ${res.status}: ${errorText}`);
+      return {
+        success: false,
+        error: `Evolution API HTTP ${res.status}: ${errorText}`,
+        timestamp: now,
+      };
+    }
+
+    const data = await res.json();
+    return {
+      success: true,
+      messageId: data?.key?.id || data?.id || `msg_${Date.now()}`,
+      simulated: false,
+      timestamp: now,
+    };
+  } catch (error) {
+    console.error("[EVOLUTION API EXCEPTION]", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Error de conexión con Evolution API",
+      timestamp: now,
+    };
+  }
+}
+
+/**
+ * Builds and sends the official Audition Confirmation WhatsApp message
+ */
+export async function sendAuditionConfirmation(data: AuditionNotificationData): Promise<SendMessageResult> {
+  const messageBody = `🎭 *¡REGISTRO CONFIRMADO A AUDICIONES DV PERFORMING ARTS!* 🎭
+
+¡Hola *${data.fullName.trim()}*! Hemos recibido con éxito tu postulación para audicionar en DV Performing Arts.
+
+📋 *Folio Único de Aspirante:* \`${data.folio}\`
+🎭 *Disciplina / Taller:* ${data.programName}
+📍 *Sede:* Paseo de los Insurgentes #1506, Col. Jardines del Moral, CP 37160, León, Gto.
+⏰ *Turno / Horario:* ${data.auditionTime || "Horario de clases (L-V 16:00 - 20:00 / Sáb 10:00 - 15:00)"}
+
+✨ *Recomendaciones esenciales para el día de tu audición:*
+1. 🕒 *Puntualidad:* Llegar 15 minutos antes de tu cita programada.
+2. 👕 *Vestuario:* Ropa cómoda de trabajo escénico (color negro de preferencia).
+3. 🎵 *Canto / Teatro:* Traer pista musical descargada en tu dispositivo o memorizada.
+4. 👟 *Danza:* Calzado adecuado según disciplina (tenis limpios o zapatillas) y botella de agua.
+5. 📄 *Acceso:* Presenta tu Folio de aspirante (\`${data.folio}\`) al llegar a recepción.
+
+Si requieres reagendar o tienes alguna duda, responde directamente a este WhatsApp o comunícate al 477 655 8156.
+
+_DV Performing Arts &bull; Disciplina, Compromiso y Pasión._`;
+
+  return sendWhatsAppMessage({
+    to: data.phone,
+    body: messageBody,
+  });
+}
+
+/**
+ * Builds and sends the Audition Reminder WhatsApp message (prior to audition day)
+ */
+export async function sendAuditionReminder(data: AuditionNotificationData): Promise<SendMessageResult> {
+  const messageBody = `🔔 *RECORDATORIO DE AUDICIÓN &bull; DV PERFORMING ARTS*
+
+Estimado/a *${data.fullName.trim()}*, te recordamos que tu audición para *${data.programName}* está programada:
+
+📋 *Folio de Acceso:* \`${data.folio}\`
+📅 *Fecha:* ${data.auditionDate || "Próxima sesión de audiciones"}
+⏰ *Horario:* ${data.auditionTime || "16:00 hrs"}
+📍 *Ubicación:* Paseo de los Insurgentes #1506, Col. Jardines del Moral, León, Gto.
+
+Recuerda presentarte con ropa cómoda de trabajo escénico e hidratación. ¡Te esperamos para darlo todo en el escenario! 🌟`;
+
+  return sendWhatsAppMessage({
+    to: data.phone,
+    body: messageBody,
+  });
+}
+
+/**
+ * Checks connectivity and state of Evolution API instance
+ */
+export async function checkEvolutionInstance(): Promise<EvolutionInstanceStatus> {
+  const apiUrl = process.env.EVOLUTION_API_URL?.trim();
+  const apiKey = process.env.EVOLUTION_API_KEY?.trim();
+  const instance = process.env.EVOLUTION_INSTANCE?.trim() || "dv_instance";
+
+  if (!apiUrl || apiUrl.includes("example.com") || !apiKey || apiKey.includes("apikey_")) {
+    return {
+      connected: true,
+      instanceName: instance,
+      state: "open",
+      profileName: "DV Performing Arts (Simulación Local)",
+    };
+  }
+
+  try {
+    const cleanUrl = apiUrl.replace(/\/$/, "");
+    const res = await fetch(`${cleanUrl}/instance/connectionState/${instance}`, {
+      method: "GET",
+      headers: {
+        "apikey": apiKey,
+      },
+      cache: "no-store",
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const state = data?.instance?.state || data?.state || "close";
+      return {
+        connected: state === "open",
+        instanceName: instance,
+        state: state === "open" ? "open" : "close",
+        profileName: "DV Performing Arts",
+      };
+    }
+  } catch (err) {
+    console.error("[EVOLUTION CHECK ERROR]", err);
+  }
+
+  return {
+    connected: false,
+    instanceName: instance,
+    state: "close",
+  };
+}
