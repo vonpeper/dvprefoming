@@ -1,0 +1,32 @@
+services:
+  dvperforming-prev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dvperforming-prev
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dvperforming-prev.rule=Host(`prev.dvperformingarts.com`)"
+      - "traefik.http.routers.dvperforming-prev.entrypoints=websecure"
+      - "traefik.http.routers.dvperforming-prev.tls.certresolver=letsencrypt"
+      - "traefik.http.services.dvperforming-prev.loadbalancer.server.port=3000"
+      - "traefik.docker.network=dokploy-network"
+    networks:
+      - default
+      - dokploy-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  dokploy-network:
+    external: true
