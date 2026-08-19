@@ -387,6 +387,35 @@ export default function ProductionsDashboardPage() {
                 </div>
               </div>
 
+              {/* Audition Deadline & Event Date (Vigencia Temporal) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-purple-300 flex items-center justify-between">
+                    <span>📅 Fecha Límite de Audición</span>
+                    <span className="text-[10px] text-slate-500 font-mono">Cierre automático</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={editingProd.auditionDeadline || ""}
+                    onChange={(e) => setEditingProd({ ...editingProd, auditionDeadline: e.target.value })}
+                    className="bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none font-mono"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-slate-300 flex items-center justify-between">
+                    <span>🎭 Fecha de Estreno / Función</span>
+                    <span className="text-[10px] text-slate-500 font-mono">Día del evento</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={editingProd.eventDate || ""}
+                    onChange={(e) => setEditingProd({ ...editingProd, eventDate: e.target.value })}
+                    className="bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none font-mono"
+                  />
+                </div>
+              </div>
+
               {/* Ticket URL (External ticketing provider) */}
               <div className="flex flex-col gap-1.5">
                 <label className="font-semibold text-slate-300 flex items-center justify-between">

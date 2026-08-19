@@ -55,7 +55,11 @@ export default function ProductionsSection() {
         {/* ================= BILLBOARD GRID (WIDE / CINEMATIC ARTWORK CARDS) ================= */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {productions.map((production) => {
-            const isAudition = production.isAuditionActive;
+            const hasActiveAudition = Boolean(
+              production.isAuditionActive &&
+                (!production.auditionDeadline ||
+                  new Date(production.auditionDeadline) >= new Date(new Date().setHours(0, 0, 0, 0)))
+            );
             const ticketLink = production.ticketUrl || "https://wa.me/524776558156?text=Hola%20DV%20Performing%20Arts,%20quiero%20comprar%20tickets%20para%20la%20obra";
 
             return (
@@ -82,9 +86,9 @@ export default function ProductionsSection() {
                       {production.season || "TEMPORADA 2026"}
                     </span>
 
-                    {isAudition ? (
-                      <span className="px-3 py-1 bg-gradient-to-r from-rose-600 to-red-600 text-white font-mono text-[10px] uppercase font-bold tracking-wider rounded-full flex items-center gap-1 shadow-lg animate-pulse">
-                        <span>★</span> Audiciones Abiertas
+                    {hasActiveAudition ? (
+                      <span className="px-3 py-1 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white font-mono text-[10px] uppercase font-bold tracking-wider rounded-full flex items-center gap-1 shadow-lg animate-pulse">
+                        <span>★</span> Convocatoria Abierta
                       </span>
                     ) : (
                       <span className="px-3 py-1 bg-zinc-900/90 border border-zinc-700 text-zinc-300 font-mono text-[10px] uppercase tracking-wider rounded-full">

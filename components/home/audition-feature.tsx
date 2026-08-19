@@ -32,19 +32,41 @@ export default function AuditionFeature() {
   } | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // Helper to verify whether an audition call is temporal / valid
+  const isAuditionValid = (p: Production) => {
+    if (p.isAuditionActive === false) return false;
+    if (p.productionStatus === "ARCHIVED") return false;
+    if (p.auditionDeadline) {
+      const deadline = new Date(p.auditionDeadline);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (deadline < today) return false; // Expired
+    }
+    return true;
+  };
+
   useEffect(() => {
     fetch("/api/productions")
       .then((res) => res.json())
       .then((data) => {
         if (data?.productions && data.productions.length > 0) {
-          setProductions(data.productions);
-          const active = data.activeAudition || data.productions[0];
-          setActiveProduction(active);
-          setFormData((prev) => ({
-            ...prev,
-            productionId: active.id,
-            productionName: active.title,
-          }));
+          const allProds: Production[] = data.productions;
+          // Filter productions whose deadline has not expired and have active auditions
+          const validProds = allProds.filter(isAuditionValid);
+          const listToUse = validProds.length > 0 ? validProds : allProds;
+
+          setProductions(listToUse);
+
+          const defaultActive = listToUse.find((p) => p.isAuditionActive) || listToUse[0];
+          setActiveProduction(defaultActive);
+
+          if (defaultActive) {
+            setFormData((prev) => ({
+              ...prev,
+              productionId: defaultActive.id,
+              productionName: defaultActive.title,
+            }));
+          }
         }
       })
       .catch((err) => console.error(err));
@@ -125,7 +147,7 @@ export default function AuditionFeature() {
   };
 
   return (
-    <section id="audiciones" className="relative w-full py-20 px-6 border-b-4 border-border-editorial" aria-labelledby="heading-audiciones">
+    <section id="audiciones" className="relative w-full py-20 px-4 sm:px-6 border-b-4 border-border-editorial" aria-labelledby="heading-audiciones">
       <div className="mx-auto max-w-4xl flex flex-col items-center">
         
         {/* ================= URBAN STREET DANCE BRUSH GRAFFITI HEADER ================= */}
@@ -190,7 +212,7 @@ export default function AuditionFeature() {
                 <span className="text-sm font-bold text-white font-display">DV Performing Arts</span>
                 <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  En línea &bull; Registro de Convocatoria
+                  En línea &bull; Registro Oficial
                 </span>
               </div>
             </div>
@@ -200,15 +222,36 @@ export default function AuditionFeature() {
           {/* Content Inside Smartphone */}
           <div className="flex flex-col gap-3 min-h-[420px]">
             
-            {/* Incoming Message 1 (Greeting) */}
+            {/* Incoming Message 1 (Dynamic Greeting synced with selected production) */}
             <div className="bg-[#1C1C26] border border-[#2B2B3A] rounded-2xl rounded-tl-sm p-4 text-xs text-zinc-200 leading-relaxed shadow-sm text-left">
               <p>
-                ¡Hola! 🎭 Queremos conocer tu talento. Completa tu ficha de registro para asignarte tu folio oficial y horario de audición:
+                ¡Hola! 🎭 Queremos conocer tu talento. Completa tu registro para asignarte tu folio oficial y cita de audición:
               </p>
-              <div className="mt-2 p-2 bg-black/50 rounded-xl border border-purple-500/30 flex items-center gap-2">
-                <span className="text-purple-400 font-bold">🎬 Obra en Curso:</span>
-                <span className="text-white font-semibold line-clamp-1">{activeProduction?.title || "Si No Es Ahora (El Musical)"}</span>
-              </div>
+              
+              {/* Dynamic Active Production Banner that reacts to dropdown selection */}
+              {activeProduction ? (
+                <div className="mt-3 p-3 bg-black/60 rounded-xl border border-purple-500/40 flex flex-col gap-1.5 shadow-inner">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-purple-400 font-bold flex items-center gap-1.5 text-[11px]">
+                      <span>🎬 Convocatoria Activa:</span>
+                    </span>
+                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
+                      ● Abierta
+                    </span>
+                  </div>
+                  <span className="text-white font-bold text-sm tracking-tight">{activeProduction.title}</span>
+                  <div className="flex items-center justify-between text-[10px] text-zinc-400 font-mono pt-1 border-t border-[#252535]">
+                    <span>{activeProduction.auditionDates || activeProduction.season || "Temporada 2026"}</span>
+                    {activeProduction.auditionDeadline && (
+                      <span className="text-purple-300">Límite: {activeProduction.auditionDeadline}</span>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-3 p-3 bg-black/60 rounded-xl border border-amber-500/40 text-amber-300 text-xs">
+                  ★ Convocatoria General para Próximos Montajes
+                </div>
+              )}
             </div>
 
             {submittedData ? (
@@ -234,7 +277,7 @@ export default function AuditionFeature() {
                   <div className="bg-black/70 border border-purple-500/50 rounded-xl p-4 text-center flex flex-col gap-1 my-1 shadow-inner">
                     <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider">Tu Folio Único Oficial:</span>
                     <span className="font-mono text-2xl font-black text-purple-300 tracking-widest">{submittedData.folio}</span>
-                    <span className="text-[10px] text-zinc-400 mt-0.5">Presenta este código al presentarte en recepción</span>
+                    <span className="text-[10px] text-zinc-400 mt-0.5">Presenta este código al llegar a recepción</span>
                   </div>
 
                   <div className="text-[11px] text-zinc-300 leading-relaxed border-t border-[#2B2B3A] pt-2 flex items-center gap-2">
@@ -260,26 +303,28 @@ export default function AuditionFeature() {
                   </div>
                 )}
 
-                {/* 1. Obra en Convocatoria */}
+                {/* 1. Obra en Convocatoria (Selector reactivo) */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-semibold text-purple-300">
-                    Obra / Puesta en Escena *
+                  <label className="text-[11px] font-semibold text-purple-300 flex justify-between items-center">
+                    <span>Obra / Puesta en Escena *</span>
+                    <span className="text-[9px] text-zinc-400 font-mono">Solo convocatorias vigentes</span>
                   </label>
                   <select
                     value={formData.productionId}
                     onChange={(e) => {
-                      const selected = productions.find((p) => p.id === e.target.value);
-                      setFormData({
-                        ...formData,
+                      const selected = productions.find((p) => p.id === e.target.value) || null;
+                      setActiveProduction(selected);
+                      setFormData((prev) => ({
+                        ...prev,
                         productionId: e.target.value,
-                        productionName: selected ? selected.title : "Si No Es Ahora",
-                      });
+                        productionName: selected ? selected.title : "Convocatoria General",
+                      }));
                     }}
                     className="w-full bg-[#0D0D12] border border-[#2D2D3C] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer font-medium"
                   >
                     {productions.map((prod) => (
                       <option key={prod.id} value={prod.id} className="bg-[#14141C] text-white">
-                        {prod.title} ({prod.season || "2026"}) {prod.isAuditionActive ? "★ Activa" : ""}
+                        {prod.title} ({prod.season || "2026"})
                       </option>
                     ))}
                   </select>
@@ -300,32 +345,23 @@ export default function AuditionFeature() {
                   />
                 </div>
 
-                {/* 3. WhatsApp & Edad */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[11px] font-semibold text-zinc-300">
-                      WhatsApp (10 dígitos) *
-                    </label>
+                {/* 3. Teléfono / WhatsApp (10 dígitos) */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] font-semibold text-zinc-300">
+                    Teléfono / WhatsApp (10 dígitos) *
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="bg-[#0D0D12] border border-[#2D2D3C] px-2.5 py-2 rounded-xl text-zinc-400 font-mono text-xs">
+                      🇲🇽 +52
+                    </span>
                     <input
                       type="tel"
                       required
-                      placeholder="Ej. 477 123 4567"
+                      maxLength={14}
+                      placeholder="477 123 4567"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full bg-[#0D0D12] border border-[#2D2D3C] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[11px] font-semibold text-zinc-300">
-                      Edad / Nacimiento
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Ej. 19 años o DD/MM/AAAA"
-                      value={formData.age}
-                      onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                      className="w-full bg-[#0D0D12] border border-[#2D2D3C] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none"
+                      className="flex-1 bg-[#0D0D12] border border-[#2D2D3C] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none font-mono"
                     />
                   </div>
                 </div>
@@ -337,83 +373,83 @@ export default function AuditionFeature() {
                   </label>
                   <input
                     type="email"
-                    placeholder="nombre@ejemplo.com"
+                    placeholder="aspirante@ejemplo.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full bg-[#0D0D12] border border-[#2D2D3C] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none"
                   />
                 </div>
 
-                {/* 5. Disciplina a Audicionar */}
+                {/* 5. Taller / Disciplina Principal */}
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-semibold text-zinc-300">
-                    Disciplina a audicionar *
+                    Taller o Disciplina de Interés *
                   </label>
                   <select
                     value={formData.programId}
                     onChange={(e) => {
-                      const selected = programOptions.find((p) => p.id === e.target.value);
+                      const selectedProg = programOptions.find((p) => p.id === e.target.value);
                       setFormData({
                         ...formData,
                         programId: e.target.value,
-                        programName: selected ? selected.name : "Teatro Musical Integral",
+                        programName: selectedProg ? selectedProg.name : "Teatro Musical Integral",
                       });
                     }}
-                    className="w-full bg-[#0D0D12] border border-[#2D2D3C] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer font-medium"
+                    className="w-full bg-[#0D0D12] border border-[#2D2D3C] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer"
                   >
-                    {programOptions.map((opt) => (
-                      <option key={opt.id} value={opt.id} className="bg-[#14141C] text-white">
-                        {opt.name}
+                    {programOptions.map((prog) => (
+                      <option key={prog.id} value={prog.id} className="bg-[#14141C] text-white">
+                        {prog.name}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                {/* 6. Turno Preferido */}
+                {/* 6. Horario Preferido */}
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-semibold text-zinc-300">
-                    Turno preferido de audición
+                    Disponibilidad de Horario *
                   </label>
                   <select
                     value={formData.preferredSchedule}
                     onChange={(e) => setFormData({ ...formData, preferredSchedule: e.target.value })}
-                    className="w-full bg-[#0D0D12] border border-[#2D2D3C] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer font-medium"
+                    className="w-full bg-[#0D0D12] border border-[#2D2D3C] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer"
                   >
-                    {scheduleOptions.map((s, idx) => (
-                      <option key={idx} value={s} className="bg-[#14141C] text-white">
-                        {s}
+                    {scheduleOptions.map((sch, sIdx) => (
+                      <option key={sIdx} value={sch} className="bg-[#14141C] text-white">
+                        {sch}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                {/* 7. Experiencia o Comentarios */}
+                {/* 7. Experiencia previa (opcional) */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-semibold text-zinc-300">
-                    Experiencia o comentarios (Opcional)
+                  <label className="text-[11px] font-semibold text-zinc-400">
+                    Experiencia previa o notas (opcional)
                   </label>
                   <textarea
                     rows={2}
-                    placeholder="Cuéntanos brevemente si has tomado clases previas de canto, danza, teatro o si eres principiante..."
+                    placeholder="Ej. 2 años en danza urbana, estudios de canto..."
                     value={formData.experienceNotes}
                     onChange={(e) => setFormData({ ...formData, experienceNotes: e.target.value })}
                     className="w-full bg-[#0D0D12] border border-[#2D2D3C] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none resize-none"
                   />
                 </div>
 
-                {/* Submit button inside chat */}
+                {/* Submit CTA Button */}
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full mt-2 py-3.5 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-purple-600 hover:from-purple-500 hover:to-fuchsia-500 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-purple-950/60 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-purple-700 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold uppercase tracking-wider text-xs shadow-xl shadow-purple-950/60 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-1"
                 >
                   {loading ? (
-                    <>
-                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Generando tu Folio y Notificación...</span>
-                    </>
+                    <span>Generando Folio Oficial...</span>
                   ) : (
-                    <span>Enviar Registro de Audición ✨</span>
+                    <>
+                      <span>★</span>
+                      <span>Registrar Mi Audición &rarr;</span>
+                    </>
                   )}
                 </button>
               </form>
@@ -421,26 +457,22 @@ export default function AuditionFeature() {
 
           </div>
 
-          {/* Bottom Home Indicator Bar */}
-          <div className="w-32 h-1 bg-zinc-600 rounded-full mx-auto mt-4" />
+          {/* Phone Bottom Home Bar */}
+          <div className="w-32 h-1 bg-white/20 rounded-full mx-auto mt-4" />
+
         </div>
 
-        {/* ================= ACTION PILL BUTTONS BELOW PHONE ================= */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
+        {/* WhatsApp Direct Help Link */}
+        <div className="mt-8 text-center text-xs text-zinc-400">
+          ¿Dudas sobre el proceso de audición?{" "}
           <a
-            href="https://wa.me/524776558156?text=Hola%20DV%20Performing%20Arts,%20quiero%20informes%20sobre%20las%20audiciones"
+            href="https://wa.me/524776558156?text=Hola,%20tengo%20dudas%20sobre%20las%20audiciones"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-8 py-3.5 bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/40 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 flex items-center gap-2 shadow-lg shadow-purple-950/30"
+            className="text-purple-400 hover:text-purple-300 font-semibold underline underline-offset-4 inline-flex items-center gap-1"
           >
-            <span>💬 Escríbenos en WhatsApp</span>
-          </a>
-
-          <a
-            href="#producciones"
-            className="px-8 py-3.5 bg-transparent hover:bg-white/10 text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500 rounded-full text-xs font-semibold uppercase tracking-wider transition-all duration-200"
-          >
-            Ver Obras en Cartelera
+            <span>Escríbenos por WhatsApp (477 655 8156)</span>
+            <span>&rarr;</span>
           </a>
         </div>
 
