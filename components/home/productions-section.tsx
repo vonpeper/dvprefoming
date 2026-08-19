@@ -65,7 +65,8 @@ export default function ProductionsSection() {
             return (
               <article
                 key={production.id}
-                className="group relative bg-[#0D0D12]/95 backdrop-blur-md border-2 border-[#202028] hover:border-rose-500/80 rounded-3xl overflow-hidden flex flex-col justify-between transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_45px_rgba(225,29,72,0.2)] shadow-xl"
+                onClick={() => setSelectedProduction(production)}
+                className="group relative bg-[#0D0D12]/95 backdrop-blur-md border-2 border-[#202028] hover:border-rose-500/80 rounded-3xl overflow-hidden flex flex-col justify-between transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_45px_rgba(225,29,72,0.25)] shadow-xl cursor-pointer"
               >
                 {/* Wide 16:10 Cinematic Artwork Container */}
                 <div className="w-full relative aspect-[16/10] bg-black overflow-hidden border-b border-[#202028]">
@@ -98,7 +99,7 @@ export default function ProductionsSection() {
                   </div>
 
                   {/* Title Overlaid at Bottom */}
-                  <div className="absolute bottom-3.5 left-4 right-4 z-10">
+                  <div className="absolute bottom-3.5 left-4 right-4 z-10 pointer-events-none">
                     <span className="text-[10px] font-mono text-rose-400 uppercase tracking-widest font-bold block mb-1">
                       DIRECCIÓN: {production.director}
                     </span>
@@ -135,6 +136,7 @@ export default function ProductionsSection() {
                       href={ticketLink}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
                       className="flex-1 text-center text-xs py-3 rounded-xl font-bold bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-white shadow-lg shadow-rose-950/40 transition-all flex items-center justify-center gap-1.5"
                     >
                       <span>🎟️</span>
@@ -143,7 +145,10 @@ export default function ProductionsSection() {
 
                     <button
                       type="button"
-                      onClick={() => setSelectedProduction(production)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedProduction(production);
+                      }}
                       className="px-4 py-3 bg-[#1C1C26] hover:bg-[#252535] text-zinc-200 hover:text-white border border-[#303045] rounded-xl text-xs font-mono font-semibold transition-colors cursor-pointer flex items-center gap-1.5"
                       title="Ver Ficha, Recinto y Créditos Completos"
                     >
