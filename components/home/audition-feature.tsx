@@ -195,7 +195,7 @@ export default function AuditionFeature() {
         </div>
 
         {/* ================= SMARTPHONE CHAT & REGISTRATION SIMULATION ================= */}
-        <div className="w-full max-w-[480px] bg-[#121218]/95 backdrop-blur-2xl border-4 border-[#282838] rounded-[3rem] shadow-[0_25px_70px_rgba(0,0,0,0.85)] p-4 sm:p-6 relative overflow-hidden ring-1 ring-white/10">
+        <div className="w-full max-w-[490px] bg-[#0E0E14] border-4 border-[#2C2C3E] rounded-[3.2rem] shadow-[0_30px_90px_rgba(0,0,0,0.9)] p-4 sm:p-6 relative overflow-hidden ring-1 ring-white/10">
           
           {/* Speaker / Dynamic Island Top Bar */}
           <div className="w-28 h-4 bg-black/90 rounded-full mx-auto mb-4 border border-white/10 flex items-center justify-center">
@@ -205,7 +205,7 @@ export default function AuditionFeature() {
           {/* Phone Top Header */}
           <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#252532] px-2">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-purple-600/20 border border-purple-500/40 flex items-center justify-center text-purple-300 text-lg font-bold shadow-inner">
+              <div className="w-10 h-10 rounded-full bg-purple-600/30 border border-purple-500/50 flex items-center justify-center text-purple-300 text-lg font-bold shadow-inner">
                 🎭
               </div>
               <div className="flex flex-col text-left">
@@ -220,22 +220,22 @@ export default function AuditionFeature() {
           </div>
 
           {/* Content Inside Smartphone */}
-          <div className="flex flex-col gap-3 min-h-[420px]">
+          <div className="flex flex-col gap-3.5 min-h-[420px]">
             
             {/* Incoming Message 1 (Dynamic Greeting synced with selected production) */}
-            <div className="bg-[#1C1C26] border border-[#2B2B3A] rounded-2xl rounded-tl-sm p-4 text-xs text-zinc-200 leading-relaxed shadow-sm text-left">
-              <p>
+            <div className="bg-[#181822] border border-[#2B2B3E] rounded-2xl rounded-tl-sm p-4 text-xs text-zinc-200 leading-relaxed shadow-sm text-left">
+              <p className="text-zinc-300">
                 ¡Hola! 🎭 Queremos conocer tu talento. Completa tu registro para asignarte tu folio oficial y cita de audición:
               </p>
               
               {/* Dynamic Active Production Banner that reacts to dropdown selection */}
               {activeProduction ? (
-                <div className="mt-3 p-3 bg-black/60 rounded-xl border border-purple-500/40 flex flex-col gap-1.5 shadow-inner">
+                <div className="mt-3 p-3 bg-[#0E0E16] rounded-xl border border-purple-500/40 flex flex-col gap-1.5 shadow-inner">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-purple-400 font-bold flex items-center gap-1.5 text-[11px]">
+                    <span className="text-purple-300 font-bold flex items-center gap-1.5 text-[11px]">
                       <span>🎬 Convocatoria Activa:</span>
                     </span>
-                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
+                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/50 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold">
                       ● Abierta
                     </span>
                   </div>
@@ -243,71 +243,71 @@ export default function AuditionFeature() {
                   <div className="flex items-center justify-between text-[10px] text-zinc-400 font-mono pt-1 border-t border-[#252535]">
                     <span>{activeProduction.auditionDates || activeProduction.season || "Temporada 2026"}</span>
                     {activeProduction.auditionDeadline && (
-                      <span className="text-purple-300">Límite: {activeProduction.auditionDeadline}</span>
+                      <span className="text-purple-300 font-semibold">Cierre: {activeProduction.auditionDeadline}</span>
                     )}
                   </div>
                 </div>
               ) : (
-                <div className="mt-3 p-3 bg-black/60 rounded-xl border border-amber-500/40 text-amber-300 text-xs">
+                <div className="mt-3 p-3 bg-[#0E0E16] rounded-xl border border-amber-500/40 text-amber-300 text-xs">
                   ★ Convocatoria General para Próximos Montajes
                 </div>
               )}
             </div>
 
             {submittedData ? (
-              /* Success / WhatsApp-style Confirmation Screen */
+              /* Success / WhatsApp-style Confirmation Screen (Clean White Card) */
               <div className="flex flex-col gap-3 animate-fade-in my-auto py-2">
                 {/* Outgoing Message from User */}
-                <div className="bg-purple-950/50 border border-purple-500/40 rounded-2xl rounded-tr-sm p-3.5 text-xs text-purple-200 self-end max-w-[85%] text-left shadow-sm">
+                <div className="bg-purple-950/70 border border-purple-500/40 rounded-2xl rounded-tr-sm p-3.5 text-xs text-purple-200 self-end max-w-[85%] text-left shadow-sm">
                   ✓ Envié mi registro de audición para <strong>{submittedData.productionName}</strong>.
                 </div>
 
-                {/* Incoming Message: Official Ticket & WhatsApp Dispatch */}
-                <div className="bg-[#1C1C26] border border-[#2B2B3A] rounded-2xl rounded-tl-sm p-5 text-xs text-zinc-200 text-left flex flex-col gap-3 shadow-md">
-                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-sm">✓</span>
+                {/* Incoming Message: Official Ticket & WhatsApp Dispatch (Crisp White Form Container) */}
+                <div className="bg-white border-2 border-emerald-200 rounded-3xl rounded-tl-sm p-6 text-xs text-slate-800 text-left flex flex-col gap-4 shadow-2xl">
+                  <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm">
+                    <span className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-sm">✓</span>
                     <span>¡Tu registro ha sido exitoso!</span>
                   </div>
 
-                  <p className="text-zinc-300 leading-relaxed">
-                    ¡Felicidades, <strong>{submittedData.fullName}</strong>! Tu postulación ha quedado registrada en la base de datos de audiciones de la academia.
+                  <p className="text-slate-600 leading-relaxed">
+                    ¡Felicidades, <strong className="text-slate-900">{submittedData.fullName}</strong>! Tu postulación ha quedado registrada en la base de datos oficial de DV Performing Arts.
                   </p>
 
-                  {/* Folio Highlight Box */}
-                  <div className="bg-black/70 border border-purple-500/50 rounded-xl p-4 text-center flex flex-col gap-1 my-1 shadow-inner">
-                    <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider">Tu Folio Único Oficial:</span>
-                    <span className="font-mono text-2xl font-black text-purple-300 tracking-widest">{submittedData.folio}</span>
-                    <span className="text-[10px] text-zinc-400 mt-0.5">Presenta este código al llegar a recepción</span>
+                  {/* Folio Highlight Box in Light Theme */}
+                  <div className="bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-50 border-2 border-purple-300 rounded-2xl p-5 text-center flex flex-col gap-1.5 shadow-md">
+                    <span className="text-[11px] text-purple-800 font-mono uppercase font-bold tracking-wider">Tu Folio Único Oficial:</span>
+                    <span className="font-mono text-3xl font-black text-purple-700 tracking-widest">{submittedData.folio}</span>
+                    <span className="text-[10px] text-slate-500 mt-0.5">Presenta este código al llegar a recepción</span>
                   </div>
 
-                  <div className="text-[11px] text-zinc-300 leading-relaxed border-t border-[#2B2B3A] pt-2 flex items-center gap-2">
-                    <span className="text-base">📱</span>
-                    <span>Hemos enviado los detalles, hora y recomendaciones a tu WhatsApp <strong>{submittedData.phone}</strong>.</span>
+                  <div className="text-[11px] text-slate-600 leading-relaxed border-t border-slate-200 pt-3 flex items-center gap-2">
+                    <span className="text-lg">📱</span>
+                    <span>Hemos enviado los detalles, hora y recomendaciones a tu WhatsApp <strong className="text-slate-900">{submittedData.phone}</strong>.</span>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => setSubmittedData(null)}
-                    className="w-full mt-2 py-2.5 bg-[#252534] hover:bg-[#2E2E40] text-zinc-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer border border-[#353548]"
+                    className="w-full mt-2 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-md"
                   >
-                    Registrar a otro aspirante
+                    Registrar a otro aspirante &rarr;
                   </button>
                 </div>
               </div>
             ) : (
-              /* Full Audition Registration Form inside Smartphone */
-              <form onSubmit={handleSubmit} className="bg-[#161620] border border-[#2B2B3A] rounded-2xl p-4 sm:p-5 flex flex-col gap-3.5 text-left shadow-inner">
+              /* Full Audition Registration Form (Crisp Clean White Container) */
+              <form onSubmit={handleSubmit} className="bg-white border-2 border-slate-200 rounded-3xl p-5 sm:p-6 flex flex-col gap-4 text-left shadow-[0_15px_40px_rgba(0,0,0,0.25)]">
                 {errorMessage && (
-                  <div className="p-2.5 bg-red-950/60 border border-red-500/50 rounded-xl text-red-200 text-xs">
-                    {errorMessage}
+                  <div className="p-3 bg-rose-50 border border-rose-300 rounded-xl text-rose-700 text-xs font-medium">
+                    ⚠️ {errorMessage}
                   </div>
                 )}
 
                 {/* 1. Obra en Convocatoria (Selector reactivo) */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-semibold text-purple-300 flex justify-between items-center">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-purple-900 flex justify-between items-center">
                     <span>Obra / Puesta en Escena *</span>
-                    <span className="text-[9px] text-zinc-400 font-mono">Solo convocatorias vigentes</span>
+                    <span className="text-[10px] text-purple-600 font-mono font-medium">Convocatorias vigentes</span>
                   </label>
                   <select
                     value={formData.productionId}
@@ -320,10 +320,10 @@ export default function AuditionFeature() {
                         productionName: selected ? selected.title : "Convocatoria General",
                       }));
                     }}
-                    className="w-full bg-[#0D0D12] border border-[#2D2D3C] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer font-medium"
+                    className="w-full bg-[#F8F9FA] border-2 border-purple-200 focus:border-purple-600 focus:bg-white rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-bold focus:outline-none cursor-pointer shadow-sm"
                   >
                     {productions.map((prod) => (
-                      <option key={prod.id} value={prod.id} className="bg-[#14141C] text-white">
+                      <option key={prod.id} value={prod.id} className="bg-white text-slate-900">
                         {prod.title} ({prod.season || "2026"})
                       </option>
                     ))}
@@ -331,8 +331,8 @@ export default function AuditionFeature() {
                 </div>
 
                 {/* 2. Nombre Completo */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-semibold text-zinc-300">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-800">
                     Nombre completo del aspirante *
                   </label>
                   <input
@@ -341,17 +341,17 @@ export default function AuditionFeature() {
                     placeholder="Ej. Sofía Hernández Navarro"
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    className="w-full bg-[#0D0D12] border border-[#2D2D3C] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none"
+                    className="w-full bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white focus:ring-2 focus:ring-purple-100 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none transition-all"
                   />
                 </div>
 
                 {/* 3. Teléfono / WhatsApp (10 dígitos) */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-semibold text-zinc-300">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-800">
                     Teléfono / WhatsApp (10 dígitos) *
                   </label>
                   <div className="flex items-center gap-2">
-                    <span className="bg-[#0D0D12] border border-[#2D2D3C] px-2.5 py-2 rounded-xl text-zinc-400 font-mono text-xs">
+                    <span className="bg-[#EEF2F6] border border-slate-300 px-3 py-2.5 rounded-xl text-slate-600 font-mono text-xs font-bold">
                       🇲🇽 +52
                     </span>
                     <input
@@ -361,14 +361,14 @@ export default function AuditionFeature() {
                       placeholder="477 123 4567"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="flex-1 bg-[#0D0D12] border border-[#2D2D3C] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none font-mono"
+                      className="flex-1 bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white focus:ring-2 focus:ring-purple-100 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-mono font-medium placeholder:text-slate-400 focus:outline-none transition-all"
                     />
                   </div>
                 </div>
 
                 {/* 4. Correo Electrónico */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-semibold text-zinc-300">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-800">
                     Correo electrónico
                   </label>
                   <input
@@ -376,13 +376,13 @@ export default function AuditionFeature() {
                     placeholder="aspirante@ejemplo.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full bg-[#0D0D12] border border-[#2D2D3C] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none"
+                    className="w-full bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white focus:ring-2 focus:ring-purple-100 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none transition-all"
                   />
                 </div>
 
                 {/* 5. Taller / Disciplina Principal */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-semibold text-zinc-300">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-800">
                     Taller o Disciplina de Interés *
                   </label>
                   <select
@@ -395,10 +395,10 @@ export default function AuditionFeature() {
                         programName: selectedProg ? selectedProg.name : "Teatro Musical Integral",
                       });
                     }}
-                    className="w-full bg-[#0D0D12] border border-[#2D2D3C] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer"
+                    className="w-full bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-medium focus:outline-none cursor-pointer"
                   >
                     {programOptions.map((prog) => (
-                      <option key={prog.id} value={prog.id} className="bg-[#14141C] text-white">
+                      <option key={prog.id} value={prog.id} className="bg-white text-slate-900">
                         {prog.name}
                       </option>
                     ))}
@@ -406,17 +406,17 @@ export default function AuditionFeature() {
                 </div>
 
                 {/* 6. Horario Preferido */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-semibold text-zinc-300">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-800">
                     Disponibilidad de Horario *
                   </label>
                   <select
                     value={formData.preferredSchedule}
                     onChange={(e) => setFormData({ ...formData, preferredSchedule: e.target.value })}
-                    className="w-full bg-[#0D0D12] border border-[#2D2D3C] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer"
+                    className="w-full bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-medium focus:outline-none cursor-pointer"
                   >
                     {scheduleOptions.map((sch, sIdx) => (
-                      <option key={sIdx} value={sch} className="bg-[#14141C] text-white">
+                      <option key={sIdx} value={sch} className="bg-white text-slate-900">
                         {sch}
                       </option>
                     ))}
@@ -424,8 +424,8 @@ export default function AuditionFeature() {
                 </div>
 
                 {/* 7. Experiencia previa (opcional) */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-semibold text-zinc-400">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-600">
                     Experiencia previa o notas (opcional)
                   </label>
                   <textarea
@@ -433,7 +433,7 @@ export default function AuditionFeature() {
                     placeholder="Ej. 2 años en danza urbana, estudios de canto..."
                     value={formData.experienceNotes}
                     onChange={(e) => setFormData({ ...formData, experienceNotes: e.target.value })}
-                    className="w-full bg-[#0D0D12] border border-[#2D2D3C] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none resize-none"
+                    className="w-full bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white focus:ring-2 focus:ring-purple-100 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none resize-none transition-all"
                   />
                 </div>
 
@@ -441,7 +441,7 @@ export default function AuditionFeature() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-purple-700 hover:from-purple-500 hover:to-fuchsia-500 text-white font-bold uppercase tracking-wider text-xs shadow-xl shadow-purple-950/60 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-1"
+                  className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-purple-700 via-fuchsia-600 to-purple-700 hover:from-purple-600 hover:to-fuchsia-500 text-white font-black uppercase tracking-wider text-xs shadow-xl shadow-purple-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-1"
                 >
                   {loading ? (
                     <span>Generando Folio Oficial...</span>
