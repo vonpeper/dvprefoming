@@ -2,11 +2,11 @@ import React from "react";
 
 export default function EditorialMarquee() {
   const words = [
-    "TEATRO MUSICAL",
-    "CANTO & TÉCNICA VOCAL",
+    "TEATRO MUSICAL INTEGRAL",
     "DANZA URBANA & HIP HOP",
-    "ACTUACIÓN ESCÉNICA",
-    "AUDICIONES: SI NO ES AHORA",
+    "CANTO & TÉCNICA VOCAL",
+    "ACTUACIÓN & PRESENCIA ESCÉNICA",
+    "AUDICIONES 2026",
     "DISCIPLINA, COMPROMISO Y PASIÓN",
     "LEÓN, GUANAJUATO",
   ];
@@ -16,15 +16,15 @@ export default function EditorialMarquee() {
 
   return (
     <div
-      className="w-full bg-background-sec border-b border-border-editorial py-4 overflow-hidden select-none"
+      className="w-full bg-[#101016] border-b border-[#20202A] py-3.5 overflow-hidden select-none"
       aria-hidden="true"
     >
       <div className="w-full relative flex">
-        <div className="animate-marquee flex gap-12 whitespace-nowrap text-text-main">
+        <div className="animate-marquee flex gap-10 whitespace-nowrap text-white">
           {marqueeItems.map((item, idx) => (
-            <div key={idx} className="flex items-center gap-12 text-xs font-mono font-bold tracking-[0.25em] uppercase">
-              <span>{item}</span>
-              <span className="w-2 h-2 border border-accent-red rotate-45 bg-transparent" />
+            <div key={idx} className="flex items-center gap-10 text-xs font-bold tracking-wider font-display uppercase">
+              <span className="text-zinc-200">{item}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-accent-red" />
             </div>
           ))}
         </div>
