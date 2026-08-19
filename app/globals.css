@@ -8,13 +8,13 @@
   --font-display: "Outfit", "Syne", sans-serif;
 
   /* Editorial & Urban Color Palette (Academia Urbana de Danza & Teatro Musical) */
-  --color-background-main: #0B0B0E;         /* Negro Estudio Cálido */
-  --color-background-sec: #131318;          /* Gris Estudio de Danza */
-  --color-surface-card: #1A1A22;            /* Elevaciones suaves de tarjeta */
+  --color-background-main: #09090D;         /* Negro Estudio Cálido Profundo */
+  --color-background-sec: #111117;          /* Gris Estudio de Danza */
+  --color-surface-card: #171720;            /* Elevaciones suaves de tarjeta */
   --color-text-main: #F8F8FA;               /* Blanco Cálido */
   --color-text-muted: #9CA3AF;              /* Gris Claro y Suave */
-  --color-border-editorial: #22222B;        /* Bordes sutiles y elegantes */
-  --color-border-editorial-light: #2D2D39;  /* Divisores suaves */
+  --color-border-editorial: #20202B;        /* Bordes sutiles y elegantes */
+  --color-border-editorial-light: #2A2A38;  /* Divisores suaves */
   --color-border-focus: #E11D48;            /* Rose 600 */
   
   --color-accent-red: #E11D48;              /* Rose 600 - Rojo escénico */
@@ -31,11 +31,18 @@
 }
 
 body {
-  background-color: var(--color-background-main);
+  background-color: #08080C;
   color: var(--color-text-main);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Textura escénica sutil de teatro musical con micro-patrón acústico y reflejos de reflector */
+  background-image: 
+    radial-gradient(circle at 10% 8%, rgba(225, 29, 72, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 90% 45%, rgba(225, 29, 72, 0.035) 0%, transparent 45%),
+    radial-gradient(circle at 20% 85%, rgba(140, 50, 230, 0.025) 0%, transparent 40%),
+    url("data:image/svg+xml,%3Csvg width='48' height='48' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.018' fill-rule='evenodd'%3E%3Cpath d='M0 48L48 0H24L0 24M48 48V24L24 48'/%3E%3Ccircle cx='24' cy='24' r='0.8'/%3E%3C/g%3E%3C/svg%3E");
+  background-attachment: fixed;
 }
 
 /* Custom Typography Classes */
@@ -71,10 +78,10 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-background-main);
+  background: #08080C;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2D2D39;
+  background: #252532;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
