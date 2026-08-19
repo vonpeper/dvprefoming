@@ -4,7 +4,7 @@ import MediaPlaceholder from "@/components/ui/media-placeholder";
 
 export default function HomeHero() {
   return (
-    <section className="relative w-full py-16 md:py-24 px-6 bg-background-main overflow-hidden border-b-4 border-border-editorial" aria-label="Introducción principal">
+    <section className="relative w-full py-16 md:py-24 px-6 bg-transparent overflow-hidden border-b-4 border-border-editorial" aria-label="Introducción principal">
       {/* Background signal coords text */}
       <div className="absolute top-4 right-6 font-mono text-[9px] text-text-muted tracking-widest uppercase pointer-events-none select-none">
         LOC: LEÓN, GTO / 21.1219° N, 101.6825° W

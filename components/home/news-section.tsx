@@ -34,7 +34,7 @@ export default function NewsSection({ initialArticles = [] }: NewsSectionProps) 
   };
 
   return (
-    <section id="noticias" className="relative w-full py-20 px-6 border-b-4 border-border-editorial bg-background-main" aria-labelledby="heading-noticias">
+    <section id="noticias" className="relative w-full py-20 px-6 border-b-4 border-border-editorial bg-transparent" aria-labelledby="heading-noticias">
       <div className="mx-auto max-w-container-max">
         
         {/* Section Title */}

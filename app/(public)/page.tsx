@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 // Layout Components
 import SiteHeader from "@/components/layout/site-header";
 import SiteFooter from "@/components/layout/site-footer";
+import TheatricalAuroraBackground from "@/components/ui/theatrical-aurora-background";
 
 // Home Page Sections
 import HomeHero from "@/components/home/home-hero";
@@ -27,12 +28,15 @@ export default async function HomePage() {
   const articles = await getLatestArticles();
 
   return (
-    <div className="flex flex-col min-h-screen bg-background-main text-text-main font-sans selection:bg-accent-red selection:text-text-main">
+    <div className="flex flex-col min-h-screen bg-[#07070A] text-text-main font-sans selection:bg-accent-red selection:text-text-main relative overflow-x-hidden">
+      {/* ================= THEATRICAL AURORA & STAGE LIGHTING BACKGROUND ================= */}
+      <TheatricalAuroraBackground />
+
       {/* Dynamic Header */}
       <SiteHeader />
 
       {/* Main Content Area */}
-      <main id="main-content" className="flex-1 flex flex-col focus:outline-none">
+      <main id="main-content" className="flex-1 flex flex-col focus:outline-none relative z-10">
         
         {/* Hero Section */}
         <HomeHero />
