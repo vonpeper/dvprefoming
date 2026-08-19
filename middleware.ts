@@ -6,12 +6,12 @@ export function middleware(req: NextRequest) {
   const sessionCookie = req.cookies.get("dv_admin_session")?.value;
 
   // 1. Alias /login -> /admin
-  if (pathname === "/login" || pathname === "/dashboard/login") {
+  if (pathname === "/login") {
     return NextResponse.redirect(new URL("/admin", req.url));
   }
 
-  // 2. Direct Admin Login route /admin
-  if (pathname === "/admin") {
+  // 2. Admin Login routes (/admin and /dashboard/login)
+  if (pathname === "/admin" || pathname === "/dashboard/login") {
     if (sessionCookie) {
       const { valid } = verifySessionToken(sessionCookie);
       if (valid) {
@@ -25,7 +25,6 @@ export function middleware(req: NextRequest) {
 
   // 3. Check Dashboard Protected Routes
   if (pathname.startsWith("/dashboard")) {
-    // For any other /dashboard page, verify authentication
     if (!sessionCookie) {
       const loginUrl = new URL("/admin", req.url);
       loginUrl.searchParams.set("redirect", pathname);
