@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import TheatricalAuroraBackground from "@/components/ui/theatrical-aurora-background";
+import CelebrationConfetti from "@/components/ui/celebration-confetti";
 
 interface AuditionLookupResult {
   folio: string;
@@ -53,11 +54,11 @@ function AuditionLookupContent() {
       if (res.ok && data.success && data.audition) {
         setResult(data.audition);
       } else {
-        setErrorMsg(data.error || "No se encontró ningún registro con ese folio. Verifica los datos.");
+        setErrorMsg(data.error || "No se encontró ningún registro con esos datos. Revisa tu folio e intenta de nuevo.");
       }
     } catch (err) {
       console.error(err);
-      setErrorMsg("Error de conexión al consultar el estado de la audición.");
+      setErrorMsg("Error de conexión al consultar el folio. Intenta nuevamente.");
     } finally {
       setLoading(false);
     }
@@ -65,57 +66,84 @@ function AuditionLookupContent() {
 
   useEffect(() => {
     if (initialFolio) {
+      setQuery(initialFolio);
       handleSearch(initialFolio);
     }
   }, [initialFolio]);
 
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSearch(query);
+  };
+
+  const isApproved = result?.status === "APPROVED";
+  const isRejected = result?.status === "REJECTED";
+  const isPending = !isApproved && !isRejected;
+
   return (
-    <main className="flex-1 pt-28 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden flex flex-col items-center">
+    <div className="relative min-h-screen bg-[#07070A] text-white flex flex-col font-sans overflow-hidden">
+      {/* Theatrical Background */}
       <TheatricalAuroraBackground />
 
-      <div className="relative z-10 max-w-2xl w-full flex flex-col gap-8">
-        
-        {/* Header */}
-        <div className="text-center flex flex-col items-center gap-3">
-          <span className="font-mono text-[11px] uppercase tracking-widest text-rose-400 font-bold bg-rose-950/40 border border-rose-500/40 px-3.5 py-1 rounded-full">
-            ★ PORTAL DE ASPIRANTES &bull; SEGUIMIENTO DE AUDICIÓN
+      {/* Trigger celebratory confetti ONLY when approved */}
+      {isApproved && <CelebrationConfetti />}
+
+      {/* Navigation Header */}
+      <header className="relative z-30 border-b border-[#1F1F2C] bg-[#07070A]/80 backdrop-blur-md px-6 py-4 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2">
+          <span className="text-xl">🎭</span>
+          <span className="font-display font-black text-sm tracking-wider uppercase bg-gradient-to-r from-purple-400 to-rose-400 bg-clip-text text-transparent">
+            DV Performing Arts
           </span>
-          <h1 className="font-display font-black text-3xl sm:text-4xl uppercase tracking-tight text-white mt-1">
-            Consulta el Estado de tu Audición
+        </Link>
+        <Link
+          href="/#audiciones"
+          className="text-xs text-zinc-400 hover:text-white transition-colors font-mono"
+        >
+          ← Volver a Convocatoria
+        </Link>
+      </header>
+
+      {/* Main Container */}
+      <main className="relative z-20 flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-12 flex flex-col gap-8">
+        
+        {/* Page Title Header */}
+        <div className="text-center flex flex-col items-center gap-3">
+          <span className="font-mono text-xs uppercase tracking-widest text-rose-400 font-bold bg-rose-950/60 border border-rose-500/30 px-3 py-1 rounded-full">
+            Plataforma de Casting &bull; Consulta Oficial
+          </span>
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-white uppercase tracking-tight">
+            Consulta de Folio & Estatus de Audición
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-400 max-w-lg font-sans">
-            Ingresa tu <strong>Número de Folio</strong> (asignado en tu registro o correo) para ver tu estatus oficial, material de casting en Google Drive y detalles del recinto.
+          <p className="text-sm sm:text-base text-zinc-400 max-w-2xl">
+            Ingresa tu número de folio (ej. <code className="text-rose-400 font-mono">AUD-2026-DV-0042</code> o <code className="text-rose-400 font-mono">042</code>) o el teléfono que registraste para consultar tu veredicto de casting.
           </p>
         </div>
 
-        {/* Search Form */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSearch(query);
-          }}
-          className="bg-[#0E0E14]/90 backdrop-blur-xl border-2 border-[#20202E] rounded-2xl p-3 sm:p-4 shadow-2xl flex flex-col sm:flex-row gap-3"
-        >
+        {/* Search Box */}
+        <form onSubmit={onSubmit} className="max-w-xl w-full mx-auto flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <input
               type="text"
+              placeholder="Ej. AUD-2026-DV-0001, 001 o 4771234567..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Ej. 585 o AUD-2026-DV-0042 o tu correo/teléfono..."
-              className="w-full bg-[#07070A] border border-[#2B2B3E] focus:border-rose-500 rounded-xl px-4 py-3.5 text-xs sm:text-sm text-white placeholder:text-zinc-600 focus:outline-none font-mono"
+              className="w-full bg-[#12121A]/90 border-2 border-[#2A2A3E] focus:border-rose-500 rounded-2xl px-5 py-4 text-sm sm:text-base text-white placeholder-zinc-500 focus:outline-none transition-all shadow-inner font-mono"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="py-3.5 px-6 rounded-xl bg-gradient-to-r from-rose-600 to-purple-600 hover:from-rose-500 hover:to-purple-500 text-white font-bold uppercase tracking-wider text-xs shadow-lg shadow-rose-950/50 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shrink-0"
+            className="px-8 py-4 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white font-bold text-sm uppercase tracking-wider rounded-2xl transition-all shadow-lg shadow-rose-950/50 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shrink-0"
           >
             {loading ? (
-              <span className="animate-pulse">Consultando...</span>
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Consultando...</span>
+              </>
             ) : (
               <>
-                <span>🔍</span>
-                <span>Consultar Folio</span>
+                <span>🔍 Consultar Estatus</span>
               </>
             )}
           </button>
@@ -123,7 +151,7 @@ function AuditionLookupContent() {
 
         {/* Error Message */}
         {errorMsg && (
-          <div className="p-4 bg-rose-950/40 border border-rose-500/50 rounded-2xl text-rose-300 text-xs font-mono flex items-start gap-3 animate-fade-in">
+          <div className="max-w-xl w-full mx-auto p-4 bg-rose-950/40 border border-rose-500/50 rounded-2xl text-rose-300 text-xs font-mono flex items-start gap-3 animate-fade-in">
             <span className="text-base">⚠️</span>
             <div className="flex flex-col">
               <span className="font-bold">Registro no encontrado</span>
@@ -132,75 +160,119 @@ function AuditionLookupContent() {
           </div>
         )}
 
-        {/* Results Card */}
+        {/* ================= RESULTS CARD ================= */}
         {result && (
-          <div className="bg-[#0E0E14]/95 backdrop-blur-2xl border-2 border-[#28283C] rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6 animate-fade-in relative">
+          <div className="bg-[#0E0E14]/95 backdrop-blur-2xl border-2 border-[#28283C] rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6 relative">
             
-            {/* Status Header Banner */}
-            {result.status === "APPROVED" ? (
+            {/* ================= STATE 1: APPROVED (CELEBRATORY WITH ANIMATIONS) ================= */}
+            {isApproved && (
               <div className="flex flex-col gap-4">
-                <div className="p-4 bg-emerald-950/60 border-2 border-emerald-500 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left shadow-lg shadow-emerald-950/50">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">🎉</span>
+                <div className="p-5 bg-gradient-to-r from-emerald-950/80 via-[#0E0E14] to-emerald-950/80 border-2 border-emerald-400 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left shadow-2xl shadow-emerald-950/60 animate-bounce-short">
+                  <div className="flex items-center gap-4">
+                    <span className="text-4xl animate-spin-slow">🎉</span>
                     <div className="flex flex-col">
-                      <span className="font-mono text-[10px] uppercase font-bold text-emerald-400 tracking-wider">
-                        Estatus Oficial del Casting
+                      <span className="font-mono text-xs uppercase font-black text-emerald-400 tracking-widest flex items-center gap-1.5 justify-center sm:justify-start">
+                        <span className="animate-ping inline-block w-2 h-2 rounded-full bg-emerald-400 mr-1" />
+                        RESULTADO OFICIAL DE CASTING
                       </span>
-                      <span className="font-display font-black text-lg text-white">
-                        ¡AUDICIÓN APROBADA / SELECCIONADO(A)!
-                      </span>
+                      <h2 className="font-display font-black text-2xl sm:text-3xl text-white mt-0.5">
+                        ¡AUDICIÓN APROBADA &bull; SELECCIONADO(A)!
+                      </h2>
                     </div>
                   </div>
-                  <span className="px-3.5 py-1 bg-emerald-500 text-white font-mono text-[10px] uppercase font-bold rounded-full">
+                  <span className="px-5 py-2 bg-emerald-500 text-white font-mono text-xs uppercase font-black rounded-full shadow-lg shadow-emerald-950/50">
                     Aprobado ✅
                   </span>
                 </div>
 
-                {/* Assigned Character / Role Highlight Card */}
+                {/* Assigned Role / Character Reveal Card */}
                 {result.assignedRole && (
-                  <div className="p-5 bg-gradient-to-r from-amber-950/50 via-[#161B22] to-amber-950/50 border-2 border-amber-400 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
-                    <div className="flex items-center gap-3.5">
-                      <span className="text-3xl">🎭</span>
+                  <div className="p-6 bg-gradient-to-r from-amber-950/60 via-[#161B22] to-amber-950/60 border-2 border-amber-400 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-5 shadow-2xl relative overflow-hidden">
+                    <div className="absolute -right-10 -top-10 w-32 h-32 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+                    
+                    <div className="flex items-center gap-4">
+                      <span className="text-4xl">🎭</span>
                       <div className="flex flex-col text-center sm:text-left">
-                        <span className="font-mono text-[10px] uppercase font-black text-amber-300 tracking-widest">
+                        <span className="font-mono text-xs uppercase font-black text-amber-300 tracking-widest">
                           ★ TU PERSONAJE ASIGNADO EN LA OBRA
                         </span>
-                        <span className="text-xl sm:text-2xl font-black text-white uppercase tracking-wide">
+                        <span className="text-2xl sm:text-3xl font-black text-white uppercase tracking-wide mt-1">
                           {result.assignedRole}
                         </span>
                       </div>
                     </div>
 
                     {result.overallScore !== undefined && result.overallScore > 0 && (
-                      <div className="bg-black/60 border border-amber-400/50 px-3.5 py-1.5 rounded-xl font-mono text-center shrink-0">
-                        <span className="text-[9px] text-zinc-400 block uppercase">Puntaje Jurado</span>
-                        <span className="text-sm font-black text-amber-400">{result.overallScore} / 10 ⭐</span>
+                      <div className="bg-black/80 border-2 border-amber-400/70 px-5 py-2.5 rounded-2xl font-mono text-center shrink-0 shadow-lg">
+                        <span className="text-[10px] text-zinc-400 block uppercase font-bold">Puntaje Jurado</span>
+                        <span className="text-lg font-black text-amber-400">{result.overallScore} / 10 ⭐</span>
                       </div>
                     )}
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="p-4 bg-purple-950/40 border border-purple-500/40 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">⏳</span>
+            )}
+
+            {/* ================= STATE 2: PENDING REVIEW / IN DELIBERATION ================= */}
+            {isPending && (
+              <div className="p-5 bg-purple-950/40 border-2 border-purple-500/50 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left shadow-lg">
+                <div className="flex items-center gap-4">
+                  <span className="text-3xl animate-pulse">⏳</span>
                   <div className="flex flex-col">
-                    <span className="font-mono text-[10px] uppercase font-bold text-purple-300 tracking-wider">
+                    <span className="font-mono text-xs uppercase font-bold text-purple-300 tracking-wider">
                       Estatus de Convocatoria
                     </span>
-                    <span className="font-display font-bold text-base text-white">
-                      REGISTRO ACTIVO &bull; EN REVISIÓN / CITATORIO
-                    </span>
+                    <h2 className="font-display font-black text-xl sm:text-2xl text-white mt-0.5">
+                      AUDICIÓN EN PROCESO DE EVALUACIÓN & DELIBERACIÓN
+                    </h2>
+                    <p className="text-xs text-zinc-400 mt-1">
+                      El panel de jurados (Canto, Coreografía y Actuación) se encuentra evaluando las audiciones. Los resultados finales se publicarán aquí en cuanto concluya el proceso.
+                    </p>
                   </div>
                 </div>
-                <span className="px-3.5 py-1 bg-purple-600 text-white font-mono text-[10px] uppercase font-bold rounded-full">
+                <span className="px-4 py-1.5 bg-purple-600 text-white font-mono text-xs uppercase font-bold rounded-full shrink-0">
                   En Proceso
                 </span>
               </div>
             )}
 
+            {/* ================= STATE 3: REJECTED (STATIC, NO ANIMATIONS, SOBRIO Y RESPETUOSO) ================= */}
+            {isRejected && (
+              <div className="p-6 bg-[#14141E] border border-[#30363D] rounded-3xl flex flex-col gap-4 text-left shadow-sm">
+                <div className="flex items-start gap-4">
+                  <span className="text-3xl">🎭</span>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="font-mono text-xs uppercase font-bold text-zinc-400 tracking-wider">
+                      Resultado de Casting &bull; Convocatoria Concluida
+                    </span>
+                    <h2 className="font-display font-black text-xl text-white">
+                      Estimadx {result.fullName}, gracias por tu entrega en el escenario.
+                    </h2>
+                    <p className="text-xs text-zinc-300 leading-relaxed mt-1">
+                      Agradecemos profundamente tu tiempo, preparación y pasión durante tu audición para la producción de <strong>"{result.productionName}"</strong>.
+                    </p>
+                    <p className="text-xs text-zinc-400 leading-relaxed">
+                      En esta ocasión tu perfil no fue seleccionado para el elenco final de este montaje. La Dirección Artística te felicita por dar el paso y te anima a seguir entrenando tu técnica vocal, dancística y actoral para formar parte de nuestras próximas convocatorias y producciones.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-[#262638] flex flex-wrap items-center justify-between gap-3 text-xs">
+                  <span className="text-zinc-400 font-mono text-[11px]">
+                    Sigue formándote en DV Performing Arts
+                  </span>
+                  <Link
+                    href="/#talleres"
+                    className="px-4 py-2 bg-[#21262D] hover:bg-[#30363D] text-white rounded-xl font-bold transition-colors"
+                  >
+                    Ver Talleres & Masterclasses ↗
+                  </Link>
+                </div>
+              </div>
+            )}
+
             {/* Candidate & Production Spec Card */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 sm:p-5 bg-[#14141E] border border-[#262638] rounded-2xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 bg-[#14141E] border border-[#262638] rounded-2xl">
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] font-mono uppercase text-rose-400 font-bold tracking-wider">
                   👤 Aspirante Registrado:
@@ -238,13 +310,13 @@ function AuditionLookupContent() {
               </div>
             </div>
 
-            {/* Venue & Google Maps Location */}
-            <div className="p-4 sm:p-5 bg-[#101018] border border-[#2B2B3E] rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            {/* Venue & Location */}
+            <div className="p-5 bg-[#101018] border border-[#2B2B3E] rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-start gap-3">
                 <span className="text-2xl mt-0.5">🏛️</span>
                 <div className="flex flex-col">
                   <span className="text-[10px] font-mono uppercase text-purple-300 font-bold tracking-wider">
-                    Recinto Oficial de Audición
+                    Recinto Oficial de la Academia
                   </span>
                   <span className="text-sm font-bold text-white mt-0.5">
                     {result.venue.name}
@@ -260,74 +332,71 @@ function AuditionLookupContent() {
                   href={result.venue.mapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full sm:w-auto px-4 py-2 bg-[#20202E] hover:bg-[#2B2B3E] text-zinc-200 hover:text-white border border-[#3A3A50] rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shrink-0 shadow"
+                  className="px-4 py-2 bg-[#1A1A28] hover:bg-[#252538] text-rose-300 border border-rose-500/30 rounded-xl text-xs font-mono font-bold transition-colors flex items-center gap-1.5 shrink-0"
                 >
-                  <span>📍</span>
-                  <span>Abrir Google Maps</span>
-                  <span>↗</span>
+                  <span>📍 Ver en Google Maps ↗</span>
                 </a>
               )}
             </div>
 
-            {/* Drive Download CTA */}
-            <div className="flex flex-col items-center text-center p-6 bg-gradient-to-br from-[#1A0E2A] to-[#12081C] border-2 border-purple-500/50 rounded-2xl gap-3">
-              <span className="text-xs font-mono uppercase text-purple-300 font-bold tracking-wider">
-                📂 Material de Estudio, Libretos y Pistas
-              </span>
-              <p className="text-xs text-zinc-300 max-w-md font-sans">
-                Descarga las pistas musicales, escenas de casting y referencias coreográficas preparadas por el equipo de dirección:
-              </p>
-              <a
-                href={result.driveMaterialUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-1 px-6 py-3.5 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all shadow-xl shadow-rose-950/50 flex items-center gap-2"
-              >
-                <span>📁</span>
-                <span>Descargar Material en Google Drive ↗</span>
-              </a>
-            </div>
+            {/* Call to Actions for Approved */}
+            {isApproved && (
+              <div className="p-6 bg-gradient-to-r from-purple-950/60 to-rose-950/60 border-2 border-purple-500/60 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex flex-col text-center sm:text-left">
+                  <span className="font-bold text-sm text-white">
+                    📖 Material, Libreto y Partituras Oficiales
+                  </span>
+                  <span className="text-xs text-zinc-300 mt-0.5">
+                    Descarga el material para tu primera lectura de libreto en el Google Drive de la producción.
+                  </span>
+                </div>
 
-            {/* Tips for Audition Day */}
-            <div className="flex flex-col gap-2">
-              <span className="text-xs font-mono uppercase text-rose-400 font-bold tracking-wider">
-                💡 Consejos Clave para tu Audición:
-              </span>
-              <ul className="flex flex-col gap-2 text-xs text-zinc-300 font-sans pl-1">
-                {result.tips.map((tip, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="text-rose-500 mt-0.5">•</span>
-                    <span>{tip}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                <div className="flex flex-wrap items-center gap-3 shrink-0">
+                  <a
+                    href={result.driveMaterialUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-5 py-3 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-rose-950/50"
+                  >
+                    📁 Abrir Google Drive ↗
+                  </a>
 
-            {/* WhatsApp Support Button */}
-            <div className="pt-4 border-t border-[#20202E] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
-              <span>¿Necesitas reagendar o tienes dudas sobre tu casting?</span>
-              <a
-                href={`https://wa.me/524776558156?text=Hola%20DV%20Performing%20Arts,%20tengo%20una%20duda%20sobre%20mi%20audici%C3%B3n%20(Folio:%20${result.folio})`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl font-bold flex items-center gap-2 transition-colors"
-              >
-                <span>💬</span>
-                <span>WhatsApp de Atención: 477 655 8156</span>
-              </a>
+                  <a
+                    href={`https://wa.me/524776558156?text=${encodeURIComponent(`Hola DV Performing Arts, consulto mi resultado de audición para ${result.productionName} (Folio: ${result.folio}) y confirmo mi participación para el personaje de ${result.assignedRole || "elenco"}.`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-colors flex items-center gap-1.5"
+                  >
+                    <span>💬 Confirmar por WhatsApp</span>
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {/* Director's Signature */}
+            <div className="pt-4 border-t border-[#262638] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div className="flex flex-col">
+                <span className="text-xs text-zinc-400 italic">Dirección Artística:</span>
+                <span className="font-display font-bold text-sm text-white">Diego Vieyra</span>
+                <span className="text-[11px] text-rose-400 font-mono">DV Performing Arts &bull; León, Gto.</span>
+              </div>
+
+              <span className="text-[10px] font-mono text-zinc-500">
+                Registro emitido el {new Date(result.createdAt).toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" })}
+              </span>
             </div>
 
           </div>
         )}
 
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }
 
-export default function AuditionLookupClient() {
+export default function AuditionLookupPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#07070A] flex items-center justify-center text-white">Cargando datos de audición...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#07070A] flex items-center justify-center text-white font-mono text-xs">Cargando plataforma de consulta...</div>}>
       <AuditionLookupContent />
     </Suspense>
   );

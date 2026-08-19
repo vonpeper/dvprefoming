@@ -128,36 +128,24 @@ Todo lo mejor,
 }
 
 /**
- * Builds and sends the Audition Approval / Successful Casting WhatsApp message with Assigned Character / Role
+ * Builds and sends the Audition Results Published WhatsApp message inviting candidate to check their verdict on the site
  */
 export async function sendAuditionApprovalWhatsApp(data: AuditionNotificationData): Promise<SendMessageResult> {
-  const auditionNum = data.folio.replace(/\D/g, "").slice(-4) || "585";
-  const driveLink = "https://drive.google.com/drive/folders/1qadnY5yaF1ZXprIXP5NY1cmAJkvQU08C?usp=drive_link";
+  const lookupUrl = `https://prev.dvperformingarts.com/audiciones/consulta?folio=${encodeURIComponent(data.folio)}`;
 
-  let roleText = "";
-  if (data.assignedRole && data.assignedRole.trim()) {
-    roleText = `\n★ *TU PERSONAJE ASIGNADO:* \n👉 *${data.assignedRole.trim().toUpperCase()}*\n`;
-  }
+  const messageBody = `🎭 *RESULTADOS DE CASTING PUBLICADOS • DV PERFORMING ARTS* 🎭
 
-  let scoreText = "";
-  if (data.overallScore !== undefined && data.overallScore > 0) {
-    scoreText = `\n📊 *Puntaje Promedio de Jueces:* ${data.overallScore}/10 ⭐\n`;
-  }
+Hola *${data.fullName.trim().toUpperCase()}*, te informamos que la Dirección General y el Panel de Jueces han concluido la evaluación de las audiciones para la producción:
+🎬 *"${data.productionName || "Si No Es Ahora (El Musical)"}"*
 
-  const messageBody = `🌟 *¡MUCHAS FELICIDADES ${data.fullName.trim().toUpperCase()}! TU AUDICIÓN FUE EXITOSA* 🌟
+📋 *Tu Folio de Consulta:* \`${data.folio}\`
 
-Nos complace informarte que la Dirección General y el Panel de Jueces te han *APROBADO* para formar parte del elenco de:
-🎭 *"${data.productionName || "Si No Es Ahora (El Musical)"}"* (Folio: \`${data.folio}\` • Turno #${auditionNum})
-${roleText}${scoreText}
-📋 *Siguientes pasos oficiales:*
-1. 📖 Descarga tu libreto, partituras y escenas en el Google Drive oficial:
-${driveLink}
-2. 🗓️ Asiste a la reunión de elenco y primera lectura de libreto.
-3. 📝 Completa tu enrolamiento y ficha artística en la recepción de la academia.
+📲 *Consulta tu estatus oficial y resultado de casting en la plataforma:*
+👉 ${lookupUrl}
 
-💬 *¿Dudas o confirmación inmediata?* Responde directamente a este mensaje de WhatsApp.
+Ingresa al enlace desde tu celular o computadora para conocer tu resolución oficial, personaje asignado, observaciones del jurado y próximos pasos.
 
-¡Bienvenidx a la compañía de DV Performing Arts!
+¡Gracias por tu pasión y entrega en el escenario!
 *Diego Vieyra — Dirección General & Artística*
 *DV Performing Arts*`;
 

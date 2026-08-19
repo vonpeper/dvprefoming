@@ -554,28 +554,42 @@ export default function AuditionsDashboardPage() {
                       <div className="text-[10px] text-slate-500 font-mono">{aud.programName}</div>
                     </td>
                     <td className="py-3 px-4 text-center">
-                      <span
-                        className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                      <select
+                        value={aud.status}
+                        onChange={(e) => handleUpdateStatus(aud.id, e.target.value as AuditionRegistration["status"])}
+                        className={`text-[10px] font-mono font-bold px-2 py-1 rounded-lg border bg-[#0D1117] focus:outline-none ${
                           aud.status === "APPROVED"
-                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                            : aud.status === "CONFIRMED"
-                            ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                            : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                            ? "text-emerald-400 border-emerald-500/40"
+                            : aud.status === "REJECTED"
+                            ? "text-slate-400 border-slate-600"
+                            : "text-amber-400 border-amber-500/40"
                         }`}
                       >
-                        {aud.status}
-                      </span>
+                        <option value="PENDING_REVIEW">⏳ Pendiente / En revisión</option>
+                        <option value="APPROVED">✅ Aprobado</option>
+                        <option value="REJECTED">❌ No Seleccionado</option>
+                        <option value="CONFIRMED">📋 Citatorio Confirmado</option>
+                      </select>
                     </td>
                     <td className="py-3 px-4 text-center font-bold text-amber-300">
                       {aud.assignedRole || "-"}
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => openAssignRoleModal(aud)}
-                        className="px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded text-[11px] font-bold"
-                      >
-                        Asignar Rol
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => openAssignRoleModal(aud)}
+                          className="px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-[11px] font-bold"
+                        >
+                          {aud.assignedRole ? "Editar Rol" : "Asignar Rol"}
+                        </button>
+                        <button
+                          onClick={() => handleUpdateStatus(aud.id, aud.status, "RESEND_CONFIRMATION")}
+                          title="Enviar link de consulta por WhatsApp"
+                          className="p-1 bg-[#21262D] hover:bg-[#30363D] text-emerald-400 border border-[#30363D] rounded-lg text-xs"
+                        >
+                          📱
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

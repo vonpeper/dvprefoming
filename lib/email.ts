@@ -341,6 +341,17 @@ export async function sendAuditionApprovalEmail(data: AuditionEmailData): Promis
                 </tr>
               </table>
 
+              <!-- Direct Platform Consultation Button -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 25px 0; text-align: center;">
+                <tr>
+                  <td align="center">
+                    <a href="https://prev.dvperformingarts.com/audiciones/consulta?folio=${encodeURIComponent(data.folio)}" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #9333EA 0%, #E11D48 100%); color: #FFFFFF; font-size: 15px; font-weight: 900; text-decoration: none; padding: 18px 36px; border-radius: 16px; box-shadow: 0 10px 30px rgba(225,29,72,0.5); text-transform: uppercase; letter-spacing: 1px;">
+                      🔍 Consultar mi Estatus & Libreto en la Web ↗
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
               <!-- Next Steps -->
               <h3 style="margin: 28px 0 14px 0; font-size: 14px; font-weight: 800; color: #34D399; text-transform: uppercase; letter-spacing: 1px;">
                 📋 Siguientes Pasos para tu Integración:
