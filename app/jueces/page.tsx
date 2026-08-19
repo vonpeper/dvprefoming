@@ -22,8 +22,10 @@ export default function JudgesPortalPage() {
   const [judgeName, setJudgeName] = useState("");
   const [judgeTitle, setJudgeTitle] = useState("");
   const [discipline, setDiscipline] = useState<EvaluationDiscipline>("CANTO");
-  const [selectedProductionId, setSelectedProductionId] = useState<string>("ALL");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Selected Production (null means show production selection cards gallery)
+  const [selectedProduction, setSelectedProduction] = useState<Production | "ALL" | null>(null);
 
   // Data State
   const [auditions, setAuditions] = useState<AuditionRegistration[]>([]);
@@ -58,10 +60,6 @@ export default function JudgesPortalPage() {
 
       const audList: AuditionRegistration[] = audData?.auditions || audData?.registrations || [];
       setAuditions(audList);
-
-      if (!selectedAuditionId && audList.length > 0) {
-        setSelectedAuditionId(audList[0].id);
-      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -81,7 +79,6 @@ export default function JudgesPortalPage() {
           setJudgeName(parsed.name);
           setJudgeTitle(parsed.title || "Juez Evaluador");
           setDiscipline(parsed.discipline);
-          if (parsed.productionId) setSelectedProductionId(parsed.productionId);
           setIsLoggedIn(true);
         }
       } catch {
@@ -100,7 +97,6 @@ export default function JudgesPortalPage() {
       name: judgeName.trim(),
       title: judgeTitle || "Juez Evaluador",
       discipline,
-      productionId: selectedProductionId,
     };
     localStorage.setItem("dv_judge_session", JSON.stringify(session));
     setIsLoggedIn(true);
@@ -109,6 +105,7 @@ export default function JudgesPortalPage() {
   const handleLogout = () => {
     localStorage.removeItem("dv_judge_session");
     setIsLoggedIn(false);
+    setSelectedProduction(null);
   };
 
   const selectJudgePreset = (preset: typeof DEFAULT_JUDGES[0]) => {
@@ -120,26 +117,45 @@ export default function JudgesPortalPage() {
   // Filter criteria by active discipline
   const activeCriteria = criteria.filter((c) => c.discipline === discipline);
 
-  // Filter auditions by search and production
+  // Helper to match candidate to production
+  const matchCandidateToProd = (a: AuditionRegistration, prod: Production | "ALL" | null) => {
+    if (!prod || prod === "ALL") return true;
+    if (a.productionId && a.productionId === prod.id) return true;
+    if (a.productionName && (a.productionName === prod.title || a.productionName.toLowerCase().includes(prod.title.toLowerCase()) || prod.title.toLowerCase().includes(a.productionName.toLowerCase()))) return true;
+    // Fallback: If candidate has no production assigned and prod is default "Si No Es Ahora"
+    if (!a.productionId && !a.productionName && prod.title.includes("Si No Es Ahora")) return true;
+    return false;
+  };
+
+  // Filter auditions by selected production and search
   const filteredAuditions = auditions.filter((a) => {
     const matchesSearch =
+      !searchTerm.trim() ||
       a.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       a.folio.toLowerCase().includes(searchTerm.toLowerCase()) ||
       a.phone.includes(searchTerm);
 
-    const matchesProd =
-      selectedProductionId === "ALL" ||
-      a.productionId === selectedProductionId ||
-      a.productionName === selectedProductionId;
+    const matchesProd = matchCandidateToProd(a, selectedProduction);
 
     return matchesSearch && matchesProd;
   });
+
+  // When selected production changes, set selected audition to first candidate
+  const handleSelectProduction = (prod: Production | "ALL") => {
+    setSelectedProduction(prod);
+    const candidatesForProd = auditions.filter((a) => matchCandidateToProd(a, prod));
+    if (candidatesForProd.length > 0) {
+      setSelectedAuditionId(candidatesForProd[0].id);
+    } else {
+      setSelectedAuditionId(null);
+    }
+  };
 
   // Find selected audition
   const currentAudition =
     filteredAuditions.find((a) => a.id === selectedAuditionId) ||
     filteredAuditions[0] ||
-    auditions[0];
+    null;
 
   // When selected audition or discipline changes, load existing scores if already scored by this judge
   useEffect(() => {
@@ -231,17 +247,15 @@ export default function JudgesPortalPage() {
     }
   };
 
-  // ================= RENDER: LOGIN SCREEN IF NOT AUTHENTICATED =================
+  // ================= 1. LOGIN SCREEN IF NOT AUTHENTICATED =================
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-[#07070A] text-white flex flex-col justify-center items-center p-4 font-sans relative overflow-hidden">
-        {/* Background Glows */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-rose-600/15 rounded-full blur-3xl pointer-events-none" />
 
         <div className="max-w-xl w-full bg-[#12121A]/95 backdrop-blur-2xl border-2 border-[#28283C] rounded-3xl p-6 sm:p-10 shadow-2xl relative z-10 flex flex-col gap-6">
           
-          {/* Header */}
           <div className="text-center flex flex-col items-center gap-2">
             <span className="text-3xl">⚖️</span>
             <span className="font-mono text-[10px] uppercase font-bold text-amber-400 tracking-widest bg-amber-950/60 border border-amber-500/30 px-3 py-1 rounded-full">
@@ -251,7 +265,7 @@ export default function JudgesPortalPage() {
               Mesa de Jueces & Calificación en Vivo
             </h1>
             <p className="text-xs text-zinc-400 max-w-md">
-              Ingresa con tu perfil docente o juez invitado y selecciona tu disciplina de evaluación para calificar las audiciones en tiempo real.
+              Ingresa con tu perfil docente o juez invitado y selecciona tu disciplina de evaluación.
             </p>
           </div>
 
@@ -281,7 +295,7 @@ export default function JudgesPortalPage() {
               </div>
             </div>
 
-            {/* Custom Name & Title Inputs */}
+            {/* Custom Name & Title */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="flex flex-col gap-1">
                 <label className="font-semibold text-zinc-300">Nombre del Juez</label>
@@ -335,31 +349,12 @@ export default function JudgesPortalPage() {
               </div>
             </div>
 
-            {/* Target Production Filter */}
-            <div className="flex flex-col gap-1">
-              <label className="font-semibold text-zinc-300">
-                Obra / Montaje a Evaluar (Opcional):
-              </label>
-              <select
-                value={selectedProductionId}
-                onChange={(e) => setSelectedProductionId(e.target.value)}
-                className="bg-[#181824] border border-[#2E2E44] focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-white font-bold focus:outline-none"
-              >
-                <option value="ALL">🌟 Todas las Obras / Montajes</option>
-                {productions.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    🎭 {p.title} {p.isAuditionActive ? " (Convocatoria Activa)" : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
-
             {/* Enter Button */}
             <button
               type="submit"
               className="w-full py-4 bg-gradient-to-r from-purple-600 via-rose-600 to-amber-500 hover:from-purple-500 hover:to-rose-500 text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-rose-950/60 transition-all cursor-pointer mt-2"
             >
-              🚀 Entrar a Mesa de Calificación
+              🚀 Continuar a Selección de Obra
             </button>
           </form>
 
@@ -376,12 +371,181 @@ export default function JudgesPortalPage() {
     );
   }
 
-  // ================= RENDER: ACTIVE JUDGE EVALUATION CONSOLE =================
+  // ================= 2. PRODUCTION SELECTION GALLERY (CARDS CON FOTO) =================
+  if (!selectedProduction) {
+    return (
+      <div className="min-h-screen bg-[#07070A] text-white flex flex-col font-sans relative">
+        
+        {/* Top Header */}
+        <header className="bg-[#12121A] border-b border-[#242436] px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">⚖️</span>
+            <div className="flex flex-col">
+              <span className="font-black text-sm text-white">Mesa de {judgeName}</span>
+              <span className="text-xs text-amber-400 font-mono">
+                {discipline === "CANTO" ? "🎤 Mesa de Canto" : discipline === "COREOGRAFIA" ? "💃 Mesa de Coreografía" : "🎭 Mesa de Actuación"}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={handleLogout}
+              className="px-3 py-1.5 bg-[#202030] hover:bg-[#2C2C40] text-zinc-300 border border-[#303046] rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+            >
+              🔄 Cambiar Juez
+            </button>
+            <Link
+              href="/dashboard/audiciones"
+              className="px-3 py-1.5 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-bold transition-colors"
+            >
+              📊 Ver Ranking General
+            </Link>
+          </div>
+        </header>
+
+        {/* Gallery Content */}
+        <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-10 flex flex-col gap-8">
+          
+          <div className="text-center flex flex-col items-center gap-2">
+            <span className="font-mono text-xs uppercase tracking-widest text-purple-400 font-bold bg-purple-950/60 border border-purple-500/30 px-3.5 py-1 rounded-full">
+              Paso 1 &bull; Selección de Producción
+            </span>
+            <h1 className="text-3xl sm:text-4xl font-black text-white uppercase tracking-tight mt-1">
+              ¿Qué Obra o Montaje vas a Calificar Hoy?
+            </h1>
+            <p className="text-sm text-zinc-400 max-w-2xl">
+              Haz clic en la card de la producción para desplegar de inmediato a todo el alumnado registrado para esa audición, sin tener que buscar manualmente.
+            </p>
+          </div>
+
+          {/* Productions Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            {productions.map((prod) => {
+              const candidateCount = auditions.filter((a) => matchCandidateToProd(a, prod)).length;
+
+              return (
+                <div
+                  key={prod.id}
+                  onClick={() => handleSelectProduction(prod)}
+                  className="group bg-[#12121A] hover:bg-[#181824] border-2 border-[#262638] hover:border-purple-500 rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 hover:-translate-y-1.5 flex flex-col cursor-pointer"
+                >
+                  {/* Poster Image */}
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-black/60">
+                    {prod.imageUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={prod.imageUrl}
+                        alt={prod.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-4xl">
+                        🎭
+                      </div>
+                    )}
+                    
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#12121A] via-transparent to-black/30" />
+
+                    {/* Status Badge */}
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                      {prod.isAuditionActive ? (
+                        <span className="px-3 py-1 bg-emerald-600/90 backdrop-blur-md text-white font-mono text-[10px] font-black uppercase tracking-wider rounded-full shadow-lg">
+                          ● Convocatoria Activa
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 bg-black/70 backdrop-blur-md text-zinc-400 font-mono text-[10px] uppercase rounded-full">
+                          En Cartelera
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Candidates Count Pill */}
+                    <div className="absolute bottom-3 right-3">
+                      <span className="px-3 py-1 bg-purple-600 text-white font-mono text-xs font-black rounded-xl shadow-lg flex items-center gap-1.5">
+                        <span>👥</span>
+                        <span>{candidateCount} Aspirantes</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card Content */}
+                  <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between gap-4">
+                    <div>
+                      <h2 className="text-xl font-black text-white group-hover:text-purple-400 transition-colors">
+                        {prod.title}
+                      </h2>
+                      <p className="text-xs text-zinc-400 mt-1 line-clamp-2">
+                        {prod.synopsis || "Producción oficial de teatro musical y formación escénica de DV Performing Arts."}
+                      </p>
+                    </div>
+
+                    <div className="pt-4 border-t border-[#202030] flex items-center justify-between">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-zinc-500 uppercase font-mono">Dirección:</span>
+                        <span className="text-xs font-bold text-zinc-300">{prod.director || "Diego Vieyra"}</span>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="px-4 py-2 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center gap-1.5"
+                      >
+                        <span>Calificar</span>
+                        <span>→</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Universal Card: All Productions */}
+            <div
+              onClick={() => handleSelectProduction("ALL")}
+              className="group bg-[#12121A] hover:bg-[#181824] border-2 border-dashed border-[#303046] hover:border-purple-400 rounded-3xl p-6 flex flex-col justify-between items-center text-center cursor-pointer transition-all duration-300 hover:-translate-y-1 shadow-xl"
+            >
+              <div className="flex flex-col items-center gap-3 my-auto">
+                <span className="text-5xl group-hover:scale-110 transition-transform">🌟</span>
+                <h2 className="text-xl font-black text-white group-hover:text-purple-300 transition-colors">
+                  Ver Todas las Producciones
+                </h2>
+                <p className="text-xs text-zinc-400 max-w-xs">
+                  Despliega a todos los aspirantes de la academia ({auditions.length} registrados) sin filtro de obra.
+                </p>
+              </div>
+
+              <div className="w-full pt-4 border-t border-[#202030]">
+                <button
+                  type="button"
+                  className="w-full py-2.5 bg-[#202030] group-hover:bg-purple-600 text-zinc-200 group-hover:text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all"
+                >
+                  Abrir Lista Global ({auditions.length}) →
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </main>
+      </div>
+    );
+  }
+
+  // ================= 3. ACTIVE JUDGE EVALUATION CONSOLE =================
+  const activeProdTitle =
+    selectedProduction === "ALL"
+      ? "Todas las Producciones"
+      : selectedProduction.title;
+
   return (
     <div className="min-h-screen bg-[#07070A] text-white flex flex-col font-sans">
       
       {/* Top Judge Bar */}
       <header className="bg-[#12121A] border-b border-[#242436] px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-30 shadow-md">
+        
+        {/* Judge & Active Production Badge */}
         <div className="flex items-center gap-3">
           <span className="text-2xl">⚖️</span>
           <div className="flex flex-col">
@@ -397,20 +561,30 @@ export default function JudgesPortalPage() {
                 {discipline === "CANTO" ? "🎤 Canto" : discipline === "COREOGRAFIA" ? "💃 Coreografía" : "🎭 Actuación"}
               </span>
               <span>&bull;</span>
-              <span>Obra: {selectedProductionId === "ALL" ? "Todas" : productions.find(p => p.id === selectedProductionId)?.title || "General"}</span>
+              <span className="text-purple-300 font-bold">🎭 Obra: {activeProdTitle}</span>
             </div>
           </div>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          
+          {/* Switch Production Card Button */}
+          <button
+            onClick={() => setSelectedProduction(null)}
+            className="px-3.5 py-1.5 bg-gradient-to-r from-purple-900/80 to-rose-900/80 hover:from-purple-800 hover:to-rose-800 text-white border border-purple-500/50 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-md cursor-pointer"
+          >
+            <span>🎭 Cambiar de Obra</span>
+          </button>
+
+          {/* Quick Discipline Switcher */}
           <div className="flex bg-[#1A1A28] border border-[#2B2B3E] rounded-xl p-1 text-xs">
             {(["CANTO", "COREOGRAFIA", "ACTUACION"] as EvaluationDiscipline[]).map((d) => (
               <button
                 key={d}
                 type="button"
                 onClick={() => setDiscipline(d)}
-                className={`px-3 py-1 rounded-lg font-bold transition-all ${
+                className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
                   discipline === d ? "bg-purple-600 text-white shadow" : "text-zinc-400 hover:text-white"
                 }`}
               >
@@ -438,22 +612,25 @@ export default function JudgesPortalPage() {
       {/* Main Scoring Grid */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 max-w-7xl w-full mx-auto p-4 sm:p-6 gap-6">
         
-        {/* Left Column: Candidates Selector (4 Cols) */}
+        {/* Left Column: Candidates List for this Production (4 Cols) */}
         <div className="lg:col-span-4 flex flex-col gap-3 bg-[#101018] border border-[#222232] rounded-3xl p-4 h-[calc(100vh-140px)] overflow-hidden">
           
           <div className="flex flex-col gap-2 pb-2 border-b border-[#222232]">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-black uppercase tracking-wider text-zinc-400 font-mono">
-                Aspirantes ({filteredAuditions.length})
+              <span className="text-xs font-black uppercase tracking-wider text-zinc-300 font-mono">
+                Alumnos en Lista ({filteredAuditions.length})
               </span>
-              <span className="text-[10px] font-mono text-purple-400">
-                {selectedProductionId === "ALL" ? "Todas las Obras" : "Filtrado por Obra"}
-              </span>
+              <button
+                onClick={() => setSelectedProduction(null)}
+                className="text-[10px] font-mono text-purple-400 hover:underline"
+              >
+                Cambiar Obra ↗
+              </button>
             </div>
 
             <input
               type="text"
-              placeholder="Buscar por folio, nombre o teléfono..."
+              placeholder="Filtro rápido por folio o nombre..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="bg-[#181824] border border-[#28283C] rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none font-sans"
@@ -463,8 +640,14 @@ export default function JudgesPortalPage() {
           {/* List of Candidates */}
           <div className="flex-1 overflow-y-auto flex flex-col gap-2 pr-1">
             {filteredAuditions.length === 0 ? (
-              <div className="py-12 text-center text-zinc-500 font-mono text-xs">
-                No hay aspirantes registrados con los filtros activos.
+              <div className="py-12 text-center text-zinc-500 font-mono text-xs flex flex-col items-center gap-2">
+                <span>No hay aspirantes registrados para esta obra.</span>
+                <button
+                  onClick={() => setSelectedProduction(null)}
+                  className="px-3 py-1 bg-purple-600 text-white rounded-lg text-xs font-bold mt-2"
+                >
+                  Seleccionar otra obra
+                </button>
               </div>
             ) : (
               filteredAuditions.map((aud) => {
@@ -485,15 +668,15 @@ export default function JudgesPortalPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-mono font-bold text-xs text-purple-300">
+                      <span className="font-mono font-black text-xs text-purple-300 bg-black/40 px-2 py-0.5 rounded border border-purple-500/30">
                         {aud.folio}
                       </span>
                       {hasMyScore ? (
-                        <span className="text-[9px] font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-1.5 py-0.2 rounded font-bold">
+                        <span className="text-[9px] font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded font-bold">
                           ✓ Calificado
                         </span>
                       ) : (
-                        <span className="text-[9px] font-mono bg-zinc-800 text-zinc-400 px-1.5 py-0.2 rounded">
+                        <span className="text-[9px] font-mono bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded">
                           Pendiente
                         </span>
                       )}
@@ -501,12 +684,12 @@ export default function JudgesPortalPage() {
 
                     <span className="font-bold text-sm text-white truncate">{aud.fullName}</span>
                     <span className="text-[10px] text-zinc-400 truncate">
-                      {aud.productionName || "Si No Es Ahora"} &bull; {aud.programName}
+                      {aud.programName || "Teatro Musical"} &bull; {aud.phone}
                     </span>
 
                     {aud.overallScore !== undefined && aud.overallScore > 0 && (
                       <div className="mt-1 flex items-center gap-2 text-[10px] font-mono text-amber-400">
-                        <span>Puntaje Jurado:</span>
+                        <span>Puntaje Global:</span>
                         <span className="font-black">⭐ {aud.overallScore}/10</span>
                       </div>
                     )}
@@ -526,16 +709,16 @@ export default function JudgesPortalPage() {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-5 border-b border-[#242436]">
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2 font-mono text-xs">
-                    <span className="bg-purple-600 text-white px-2 py-0.5 rounded font-black">
+                    <span className="bg-purple-600 text-white px-2.5 py-0.5 rounded-lg font-black">
                       {currentAudition.folio}
                     </span>
                     <span className="text-zinc-400">&bull;</span>
-                    <span className="text-zinc-400">{currentAudition.phone}</span>
+                    <span className="text-zinc-300">{currentAudition.phone}</span>
                   </div>
                   <h2 className="text-2xl font-black text-white mt-1">
                     {currentAudition.fullName}
                   </h2>
-                  <p className="text-xs text-rose-400 font-medium">
+                  <p className="text-xs text-rose-400 font-bold">
                     🎭 Obra: {currentAudition.productionName || "Si No Es Ahora (El Musical)"} &bull; {currentAudition.programName}
                   </p>
                 </div>
@@ -543,7 +726,7 @@ export default function JudgesPortalPage() {
                 {/* Live Average Score Display */}
                 <div className="bg-black/60 border-2 border-purple-500/60 px-5 py-3 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-lg">
                   <span className="text-[10px] font-mono uppercase text-purple-300 font-bold tracking-wider">
-                    Promedio de {discipline}
+                    Promedio en {discipline}
                   </span>
                   <span className="text-3xl font-black text-amber-400 font-mono mt-0.5">
                     {liveAverage} <span className="text-sm text-zinc-400">/ 10</span>
@@ -657,7 +840,7 @@ export default function JudgesPortalPage() {
                     onClick={handleNextAudition}
                     className="px-4 py-2.5 bg-[#202030] hover:bg-[#2C2C40] text-zinc-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
                   >
-                    Siguiente →
+                    Siguiente Aspirante →
                   </button>
                 </div>
 
@@ -681,8 +864,14 @@ export default function JudgesPortalPage() {
 
             </div>
           ) : (
-            <div className="bg-[#12121A] border-2 border-[#28283C] rounded-3xl p-12 text-center text-zinc-500 font-mono text-xs">
-              Selecciona un aspirante para comenzar a calificar.
+            <div className="bg-[#12121A] border-2 border-[#28283C] rounded-3xl p-12 text-center text-zinc-500 font-mono text-xs flex flex-col items-center gap-3">
+              <span>No hay aspirantes registrados para esta producción.</span>
+              <button
+                onClick={() => setSelectedProduction(null)}
+                className="px-4 py-2 bg-purple-600 text-white rounded-xl text-xs font-bold cursor-pointer"
+              >
+                Ver otras producciones
+              </button>
             </div>
           )}
         </div>
