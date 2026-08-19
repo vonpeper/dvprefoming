@@ -12,21 +12,109 @@ function ensureDirectoryExists() {
 }
 
 // ---------------------------------------------------------------------------
-// Auditions Storage
+// ---------------------------------------------------------------------------
+// Auditions Storage & Relational Integrity Normalizer
 // ---------------------------------------------------------------------------
 const AUDITIONS_FILE = path.join(DATA_DIR, "auditions.json");
 
+export function normalizeAuditionRecord(
+  aud: AuditionRegistration,
+  productions: Production[]
+): AuditionRegistration {
+  // 1. Relational Integrity: Production linkage
+  let matchedProd = productions.find(
+    (p) => p.id === aud.productionId || p.title === aud.productionName
+  );
+  if (!matchedProd) {
+    matchedProd = productions.find((p) => p.isAuditionActive) || productions[0];
+  }
+
+  // 2. Ensure short folio & audition number
+  let folio = aud.folio || "";
+  let auditionNumber = aud.auditionNumber;
+  if (!folio.startsWith("DV-") && !folio.startsWith("dv-")) {
+    const numericPart = folio.replace(/\D/g, "");
+    if (numericPart) {
+      const num = parseInt(numericPart, 10) || 585;
+      folio = `DV-${num}`;
+      auditionNumber = String(num);
+    } else {
+      folio = "DV-585";
+      auditionNumber = "585";
+    }
+  } else {
+    auditionNumber = folio.replace(/\D/g, "") || "585";
+  }
+
+  // 3. Status and Assigned Role consistency
+  let status = aud.status || "PENDING_REVIEW";
+  if (aud.assignedRole && aud.assignedRole.trim() && status !== "APPROVED") {
+    status = "APPROVED";
+  }
+
+  // 4. Averages recalculation from individual scores
+  const scores = aud.scores || [];
+  let cantoAverage = aud.cantoAverage;
+  let danceAverage = aud.danceAverage;
+  let actingAverage = aud.actingAverage;
+  let overallScore = aud.overallScore;
+
+  if (scores.length > 0) {
+    const cantoScores = scores.filter((s) => s.discipline === "CANTO");
+    const danceScores = scores.filter((s) => s.discipline === "COREOGRAFIA");
+    const actingScores = scores.filter((s) => s.discipline === "ACTUACION");
+
+    if (cantoScores.length > 0) {
+      cantoAverage = Number((cantoScores.reduce((a, b) => a + b.averageScore, 0) / cantoScores.length).toFixed(2));
+    }
+    if (danceScores.length > 0) {
+      danceAverage = Number((danceScores.reduce((a, b) => a + b.averageScore, 0) / danceScores.length).toFixed(2));
+    }
+    if (actingScores.length > 0) {
+      actingAverage = Number((actingScores.reduce((a, b) => a + b.averageScore, 0) / actingScores.length).toFixed(2));
+    }
+
+    const discAverages: number[] = [];
+    if (cantoAverage !== undefined && cantoAverage > 0) discAverages.push(cantoAverage);
+    if (danceAverage !== undefined && danceAverage > 0) discAverages.push(danceAverage);
+    if (actingAverage !== undefined && actingAverage > 0) discAverages.push(actingAverage);
+
+    if (discAverages.length > 0) {
+      overallScore = Number((discAverages.reduce((a, b) => a + b, 0) / discAverages.length).toFixed(2));
+    }
+  }
+
+  return {
+    ...aud,
+    folio,
+    auditionNumber,
+    productionId: matchedProd?.id || "prod_si_no_es_ahora",
+    productionName: matchedProd?.title || "Si No Es Ahora (El Musical)",
+    programId: aud.programId || "prog_teatro_musical",
+    programName: aud.programName || "Teatro Musical Integral",
+    status,
+    cantoAverage,
+    danceAverage,
+    actingAverage,
+    overallScore,
+  };
+}
+
 export function getStoredAuditions(): AuditionRegistration[] {
   ensureDirectoryExists();
+  const productions = getStoredProductions();
+
   if (!fs.existsSync(AUDITIONS_FILE)) {
-    saveStoredAuditions(mockAuditions);
-    return mockAuditions;
+    const normalized = mockAuditions.map((a) => normalizeAuditionRecord(a, productions));
+    saveStoredAuditions(normalized);
+    return normalized;
   }
   try {
     const raw = fs.readFileSync(AUDITIONS_FILE, "utf-8");
-    return JSON.parse(raw);
+    const parsed: AuditionRegistration[] = JSON.parse(raw);
+    return parsed.map((a) => normalizeAuditionRecord(a, productions));
   } catch {
-    return mockAuditions;
+    return mockAuditions.map((a) => normalizeAuditionRecord(a, productions));
   }
 }
 
@@ -37,14 +125,23 @@ export function saveStoredAuditions(auditions: AuditionRegistration[]) {
 
 export function createAudition(data: Omit<AuditionRegistration, "id" | "folio" | "createdAt" | "updatedAt">): AuditionRegistration {
   const auditions = getStoredAuditions();
+  const productions = getStoredProductions();
+
+  // Validate or assign active production
+  const matchedProd = productions.find(
+    (p) => p.id === data.productionId || p.title === data.productionName || p.isAuditionActive
+  ) || productions[0];
+
   const nextNum = 500 + auditions.length + 1;
   const folio = `DV-${nextNum}`;
 
   const newRecord: AuditionRegistration = {
     id: `aud_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
     folio,
-    auditionNumber: nextNum,
+    auditionNumber: String(nextNum),
     ...data,
+    productionId: matchedProd?.id || "prod_si_no_es_ahora",
+    productionName: matchedProd?.title || "Si No Es Ahora (El Musical)",
     status: data.status || "PENDING_REVIEW",
     whatsappNotified: false,
     createdAt: new Date(),
