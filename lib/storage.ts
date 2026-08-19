@@ -546,28 +546,22 @@ const CRITERIA_FILE = path.join(DATA_DIR, "evaluation-criteria.json");
 
 export const DEFAULT_EVALUATION_CRITERIA: EvaluationCriteria[] = [
   // Canto
-  { id: "c_afinacion", discipline: "CANTO", name: "Afinación & Oído", description: "Precisión tonal, afinación en intervalos y limpieza armónica", maxScore: 10, order: 1 },
-  { id: "c_diccion", discipline: "CANTO", name: "Dicción & Colocación", description: "Claridad en vocales y consonantes, resonancia y apoyo", maxScore: 10, order: 2 },
-  { id: "c_resistencia", discipline: "CANTO", name: "Resistencia Vocal", description: "Control del aire, apoyo diafragmático y estabilidad", maxScore: 10, order: 3 },
-  { id: "c_tesitura", discipline: "CANTO", name: "Tesitura & Rango", description: "Extensión vocal, comodidad en agudos y graves", maxScore: 10, order: 4 },
-  { id: "c_armonia", discipline: "CANTO", name: "Armonía & Sentido Musical", description: "Capacidad de segundas voces y ensamble", maxScore: 10, order: 5 },
-  { id: "c_tempo", discipline: "CANTO", name: "Tempo & Ritmo", description: "Entrada a tiempo, cuadratura y métrica", maxScore: 10, order: 6 },
-  { id: "c_expresion", discipline: "CANTO", name: "Expresión & Emoción Vocal", description: "Matiz, dinámicas y transmisión del mensaje de la canción", maxScore: 10, order: 7 },
-
-  // Coreografía / Danza
-  { id: "d_coordinacion", discipline: "COREOGRAFIA", name: "Coordinación & Técnica", description: "Limpieza en extremidades, postura y alineación corporal", maxScore: 10, order: 1 },
-  { id: "d_memoria", discipline: "COREOGRAFIA", name: "Memoria Coreográfica", description: "Velocidad de retención de pasos y secuencias", maxScore: 10, order: 2 },
-  { id: "d_ritmo", discipline: "COREOGRAFIA", name: "Ritmo & Musicalidad", description: "Acentuación precisa con el compás de la música", maxScore: 10, order: 3 },
-  { id: "d_flexibilidad", discipline: "COREOGRAFIA", name: "Flexibilidad & Extensión", description: "Amplitud de movimiento, saltos y elongación", maxScore: 10, order: 4 },
-  { id: "d_fuerza", discipline: "COREOGRAFIA", name: "Fuerza & Energía", description: "Dinámica, resistencia física y ataque del movimiento", maxScore: 10, order: 5 },
-  { id: "d_proyeccion", discipline: "COREOGRAFIA", name: "Proyección Escénica", description: "Expresión corporal, mirada y carisma en el baile", maxScore: 10, order: 6 },
+  { id: "c_tesitura", discipline: "CANTO", name: "Tesitura", description: "Rango, extensión vocal y comodidad en agudos/graves", maxScore: 10, order: 1 },
+  { id: "c_afinacion", discipline: "CANTO", name: "Afinación", description: "Precisión tonal, oído armónico y afinación en intervalos", maxScore: 10, order: 2 },
+  { id: "c_proyeccion", discipline: "CANTO", name: "Proyección", description: "Potencia, resonancia y llegada del sonido sin tensión", maxScore: 10, order: 3 },
+  { id: "c_diccion", discipline: "CANTO", name: "Dicción", description: "Claridad en la articulación de vocales y consonantes", maxScore: 10, order: 4 },
 
   // Actuación
-  { id: "a_interpretacion", discipline: "ACTUACION", name: "Interpretación & Verdad", description: "Credibilidad emocional y autenticidad del personaje", maxScore: 10, order: 1 },
-  { id: "a_proyeccion", discipline: "ACTUACION", name: "Proyección & Dicción Escénica", description: "Volumen, articulación y llegada de la voz al público", maxScore: 10, order: 2 },
-  { id: "a_improvisacion", discipline: "ACTUACION", name: "Improvisación & Escucha", description: "Reacción espontánea a estímulos de dirección y compañeros", maxScore: 10, order: 3 },
-  { id: "a_presencia", discipline: "ACTUACION", name: "Presencia & Dominio Escénico", description: "Seguridad, uso del espacio escénico y magnetismo", maxScore: 10, order: 4 },
-  { id: "a_conexion", discipline: "ACTUACION", name: "Conexión con el Texto", description: "Comprensión del subtexto, pausas y arcos dramáticos", maxScore: 10, order: 5 },
+  { id: "a_interpretacion", discipline: "ACTUACION", name: "Interpretación", description: "Construcción del personaje, verdad y credibilidad escénica", maxScore: 10, order: 1 },
+  { id: "a_presencia", discipline: "ACTUACION", name: "Presencia Escénica", description: "Seguridad, magnetismo y dominio del espacio", maxScore: 10, order: 2 },
+  { id: "a_creatividad", discipline: "ACTUACION", name: "Creatividad", description: "Propuesta actoral, espontaneidad y toma de riesgos", maxScore: 10, order: 3 },
+  { id: "a_naturalidad", discipline: "ACTUACION", name: "Naturalidad", description: "Organicidad, fluidez y escucha activa con el texto", maxScore: 10, order: 4 },
+
+  // Danza / Coreografía
+  { id: "d_tecnica", discipline: "COREOGRAFIA", name: "Técnica", description: "Alineación corporal, colocación, limpieza y ejecución", maxScore: 10, order: 1 },
+  { id: "d_memoria", discipline: "COREOGRAFIA", name: "Memoria", description: "Velocidad de retención de pasos y secuencias coreográficas", maxScore: 10, order: 2 },
+  { id: "d_expresion", discipline: "COREOGRAFIA", name: "Expresión Corporal", description: "Proyección emocional, carisma y gestualidad en el baile", maxScore: 10, order: 3 },
+  { id: "d_energia", discipline: "COREOGRAFIA", name: "Energía", description: "Fuerza, dinamismo, ritmo y ataque del movimiento", maxScore: 10, order: 4 },
 ];
 
 export function getStoredCriteria(): EvaluationCriteria[] {

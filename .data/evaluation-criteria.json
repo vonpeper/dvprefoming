@@ -1,0 +1,98 @@
+[
+  {
+    "id": "c_tesitura",
+    "discipline": "CANTO",
+    "name": "Tesitura",
+    "description": "Rango, extensión vocal y comodidad en agudos/graves",
+    "maxScore": 10,
+    "order": 1
+  },
+  {
+    "id": "c_afinacion",
+    "discipline": "CANTO",
+    "name": "Afinación",
+    "description": "Precisión tonal, oído armónico y afinación en intervalos",
+    "maxScore": 10,
+    "order": 2
+  },
+  {
+    "id": "c_proyeccion",
+    "discipline": "CANTO",
+    "name": "Proyección",
+    "description": "Potencia, resonancia y llegada del sonido sin tensión",
+    "maxScore": 10,
+    "order": 3
+  },
+  {
+    "id": "c_diccion",
+    "discipline": "CANTO",
+    "name": "Dicción",
+    "description": "Claridad en la articulación de vocales y consonantes",
+    "maxScore": 10,
+    "order": 4
+  },
+  {
+    "id": "a_interpretacion",
+    "discipline": "ACTUACION",
+    "name": "Interpretación",
+    "description": "Construcción del personaje, verdad y credibilidad escénica",
+    "maxScore": 10,
+    "order": 1
+  },
+  {
+    "id": "a_presencia",
+    "discipline": "ACTUACION",
+    "name": "Presencia Escénica",
+    "description": "Seguridad, magnetismo y dominio del espacio",
+    "maxScore": 10,
+    "order": 2
+  },
+  {
+    "id": "a_creatividad",
+    "discipline": "ACTUACION",
+    "name": "Creatividad",
+    "description": "Propuesta actoral, espontaneidad y toma de riesgos",
+    "maxScore": 10,
+    "order": 3
+  },
+  {
+    "id": "a_naturalidad",
+    "discipline": "ACTUACION",
+    "name": "Naturalidad",
+    "description": "Organicidad, fluidez y escucha activa con el texto",
+    "maxScore": 10,
+    "order": 4
+  },
+  {
+    "id": "d_tecnica",
+    "discipline": "COREOGRAFIA",
+    "name": "Técnica",
+    "description": "Alineación corporal, colocación, limpieza y ejecución",
+    "maxScore": 10,
+    "order": 1
+  },
+  {
+    "id": "d_memoria",
+    "discipline": "COREOGRAFIA",
+    "name": "Memoria",
+    "description": "Velocidad de retención de pasos y secuencias coreográficas",
+    "maxScore": 10,
+    "order": 2
+  },
+  {
+    "id": "d_expresion",
+    "discipline": "COREOGRAFIA",
+    "name": "Expresión Corporal",
+    "description": "Proyección emocional, carisma y gestualidad en el baile",
+    "maxScore": 10,
+    "order": 3
+  },
+  {
+    "id": "d_energia",
+    "discipline": "COREOGRAFIA",
+    "name": "Energía",
+    "description": "Fuerza, dinamismo, ritmo y ataque del movimiento",
+    "maxScore": 10,
+    "order": 4
+  }
+]
