@@ -266,10 +266,16 @@ export default function MediaLibraryPage() {
         )}
       </div>
 
-      {/* IMAGE DETAIL / ACTIONS MODAL */}
+      {/* MEDIA DETAILS MODAL */}
       {selectedItem && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#161B22] border border-[#30363D] rounded-2xl max-w-3xl w-full p-6 sm:p-8 flex flex-col gap-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setSelectedItem(null)}
+        >
+          <div
+            className="bg-[#161B22] border border-[#30363D] rounded-2xl max-w-3xl w-full p-6 sm:p-8 flex flex-col gap-6 shadow-2xl max-h-[90vh] overflow-y-auto cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
             <div className="flex justify-between items-start border-b border-[#30363D] pb-3">
               <div>

@@ -21,6 +21,16 @@ export default function ProductionsSection() {
       .catch(() => {});
   }, []);
 
+  // Close modal with Escape key
+  useEffect(() => {
+    if (!selectedProduction) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedProduction(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedProduction]);
+
   return (
     <section id="producciones" className="relative w-full py-20 px-4 sm:px-6 lg:px-8 border-b-4 border-border-editorial bg-transparent" aria-labelledby="heading-producciones">
       <div className="mx-auto max-w-container-max">
@@ -155,12 +165,16 @@ export default function ProductionsSection() {
       {/* ================= WIDE-FORMAT MOVIE & SHOW PRODUCTION MODAL ================= */}
       {selectedProduction && (
         <div
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-4 sm:p-6 overflow-y-auto cursor-pointer"
           role="dialog"
           aria-modal="true"
           aria-label={`Ficha de ${selectedProduction.title}`}
+          onClick={() => setSelectedProduction(null)}
         >
-          <div className="bg-[#101016] border-2 border-rose-500/40 rounded-3xl max-w-3xl w-full overflow-hidden shadow-[0_25px_80px_rgba(0,0,0,0.95)] flex flex-col max-h-[92vh] animate-fade-in relative">
+          <div
+            className="bg-[#101016] border-2 border-rose-500/40 rounded-3xl max-w-3xl w-full overflow-hidden shadow-[0_25px_80px_rgba(0,0,0,0.95)] flex flex-col max-h-[92vh] animate-fade-in relative cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
             
             {/* 1. CINEMATIC WIDE HERO HEADER (16:9 / 21:9) */}
             <div className="w-full aspect-[16/9] sm:aspect-[21/9] bg-black overflow-hidden relative shrink-0 border-b border-[#252535]">

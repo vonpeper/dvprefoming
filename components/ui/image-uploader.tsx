@@ -173,8 +173,14 @@ export default function ImageUploader({
 
       {/* GALLERY PICKER MODAL */}
       {galleryOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#161B22] border border-[#30363D] rounded-2xl max-w-4xl w-full p-6 flex flex-col gap-6 shadow-2xl max-h-[85vh] overflow-hidden">
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setGalleryOpen(false)}
+        >
+          <div
+            className="bg-[#161B22] border border-[#30363D] rounded-2xl max-w-4xl w-full p-6 flex flex-col gap-6 shadow-2xl max-h-[85vh] overflow-hidden cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center border-b border-[#30363D] pb-3">
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">

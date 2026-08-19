@@ -21,6 +21,16 @@ export default function StripeCheckoutModal({
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Close on Escape key
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !program) return null;
 
   const price = paymentType === "SUBSCRIPTION" ? program.monthlyPrice || 2400 : program.registrationFee || 500;
@@ -67,11 +77,15 @@ export default function StripeCheckoutModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-fade-in"
+      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-fade-in cursor-pointer"
       role="dialog"
       aria-modal="true"
+      onClick={onClose}
     >
-      <div className="bg-[#101016] border-2 border-purple-500/40 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl flex flex-col my-auto">
+      <div
+        className="bg-[#101016] border-2 border-purple-500/40 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl flex flex-col my-auto cursor-default"
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-950/80 via-[#151522] to-rose-950/60 p-6 border-b border-[#252535] relative">

@@ -325,8 +325,14 @@ export default function AuditionsDashboardPage() {
 
       {/* APPLICANT DETAIL MODAL */}
       {selectedAudition && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#161B22] border border-[#30363D] rounded-2xl max-w-2xl w-full p-6 sm:p-8 flex flex-col gap-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setSelectedAudition(null)}
+        >
+          <div
+            className="bg-[#161B22] border border-[#30363D] rounded-2xl max-w-2xl w-full p-6 sm:p-8 flex flex-col gap-6 shadow-2xl max-h-[90vh] overflow-y-auto cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
             <div className="flex justify-between items-start border-b border-[#30363D] pb-4">
               <div>
