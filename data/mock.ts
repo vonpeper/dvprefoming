@@ -230,7 +230,8 @@ export const mockProductions: Production[] = [
 export const mockAuditions: AuditionRegistration[] = [
   {
     id: "audition_registro_activo",
-    folio: "AUD-2026-DV-001",
+    folio: "DV-585",
+    auditionNumber: "585",
     fullName: "Aspirante a Teatro Musical",
     email: "contacto@dvperformingarts.com",
     phone: "4776558156",
@@ -238,6 +239,8 @@ export const mockAuditions: AuditionRegistration[] = [
     programId: "prog_teatro_musical",
     experienceNotes: "Audición abierta para 'Si no es ahora' y talleres de alto rendimiento.",
     status: "APPROVED",
+    assignedRole: "Elenco Principal",
+    overallScore: 9.4,
     createdAt: MOCK_DATE,
     updatedAt: MOCK_DATE,
   },

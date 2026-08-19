@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     const res = await sendAuditionRegistrationEmail({
       fullName: fullName || "Aspirante de Prueba",
       email: to,
-      folio: folio || "AUD-2026-DV-0585",
+      folio: folio || "DV-585",
       auditionNumber: "585",
       productionName: productionName || "Si No Es Ahora (El Musical)",
       programName: "Teatro Musical Integral",

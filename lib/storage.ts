@@ -37,14 +37,13 @@ export function saveStoredAuditions(auditions: AuditionRegistration[]) {
 
 export function createAudition(data: Omit<AuditionRegistration, "id" | "folio" | "createdAt" | "updatedAt">): AuditionRegistration {
   const auditions = getStoredAuditions();
-  const currentYear = new Date().getFullYear();
-  const nextSequence = auditions.length + 1;
-  const paddedSequence = String(nextSequence).padStart(4, "0");
-  const folio = `AUD-${currentYear}-DV-${paddedSequence}`;
+  const nextNum = 500 + auditions.length + 1;
+  const folio = `DV-${nextNum}`;
 
   const newRecord: AuditionRegistration = {
     id: `aud_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
     folio,
+    auditionNumber: nextNum,
     ...data,
     status: data.status || "PENDING_REVIEW",
     whatsappNotified: false,
@@ -84,19 +83,30 @@ export function updateAuditionStatus(
 export function getAuditionByFolioOrContact(query: string): AuditionRegistration | null {
   if (!query) return null;
   const auditions = getStoredAuditions();
-  const cleanQuery = query.trim().toLowerCase();
-  const numericOnly = cleanQuery.replace(/\D/g, "");
+  const cleanQuery = query.trim().toLowerCase().replace(/[^a-z0-9]/g, ""); // e.g. "dv585" or "585"
+  const numericOnly = query.replace(/\D/g, "");
 
   return (
     auditions.find((a) => {
-      // Direct Folio match
-      if (a.folio && a.folio.toLowerCase() === cleanQuery) return true;
-      // Sequence number match (e.g. 585 or 0585)
-      if (numericOnly && a.folio && a.folio.includes(numericOnly)) return true;
+      if (!a) return false;
+      const cleanFolio = (a.folio || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+      
+      // Direct or normalized match (e.g. "DV-585", "dv585", "585")
+      if (cleanFolio && (cleanFolio === cleanQuery || cleanFolio.includes(cleanQuery) || cleanQuery.includes(cleanFolio))) {
+        return true;
+      }
+      // Numeric matching (e.g. typing "585" matches "DV-585" or "AUD-2026-DV-0585")
+      if (numericOnly && (cleanFolio.includes(numericOnly) || String(a.auditionNumber || "").includes(numericOnly))) {
+        return true;
+      }
       // Email match
-      if (a.email && a.email.toLowerCase() === cleanQuery) return true;
+      if (a.email && a.email.toLowerCase().includes(query.trim().toLowerCase())) {
+        return true;
+      }
       // Phone match
-      if (numericOnly && a.phone && a.phone.replace(/\D/g, "").includes(numericOnly)) return true;
+      if (numericOnly && a.phone && a.phone.replace(/\D/g, "").includes(numericOnly)) {
+        return true;
+      }
       return false;
     }) || null
   );

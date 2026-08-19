@@ -116,7 +116,7 @@ function AuditionLookupContent() {
             Consulta de Folio & Estatus de Audición
           </h1>
           <p className="text-sm sm:text-base text-zinc-400 max-w-2xl">
-            Ingresa tu número de folio (ej. <code className="text-rose-400 font-mono">AUD-2026-DV-0042</code> o <code className="text-rose-400 font-mono">042</code>) o el teléfono que registraste para consultar tu veredicto de casting.
+            Ingresa tu número de folio corto (ej. <code className="text-rose-400 font-mono font-bold">DV-585</code> o simplemente <code className="text-rose-400 font-mono font-bold">585</code>) o tu teléfono para consultar tu resultado de casting.
           </p>
         </div>
 
@@ -125,10 +125,10 @@ function AuditionLookupContent() {
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder="Ej. AUD-2026-DV-0001, 001 o 4771234567..."
+              placeholder="Ej. DV-585, 585 o 4771234567..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full bg-[#12121A]/90 border-2 border-[#2A2A3E] focus:border-rose-500 rounded-2xl px-5 py-4 text-sm sm:text-base text-white placeholder-zinc-500 focus:outline-none transition-all shadow-inner font-mono"
+              className="w-full bg-[#12121A]/90 border-2 border-[#2A2A3E] focus:border-rose-500 rounded-2xl px-5 py-4 text-sm sm:text-base text-white placeholder-zinc-500 focus:outline-none transition-all shadow-inner font-mono font-bold"
             />
           </div>
           <button

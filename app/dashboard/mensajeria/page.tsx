@@ -175,7 +175,7 @@ export default function MessagingDashboardPage() {
           to: testEmailTo,
           fullName: "Aspirante de Prueba",
           productionName: "Si No Es Ahora (El Musical)",
-          folio: "AUD-2026-DV-0585",
+          folio: "DV-585",
         }),
       });
 

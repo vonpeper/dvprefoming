@@ -1,7 +1,8 @@
 [
   {
     "id": "aud_1787040727908_z5lhm",
-    "folio": "AUD-2026-DV-0003",
+    "folio": "DV-503",
+    "auditionNumber": "503",
     "fullName": "Rodrigo Montes",
     "email": "rodrigo@test.com",
     "phone": "4779876543",
@@ -18,7 +19,8 @@
   },
   {
     "id": "aud_1787040377388_h4q16",
-    "folio": "AUD-2026-DV-0002",
+    "folio": "DV-502",
+    "auditionNumber": "502",
     "fullName": "Mariana Valenzuela",
     "email": "mariana@test.com",
     "phone": "4771234567",
@@ -26,14 +28,17 @@
     "programName": "Teatro Musical Integral",
     "preferredSchedule": "Turno Vespertino (16:00 - 20:00)",
     "experienceNotes": "3 años de canto coral y danza jazz",
-    "status": "PENDING_REVIEW",
+    "status": "APPROVED",
+    "assignedRole": "Mariana",
+    "overallScore": 9.2,
     "whatsappNotified": true,
     "createdAt": "2026-08-18T08:06:17.388Z",
     "updatedAt": "2026-08-18T08:06:17.388Z"
   },
   {
     "id": "audition_registro_activo",
-    "folio": "AUD-2026-DV-001",
+    "folio": "DV-585",
+    "auditionNumber": "585",
     "fullName": "Aspirante a Teatro Musical",
     "email": "contacto@dvperformingarts.com",
     "phone": "4776558156",
@@ -41,6 +46,8 @@
     "programId": "prog_teatro_musical",
     "experienceNotes": "Audición abierta para 'Si no es ahora' y talleres de alto rendimiento.",
     "status": "APPROVED",
+    "assignedRole": "Elenco Principal",
+    "overallScore": 9.5,
     "createdAt": "2026-08-06T12:00:00.000Z",
     "updatedAt": "2026-08-06T12:00:00.000Z"
   }
