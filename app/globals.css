@@ -5,7 +5,14 @@
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, monospace;
   --font-display: var(--font-display), "Outfit", sans-serif;
-  --font-urban-brush: var(--font-urban-brush), "Permanent Marker", cursive, sans-serif;
+
+  /* Urban Brush Families (Grotters style + backups) */
+  --font-urban-brush: var(--font-road-rage), var(--font-rock-salt), cursive, sans-serif;
+  --font-road-rage: var(--font-road-rage), cursive, sans-serif;
+  --font-rock-salt: var(--font-rock-salt), cursive, sans-serif;
+  --font-sedgwick: var(--font-sedgwick), cursive, sans-serif;
+  --font-rubik-paint: var(--font-rubik-paint), cursive, sans-serif;
+  --font-permanent-marker: var(--font-permanent-marker), cursive, sans-serif;
 
   /* Editorial & Urban Color Palette (Academia Urbana de Danza & Teatro Musical) */
   --color-background-main: #09090D;         /* Negro Estudio Cálido Profundo */
@@ -53,6 +60,26 @@ body {
 
 .font-urban-brush {
   font-family: var(--font-urban-brush);
+}
+
+.font-road-rage {
+  font-family: var(--font-road-rage);
+}
+
+.font-rock-salt {
+  font-family: var(--font-rock-salt);
+}
+
+.font-sedgwick {
+  font-family: var(--font-sedgwick);
+}
+
+.font-rubik-paint {
+  font-family: var(--font-rubik-paint);
+}
+
+.font-permanent-marker {
+  font-family: var(--font-permanent-marker);
 }
 
 /* Dynamic Ticker (Editorial Marquee) */
