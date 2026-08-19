@@ -508,14 +508,14 @@ export default function AuditionsDashboardPage() {
 
               <div className="flex items-center gap-2 text-xs font-mono">
                 <span className="text-slate-400">Escala:</span>
-                <span className="bg-amber-400/20 text-amber-300 border border-amber-400/40 px-2 py-0.5 rounded font-bold">
-                  9-10 Sobresaliente
-                </span>
                 <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded font-bold">
-                  7-8 Aprobado
+                  8-10 Sobresaliente (Verde)
                 </span>
-                <span className="bg-rose-500/20 text-rose-300 border border-rose-500/40 px-2 py-0.5 rounded font-bold">
-                  0-6 En desarrollo
+                <span className="bg-yellow-400/20 text-yellow-300 border border-yellow-400/40 px-2 py-0.5 rounded font-bold">
+                  5-7 En Observación (Amarillo)
+                </span>
+                <span className="bg-red-500/20 text-red-300 border border-red-500/40 px-2 py-0.5 rounded font-bold">
+                  0-4 En desarrollo (Rojo)
                 </span>
               </div>
             </div>
@@ -546,6 +546,13 @@ export default function AuditionsDashboardPage() {
                     rankedAuditions.map((aud, index) => {
                       const pos = index + 1;
                       const hasOverall = aud.overallScore !== undefined && aud.overallScore > 0;
+
+                      const getBadgeColor = (val: number | undefined) => {
+                        if (val === undefined || val === null) return "text-slate-600";
+                        if (val >= 8) return "bg-emerald-950/80 text-emerald-300 border-emerald-500/40";
+                        if (val >= 5) return "bg-yellow-950/80 text-yellow-300 border-yellow-500/40";
+                        return "bg-red-950/80 text-red-300 border-red-500/40";
+                      };
 
                       return (
                         <tr
@@ -591,7 +598,7 @@ export default function AuditionsDashboardPage() {
                           {/* Canto Score */}
                           <td className="py-3 px-4 text-center font-mono">
                             {aud.cantoAverage !== undefined ? (
-                              <span className="bg-purple-950/80 text-purple-300 border border-purple-500/40 px-2 py-0.5 rounded font-bold">
+                              <span className={`border px-2 py-0.5 rounded font-bold ${getBadgeColor(aud.cantoAverage)}`}>
                                 {aud.cantoAverage}
                               </span>
                             ) : (
@@ -602,7 +609,7 @@ export default function AuditionsDashboardPage() {
                           {/* Dance Score */}
                           <td className="py-3 px-4 text-center font-mono">
                             {aud.danceAverage !== undefined ? (
-                              <span className="bg-rose-950/80 text-rose-300 border border-rose-500/40 px-2 py-0.5 rounded font-bold">
+                              <span className={`border px-2 py-0.5 rounded font-bold ${getBadgeColor(aud.danceAverage)}`}>
                                 {aud.danceAverage}
                               </span>
                             ) : (
@@ -613,7 +620,7 @@ export default function AuditionsDashboardPage() {
                           {/* Acting Score */}
                           <td className="py-3 px-4 text-center font-mono">
                             {aud.actingAverage !== undefined ? (
-                              <span className="bg-amber-950/80 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded font-bold">
+                              <span className={`border px-2 py-0.5 rounded font-bold ${getBadgeColor(aud.actingAverage)}`}>
                                 {aud.actingAverage}
                               </span>
                             ) : (
@@ -624,7 +631,13 @@ export default function AuditionsDashboardPage() {
                           {/* Overall Score */}
                           <td className="py-3 px-4 text-center font-mono">
                             {hasOverall ? (
-                              <span className="text-sm font-black bg-gradient-to-r from-purple-600 to-rose-600 text-white px-3 py-1 rounded-xl shadow-md">
+                              <span className={`text-sm font-black px-3 py-1 rounded-xl shadow-md border ${
+                                (aud.overallScore || 0) >= 8
+                                  ? "bg-emerald-600 text-white border-emerald-400 shadow-emerald-950/50"
+                                  : (aud.overallScore || 0) >= 5
+                                  ? "bg-yellow-500 text-black border-yellow-300 shadow-yellow-950/50"
+                                  : "bg-red-600 text-white border-red-400 shadow-red-950/50"
+                              }`}>
                                 {aud.overallScore} / 10
                               </span>
                             ) : (

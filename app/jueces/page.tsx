@@ -754,11 +754,23 @@ export default function JudgesPortalPage() {
                 </div>
 
                 {/* Live Average Score Display */}
-                <div className="bg-black/60 border-2 border-purple-500/60 px-5 py-3 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-lg">
-                  <span className="text-[10px] font-mono uppercase text-purple-300 font-bold tracking-wider">
+                <div className={`bg-black/60 border-2 px-5 py-3 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-lg ${
+                  Number(liveAverage) >= 8
+                    ? "border-emerald-500/60 shadow-emerald-950/40"
+                    : Number(liveAverage) >= 5
+                    ? "border-yellow-500/60 shadow-yellow-950/40"
+                    : "border-red-500/60 shadow-red-950/40"
+                }`}>
+                  <span className="text-[10px] font-mono uppercase text-zinc-300 font-bold tracking-wider">
                     Promedio en {discipline}
                   </span>
-                  <span className="text-3xl font-black text-amber-400 font-mono mt-0.5">
+                  <span className={`text-3xl font-black font-mono mt-0.5 ${
+                    Number(liveAverage) >= 8
+                      ? "text-emerald-400"
+                      : Number(liveAverage) >= 5
+                      ? "text-yellow-400"
+                      : "text-red-400"
+                  }`}>
                     {liveAverage} <span className="text-sm text-zinc-400">/ 10</span>
                   </span>
                 </div>
@@ -779,7 +791,13 @@ export default function JudgesPortalPage() {
                         <span className="font-bold text-white">
                           {sc.discipline === "CANTO" ? "🎤" : sc.discipline === "COREOGRAFIA" ? "💃" : "🎭"} {sc.judgeName}:
                         </span>
-                        <span className="font-black text-amber-400">{sc.averageScore} / 10</span>
+                        <span className={`font-black ${
+                          sc.averageScore >= 8
+                            ? "text-emerald-400"
+                            : sc.averageScore >= 5
+                            ? "text-yellow-400"
+                            : "text-red-400"
+                        }`}>{sc.averageScore} / 10</span>
                         {sc.judgeNotes && (
                           <span className="text-[10px] text-zinc-400 italic truncate max-w-[150px]">
                             "{sc.judgeNotes}"
@@ -812,28 +830,43 @@ export default function JudgesPortalPage() {
                           )}
                         </div>
 
-                        {/* Quick 0-10 Buttons */}
+                        {/* Quick 0-10 Buttons (Rojo a Amarillo 0-7, Verde 8-10) */}
                         <div className="flex items-center gap-1 overflow-x-auto py-1">
-                          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                            <button
-                              key={num}
-                              type="button"
-                              onClick={() => handleScoreChange(c.id, num)}
-                              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg font-mono font-bold text-xs flex items-center justify-center transition-all cursor-pointer shrink-0 ${
-                                currentScore === num
-                                  ? num >= 9
-                                    ? "bg-amber-400 text-black shadow-lg shadow-amber-400/40 font-black scale-110"
-                                    : num >= 7
-                                    ? "bg-emerald-500 text-white font-black scale-110"
-                                    : num >= 5
-                                    ? "bg-orange-500 text-white font-black"
-                                    : "bg-rose-600 text-white font-black"
-                                  : "bg-[#222232] text-zinc-400 hover:text-white hover:bg-[#303046]"
-                              }`}
-                            >
-                              {num}
-                            </button>
-                          ))}
+                          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
+                            const isSelected = currentScore === num;
+
+                            let btnStyle = "bg-[#222232] text-zinc-400 hover:text-white hover:bg-[#303046]";
+                            if (isSelected) {
+                              if (num === 10) {
+                                btnStyle = "bg-emerald-400 text-black font-black scale-115 shadow-xl shadow-emerald-400/50 ring-2 ring-emerald-300";
+                              } else if (num === 9) {
+                                btnStyle = "bg-emerald-500 text-white font-black scale-110 shadow-lg shadow-emerald-500/40";
+                              } else if (num === 8) {
+                                btnStyle = "bg-emerald-600 text-white font-black scale-110 shadow-md shadow-emerald-700/40";
+                              } else if (num === 7) {
+                                btnStyle = "bg-yellow-400 text-black font-black scale-110 shadow-lg shadow-yellow-400/40";
+                              } else if (num === 6) {
+                                btnStyle = "bg-yellow-500 text-black font-black scale-110 shadow-md shadow-yellow-500/40";
+                              } else if (num === 5) {
+                                btnStyle = "bg-amber-500 text-white font-black scale-110 shadow-md shadow-amber-500/40";
+                              } else if (num >= 3) {
+                                btnStyle = "bg-rose-500 text-white font-black scale-110 shadow-md shadow-rose-600/40";
+                              } else {
+                                btnStyle = "bg-red-600 text-white font-black scale-110 shadow-md shadow-red-700/50";
+                              }
+                            }
+
+                            return (
+                              <button
+                                key={num}
+                                type="button"
+                                onClick={() => handleScoreChange(c.id, num)}
+                                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg font-mono font-bold text-xs flex items-center justify-center transition-all cursor-pointer shrink-0 ${btnStyle}`}
+                              >
+                                {num}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     );
