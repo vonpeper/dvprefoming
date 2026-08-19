@@ -7,15 +7,8 @@ import {
   EvaluationCriteria,
   EvaluationDiscipline,
   Production,
+  Teacher,
 } from "@/types/mock";
-
-const DEFAULT_JUDGES = [
-  { name: "Diego Vieyra", title: "Director General & Artístico", defaultDiscipline: "CANTO" as EvaluationDiscipline },
-  { name: "Fanny Monroy", title: "Directora Vocal & Maestra de Canto", defaultDiscipline: "CANTO" as EvaluationDiscipline },
-  { name: "Andrés Rodríguez", title: "Coreógrafo & Director de Danza", defaultDiscipline: "COREOGRAFIA" as EvaluationDiscipline },
-  { name: "Angel Piedra", title: "Docente de Actuación & Texto Teatral", defaultDiscipline: "ACTUACION" as EvaluationDiscipline },
-  { name: "Carolina Torres", title: "Docente de Expresión Corporal & Danza", defaultDiscipline: "COREOGRAFIA" as EvaluationDiscipline },
-];
 
 export default function JudgesPortalPage() {
   // Session State
@@ -27,7 +20,8 @@ export default function JudgesPortalPage() {
   // Selected Production (null means show production selection cards gallery)
   const [selectedProduction, setSelectedProduction] = useState<Production | "ALL" | null>(null);
 
-  // Data State
+  // Dynamic Data State
+  const [teachers, setTeachers] = useState<(Teacher & { defaultDiscipline?: EvaluationDiscipline })[]>([]);
   const [auditions, setAuditions] = useState<AuditionRegistration[]>([]);
   const [productions, setProductions] = useState<Production[]>([]);
   const [criteria, setCriteria] = useState<EvaluationCriteria[]>([]);
@@ -41,22 +35,25 @@ export default function JudgesPortalPage() {
   const [savingScore, setSavingScore] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  // Load criteria, auditions, and productions
+  // Load criteria, auditions, productions, and teachers dynamically
   const loadData = async () => {
     setLoading(true);
     try {
-      const [critRes, audRes, prodRes] = await Promise.all([
+      const [critRes, audRes, prodRes, teachRes] = await Promise.all([
         fetch("/api/auditions/criteria"),
         fetch("/api/auditions/list"),
         fetch("/api/productions"),
+        fetch("/api/teachers"),
       ]);
 
       const critData = await critRes.json();
       const audData = await audRes.json();
       const prodData = await prodRes.json();
+      const teachData = await teachRes.json();
 
       if (critData?.criteria) setCriteria(critData.criteria);
       if (prodData?.productions) setProductions(prodData.productions);
+      if (teachData?.teachers) setTeachers(teachData.teachers);
 
       const audList: AuditionRegistration[] = audData?.auditions || audData?.registrations || [];
       setAuditions(audList);
@@ -108,10 +105,16 @@ export default function JudgesPortalPage() {
     setSelectedProduction(null);
   };
 
-  const selectJudgePreset = (preset: typeof DEFAULT_JUDGES[0]) => {
-    setJudgeName(preset.name);
-    setJudgeTitle(preset.title);
-    setDiscipline(preset.defaultDiscipline);
+  const selectTeacherPreset = (teacher: Teacher & { defaultDiscipline?: EvaluationDiscipline }) => {
+    setJudgeName(teacher.fullName);
+    setJudgeTitle(
+      teacher.specialties && teacher.specialties.length > 0
+        ? `Docente de ${teacher.specialties[0]}`
+        : "Docente Titular"
+    );
+    if (teacher.defaultDiscipline) {
+      setDiscipline(teacher.defaultDiscipline);
+    }
   };
 
   // Filter criteria by active discipline
@@ -122,7 +125,6 @@ export default function JudgesPortalPage() {
     if (!prod || prod === "ALL") return true;
     if (a.productionId && a.productionId === prod.id) return true;
     if (a.productionName && (a.productionName === prod.title || a.productionName.toLowerCase().includes(prod.title.toLowerCase()) || prod.title.toLowerCase().includes(a.productionName.toLowerCase()))) return true;
-    // Fallback: If candidate has no production assigned and prod is default "Si No Es Ahora"
     if (!a.productionId && !a.productionName && prod.title.includes("Si No Es Ahora")) return true;
     return false;
   };
@@ -254,7 +256,7 @@ export default function JudgesPortalPage() {
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-rose-600/15 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="max-w-xl w-full bg-[#12121A]/95 backdrop-blur-2xl border-2 border-[#28283C] rounded-3xl p-6 sm:p-10 shadow-2xl relative z-10 flex flex-col gap-6">
+        <div className="max-w-2xl w-full bg-[#12121A]/95 backdrop-blur-2xl border-2 border-[#28283C] rounded-3xl p-6 sm:p-10 shadow-2xl relative z-10 flex flex-col gap-6">
           
           <div className="text-center flex flex-col items-center gap-2">
             <span className="text-3xl">⚖️</span>
@@ -265,33 +267,55 @@ export default function JudgesPortalPage() {
               Mesa de Jueces & Calificación en Vivo
             </h1>
             <p className="text-xs text-zinc-400 max-w-md">
-              Ingresa con tu perfil docente o juez invitado y selecciona tu disciplina de evaluación.
+              Selecciona tu perfil de docente activo (sincronizado con la academia) o escribe tu nombre como jurado invitado.
             </p>
           </div>
 
           <form onSubmit={handleLogin} className="flex flex-col gap-5 text-xs">
             
-            {/* Preset Teachers Chips */}
+            {/* Dynamic Teachers Chips from Database */}
             <div className="flex flex-col gap-2">
-              <label className="font-semibold text-zinc-300">
-                Selecciona tu perfil de docente o ingresa tu nombre:
+              <label className="font-semibold text-zinc-300 flex items-center justify-between">
+                <span>👨‍🏫 Planta Docente Sincronizada:</span>
+                <span className="text-[10px] font-mono text-purple-400">{teachers.length} Maestros Activos</span>
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {DEFAULT_JUDGES.map((j) => (
-                  <button
-                    key={j.name}
-                    type="button"
-                    onClick={() => selectJudgePreset(j)}
-                    className={`p-2.5 rounded-xl border text-left transition-all flex flex-col gap-0.5 cursor-pointer ${
-                      judgeName === j.name
-                        ? "bg-purple-950/80 border-purple-500 text-white shadow-md shadow-purple-950/50"
-                        : "bg-[#1A1A26] border-[#2A2A3E] text-zinc-300 hover:border-zinc-500"
-                    }`}
-                  >
-                    <span className="font-bold text-xs">{j.name}</span>
-                    <span className="text-[10px] text-zinc-400 truncate">{j.title}</span>
-                  </button>
-                ))}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1">
+                {teachers.map((t) => {
+                  const isSelected = judgeName === t.fullName;
+                  const discLabel = t.defaultDiscipline === "CANTO" ? "🎤 Canto" : t.defaultDiscipline === "COREOGRAFIA" ? "💃 Danza" : "🎭 Actuación";
+
+                  return (
+                    <button
+                      key={t.id || t.fullName}
+                      type="button"
+                      onClick={() => selectTeacherPreset(t)}
+                      className={`p-2.5 rounded-2xl border text-left transition-all flex items-center gap-3 cursor-pointer ${
+                        isSelected
+                          ? "bg-purple-950/80 border-purple-500 text-white shadow-md shadow-purple-950/50"
+                          : "bg-[#1A1A26] border-[#2A2A3E] text-zinc-300 hover:border-zinc-500"
+                      }`}
+                    >
+                      {/* Teacher Avatar */}
+                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-black/60 shrink-0 border border-white/10">
+                        {t.imageUrl ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img src={t.imageUrl} alt={t.fullName} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-sm">👨‍🏫</div>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col truncate">
+                        <span className="font-bold text-xs text-white truncate">{t.fullName}</span>
+                        <span className="text-[10px] text-amber-400 font-mono font-semibold">{discLabel}</span>
+                        <span className="text-[9px] text-zinc-400 truncate">
+                          {(t.specialties || []).slice(0, 2).join(", ") || "Docente"}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -328,9 +352,9 @@ export default function JudgesPortalPage() {
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { id: "CANTO", label: "🎤 Canto", desc: "Voz y afinación" },
-                  { id: "COREOGRAFIA", label: "💃 Danza", desc: "Coreo y ritmo" },
-                  { id: "ACTUACION", label: "🎭 Actuación", desc: "Texto y escena" },
+                  { id: "CANTO", label: "🎤 Canto", desc: "Tesitura & Afinación" },
+                  { id: "COREOGRAFIA", label: "💃 Danza", desc: "Técnica & Memoria" },
+                  { id: "ACTUACION", label: "🎭 Actuación", desc: "Interpretación & Escena" },
                 ].map((d) => (
                   <button
                     key={d.id}
@@ -358,12 +382,18 @@ export default function JudgesPortalPage() {
             </button>
           </form>
 
-          <div className="text-center pt-2 border-t border-[#202030]">
+          <div className="text-center pt-2 border-t border-[#202030] flex items-center justify-between">
             <Link
               href="/dashboard/audiciones"
               className="text-xs text-zinc-500 hover:text-white transition-colors font-mono"
             >
-              ← Ir al Panel de Control de Administrador
+              ← Ir a Control de Audiciones
+            </Link>
+            <Link
+              href="/dashboard/paginas"
+              className="text-xs text-purple-400 hover:underline font-mono"
+            >
+              Editar Planta Docente en CMS ↗
             </Link>
           </div>
         </div>

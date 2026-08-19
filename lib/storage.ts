@@ -504,6 +504,31 @@ export function saveStoredWebsiteContent(content: WebsiteContent) {
 }
 
 // ---------------------------------------------------------------------------
+// Teachers & Faculty Storage (Connected to Judges & Portal)
+// ---------------------------------------------------------------------------
+export function getStoredTeachers(): Teacher[] {
+  const content = getStoredWebsiteContent();
+  return content.teachers && content.teachers.length > 0 ? content.teachers : mockTeachers;
+}
+
+export function saveStoredTeachers(teachers: Teacher[]) {
+  const content = getStoredWebsiteContent();
+  content.teachers = teachers;
+  saveStoredWebsiteContent(content);
+}
+
+export function inferTeacherDiscipline(teacher: Teacher): EvaluationDiscipline {
+  const text = `${teacher.fullName} ${(teacher.specialties || []).join(" ")} ${teacher.bio || ""}`.toLowerCase();
+  if (text.includes("danza") || text.includes("baile") || text.includes("coreograf") || text.includes("hip hop") || text.includes("jazz") || text.includes("urbano")) {
+    return "COREOGRAFIA";
+  }
+  if (text.includes("actua") || text.includes("teatro") || text.includes("escén") || text.includes("interpret") || text.includes("dirección") || text.includes("texto")) {
+    return "ACTUACION";
+  }
+  return "CANTO";
+}
+
+// ---------------------------------------------------------------------------
 // Productions & Cartelera Storage (Connected to Auditions & Home)
 // ---------------------------------------------------------------------------
 export function getStoredProductions(): Production[] {
