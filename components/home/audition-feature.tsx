@@ -282,13 +282,21 @@ export default function AuditionFeature() {
 
                   <div className="text-[11px] text-slate-700 leading-relaxed border-t border-slate-200 pt-3 flex items-center gap-2">
                     <span className="text-lg">📱</span>
-                    <span>Hemos enviado los detalles, hora y recomendaciones a tu WhatsApp <strong className="text-slate-900">{submittedData.phone}</strong>.</span>
+                    <span>Hemos enviado tu número de audición, material en Google Drive y recomendaciones a tu correo y WhatsApp <strong className="text-slate-900">{submittedData.phone}</strong>.</span>
                   </div>
+
+                  <a
+                    href={`/audiciones/consulta?folio=${submittedData.folio}`}
+                    className="w-full py-3 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 shadow-md"
+                  >
+                    <span>🔍</span>
+                    <span>Ver Ficha y Material de Audición ↗</span>
+                  </a>
 
                   <button
                     type="button"
                     onClick={() => setSubmittedData(null)}
-                    className="w-full mt-2 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-md"
+                    className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
                   >
                     Registrar a otro aspirante &rarr;
                   </button>
@@ -462,18 +470,28 @@ export default function AuditionFeature() {
 
         </div>
 
-        {/* WhatsApp Direct Help Link */}
-        <div className="mt-8 text-center text-xs text-zinc-400">
-          ¿Dudas sobre el proceso de audición?{" "}
+        {/* WhatsApp Direct Help & Audition Lookup Link */}
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs text-zinc-400">
           <a
-            href="https://wa.me/524776558156?text=Hola,%20tengo%20dudas%20sobre%20las%20audiciones"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-purple-400 hover:text-purple-300 font-semibold underline underline-offset-4 inline-flex items-center gap-1"
+            href="/audiciones/consulta"
+            className="px-4 py-2 bg-[#161622] hover:bg-[#202030] text-rose-300 hover:text-white border border-rose-500/30 rounded-xl font-bold transition-all flex items-center gap-1.5 shadow-sm"
           >
-            <span>Escríbenos por WhatsApp (477 655 8156)</span>
+            <span>🔍</span>
+            <span>¿Ya te registraste? Consulta el estado de tu folio aquí</span>
             <span>&rarr;</span>
           </a>
+
+          <span>
+            ¿Dudas sobre el casting?{" "}
+            <a
+              href="https://wa.me/524776558156?text=Hola,%20tengo%20dudas%20sobre%20las%20audiciones"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-purple-400 hover:text-purple-300 font-semibold underline underline-offset-4 inline-flex items-center gap-1"
+            >
+              <span>WhatsApp: 477 655 8156 &rarr;</span>
+            </a>
+          </span>
         </div>
 
       </div>

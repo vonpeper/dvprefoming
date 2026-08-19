@@ -93,26 +93,60 @@ export async function sendWhatsAppMessage(payload: MessagePayload): Promise<Send
  * Builds and sends the official Audition Confirmation WhatsApp message
  */
 export async function sendAuditionConfirmation(data: AuditionNotificationData): Promise<SendMessageResult> {
-  const messageBody = `🎭 *¡REGISTRO CONFIRMADO A AUDICIONES DV PERFORMING ARTS!* 🎭
+  const auditionNum = data.folio.replace(/\D/g, "").slice(-4) || "585";
+  const driveLink = "https://drive.google.com/drive/folders/1qadnY5yaF1ZXprIXP5NY1cmAJkvQU08C?usp=drive_link";
 
-¡Hola *${data.fullName.trim()}*! Hemos recibido con éxito tu postulación para audicionar en DV Performing Arts.
+  const messageBody = `🎭 *¡HOLA ${data.fullName.trim().toUpperCase()}, YA DISTE EL PRIMER PASO!* 🎭
 
-📋 *Folio Único de Aspirante:* \`${data.folio}\`
-🎬 *Obra / Montaje:* ${data.productionName || "Si No Es Ahora (El Musical)"}
-🎭 *Disciplina / Taller:* ${data.programName}
-📍 *Sede:* Paseo de los Insurgentes #1506, Col. Jardines del Moral, CP 37160, León, Gto.
-⏰ *Turno / Horario:* ${data.auditionTime || "Horario de clases (L-V 16:00 - 20:00 / Sáb 10:00 - 15:00)"}
+Es hora de preparar la canción que te ayudará a obtener el papel de tus sueños.
 
-✨ *Recomendaciones esenciales para el día de tu audición:*
-1. 🕒 *Puntualidad:* Llegar 15 minutos antes de tu cita programada.
-2. 👕 *Vestuario:* Ropa cómoda de trabajo escénico (color negro de preferencia).
-3. 🎵 *Canto / Teatro:* Traer pista musical descargada en tu dispositivo o memorizada.
-4. 👟 *Danza:* Calzado adecuado según disciplina (tenis limpios o zapatillas) y botella de agua.
-5. 📄 *Acceso:* Presenta tu Folio de aspirante (\`${data.folio}\`) al llegar a recepción.
+📋 *Tu número de audición para "${data.productionName || "Si no es ahora"}" es:*
+*${auditionNum}* (Folio: \`${data.folio}\`)
 
-Si requieres reagendar o tienes alguna duda, responde directamente a este WhatsApp o comunícate al 477 655 8156.
+💡 *Consejos para el día de la audición:*
+• *Canción:* Prepara una canción de teatro musical o contemporánea (1 minuto de duración).
+• *Pista musical:* Trae tu pista preparada. Puedes reproducirla desde tu celular.
+• *Vestimenta:* Usa ropa cómoda. Después del canto, hay una audición de baile. *NO tienes que preparar ninguna coreografía previa*.
+• *Hidratación:* Lleva una botella de agua. Mantente hidratadx con pequeños sorbos.
+• *Enfoque:* Si estás nerviosx, respira profundo y recuerda que estás haciendo algo que amas.
+• *Acompañantes:* No podrás entrar acompañado, pero te podrán esperar afuera de las instalaciones.
 
-_DV Performing Arts &bull; Disciplina, Compromiso y Pasión._`;
+📁 *Encuentra el material para realizar tu audición en este enlace:*
+${driveLink}
+
+🔍 *Consulta o recuerda tus datos de audición en línea:*
+https://prev.dvperformingarts.com/audiciones/consulta?folio=${data.folio}
+
+Todo lo mejor,
+*Diego Vieyra — Director Artístico*
+*DV Performing Arts*`;
+
+  return sendWhatsAppMessage({
+    to: data.phone,
+    body: messageBody,
+  });
+}
+
+/**
+ * Builds and sends the Audition Approval / Successful Casting WhatsApp message
+ */
+export async function sendAuditionApprovalWhatsApp(data: AuditionNotificationData): Promise<SendMessageResult> {
+  const auditionNum = data.folio.replace(/\D/g, "").slice(-4) || "585";
+
+  const messageBody = `🌟 *¡MUCHAS FELICIDADES ${data.fullName.trim().toUpperCase()}! TU AUDICIÓN FUE EXITOSA* 🌟
+
+Nos complace informarte que has sido *APROBADO(A)* para formar parte del elenco de la producción:
+🎭 *"${data.productionName || "Si No Es Ahora (El Musical)"}"* (Folio: \`${data.folio}\` • #${auditionNum})
+
+📋 *Siguientes pasos oficiales:*
+1. 📖 Nuestro equipo de dirección artística se coordinará contigo para la primera lectura y entrega de libreto.
+2. 📝 Proceso de enrolamiento y ficha artística en la academia.
+
+💬 *¿Dudas o confirmación inmediata?* Responde directamente a este mensaje para comunicarte con coordinación.
+
+¡Bienvenidx a la compañía!
+*Diego Vieyra — Dirección General & Artística*
+*DV Performing Arts*`;
 
   return sendWhatsAppMessage({
     to: data.phone,

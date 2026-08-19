@@ -77,6 +77,8 @@ export interface AuditionRegistration {
   experienceNotes: string;
   status: "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "CONFIRMED" | "DRAFT";
   whatsappNotified?: boolean;
+  emailNotified?: boolean;
+  auditionNumber?: number | string;
   notes?: string;
   createdAt: Date;
   updatedAt: Date;

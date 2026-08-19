@@ -2,27 +2,51 @@
 
 import React, { useState, useEffect } from "react";
 import { EvolutionInstanceStatus } from "@/features/messaging/types";
+import { NotificationSettings } from "@/lib/storage";
 
 export default function MessagingDashboardPage() {
+  const [activeTab, setActiveTab] = useState<"whatsapp" | "email" | "templates" | "switches">("switches");
+  
+  // WhatsApp States
   const [status, setStatus] = useState<EvolutionInstanceStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingStatus, setLoadingStatus] = useState(true);
   const [checkingPing, setCheckingPing] = useState(false);
   const [pingTime, setPingTime] = useState<number | null>(null);
-
-  // QR Modal / States
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [qrLoading, setQrLoading] = useState(false);
   const [qrBase64, setQrBase64] = useState<string | null>(null);
   const [qrPairingCode, setQrPairingCode] = useState<string | null>(null);
   const [qrError, setQrError] = useState("");
 
-  // Test send form
+  // Test WhatsApp
   const [testPhone, setTestPhone] = useState("");
   const [testMessage, setTestMessage] = useState(
-    `🎭 *DV PERFORMING ARTS - MENSAJE DE PRUEBA*\n\n¡Hola! Este es un mensaje de prueba emitido desde la consola de Evolution API para verificar la conexión activa de WhatsApp.`
+    `🎭 *DV PERFORMING ARTS - MENSAJE DE PRUEBA*\n\n¡Hola! Este es un mensaje de prueba emitido desde la consola para verificar la conexión activa de WhatsApp.`
   );
-  const [sending, setSending] = useState(false);
-  const [sendResult, setSendResult] = useState<{ success: boolean; messageId?: string; error?: string } | null>(null);
+  const [sendingWp, setSendingWp] = useState(false);
+  const [wpSendResult, setWpSendResult] = useState<{ success: boolean; messageId?: string; error?: string } | null>(null);
+
+  // Test Email
+  const [testEmailTo, setTestEmailTo] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSendResult, setEmailSendResult] = useState<{ success: boolean; messageId?: string; error?: string } | null>(null);
+
+  // Settings & Templates State
+  const [settings, setSettings] = useState<NotificationSettings | null>(null);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch("/api/messaging/settings");
+      const data = await res.json();
+      if (data?.settings) {
+        setSettings(data.settings);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const checkStatus = async () => {
     setCheckingPing(true);
@@ -43,17 +67,41 @@ export default function MessagingDashboardPage() {
         state: "close",
       });
     } finally {
-      setLoading(false);
+      setLoadingStatus(false);
       setCheckingPing(false);
     }
   };
 
   useEffect(() => {
     checkStatus();
-    // Auto-poll status every 30s
+    fetchSettings();
     const interval = setInterval(checkStatus, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleSaveSettings = async () => {
+    if (!settings) return;
+    setSavingSettings(true);
+    setSaveSuccess(false);
+
+    try {
+      const res = await fetch("/api/messaging/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+
+      if (res.ok) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3500);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error al guardar la configuración de mensajería.");
+    } finally {
+      setSavingSettings(false);
+    }
+  };
 
   const handleRequestQR = async () => {
     setQrModalOpen(true);
@@ -78,12 +126,12 @@ export default function MessagingDashboardPage() {
     }
   };
 
-  const handleSendTest = async (e: React.FormEvent) => {
+  const handleSendTestWhatsApp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!testPhone.trim() || !testMessage.trim()) return;
 
-    setSending(true);
-    setSendResult(null);
+    setSendingWp(true);
+    setWpSendResult(null);
 
     try {
       const res = await fetch("/api/messaging/evolution/send", {
@@ -96,386 +144,644 @@ export default function MessagingDashboardPage() {
       });
 
       const data = await res.json();
-      setSendResult({
+      setWpSendResult({
         success: data.success,
-        messageId: data.result?.messageId,
-        error: data.error || data.result?.error,
+        messageId: data.messageId,
+        error: data.error,
       });
     } catch (err) {
       console.error(err);
-      setSendResult({
+      setWpSendResult({
         success: false,
-        error: "Error de conexión con el servidor.",
+        error: "Error de red al enviar el mensaje.",
       });
     } finally {
-      setSending(false);
+      setSendingWp(false);
     }
   };
 
-  const isConnected = status?.state === "open" || status?.connected;
-  const isConnecting = status?.state === "connecting" || status?.state === "qrcode";
+  const handleSendTestEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!testEmailTo.trim()) return;
+
+    setSendingEmail(true);
+    setEmailSendResult(null);
+
+    try {
+      const res = await fetch("/api/messaging/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: testEmailTo,
+          fullName: "Aspirante de Prueba",
+          productionName: "Si No Es Ahora (El Musical)",
+          folio: "AUD-2026-DV-0585",
+        }),
+      });
+
+      const data = await res.json();
+      setEmailSendResult({
+        success: data.success,
+        messageId: data.messageId,
+        error: data.error,
+      });
+    } catch (err) {
+      console.error(err);
+      setEmailSendResult({
+        success: false,
+        error: "Error de red al enviar correo de prueba.",
+      });
+    } finally {
+      setSendingEmail(false);
+    }
+  };
 
   return (
-    <div className="flex flex-col gap-6 max-w-6xl">
+    <div className="flex flex-col gap-8">
       
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-[#30363D]">
         <div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-3">
-            <span>Consola de WhatsApp & Evolution API</span>
-          </h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl font-black text-white tracking-tight uppercase">
+              Centro de Notificaciones & Mensajería
+            </h1>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+              Google Workspace &bull; WhatsApp
+            </span>
+          </div>
           <p className="text-xs text-slate-400 mt-1">
-            Motor de mensajería automatizado para altas de audición, folios oficiales y recordatorios en tiempo real.
+            Administra los envíos automáticos por correo y WhatsApp, edita plantillas para audiciones y controla los interruptores de notificación.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
+          {saveSuccess && (
+            <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-lg flex items-center gap-1.5 animate-fade-in">
+              <span>✓</span> Configuración guardada
+            </span>
+          )}
           <button
-            type="button"
-            onClick={checkStatus}
-            disabled={checkingPing}
-            className="px-3.5 py-2 bg-[#21262D] hover:bg-[#30363D] text-slate-200 rounded-xl text-xs font-semibold border border-[#30363D] transition-colors flex items-center gap-2 cursor-pointer"
+            onClick={handleSaveSettings}
+            disabled={savingSettings || !settings}
+            className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow cursor-pointer disabled:opacity-50"
           >
-            <span className={checkingPing ? "animate-spin" : ""}>🔄</span>
-            <span>{checkingPing ? "Verificando..." : "Comprobar Ping"}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleRequestQR}
-            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-emerald-600 hover:from-purple-500 hover:to-emerald-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg transition-all flex items-center gap-2 cursor-pointer"
-          >
-            <span>📲</span>
-            <span>Vincular WhatsApp (QR)</span>
+            {savingSettings ? "Guardando..." : "Guardar Cambios"}
           </button>
         </div>
       </div>
 
-      {/* ================= SEMÁFORO LED DE CONEXIÓN ================= */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        
-        {/* LED Card 1: Estado General */}
-        <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-5 flex items-center gap-4 shadow-sm">
-          <div className="relative flex items-center justify-center shrink-0">
-            {/* LED Glow Ping */}
-            {isConnected ? (
-              <>
-                <span className="w-5 h-5 rounded-full bg-emerald-500 animate-ping absolute opacity-75 duration-1000" />
-                <span className="w-5 h-5 rounded-full bg-emerald-400 relative z-10 shadow-[0_0_15px_rgba(52,211,153,0.8)]" />
-              </>
-            ) : isConnecting ? (
-              <>
-                <span className="w-5 h-5 rounded-full bg-amber-500 animate-ping absolute opacity-75" />
-                <span className="w-5 h-5 rounded-full bg-amber-400 relative z-10 shadow-[0_0_15px_rgba(251,191,36,0.8)]" />
-              </>
-            ) : (
-              <span className="w-5 h-5 rounded-full bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.7)]" />
-            )}
-          </div>
+      {/* Navigation Tabs */}
+      <div className="flex flex-wrap gap-2 bg-[#161B22] p-2 rounded-2xl border border-[#30363D]">
+        <button
+          onClick={() => setActiveTab("switches")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            activeTab === "switches"
+              ? "bg-purple-600 text-white shadow"
+              : "text-slate-300 hover:bg-[#21262D] hover:text-white"
+          }`}
+        >
+          <span>⚡</span>
+          <span>Interruptores & Automatización</span>
+        </button>
 
-          <div className="flex flex-col">
-            <span className="text-[10px] font-mono text-slate-400 uppercase font-bold tracking-wider">
-              Semáforo de Conexión
-            </span>
-            <span className="text-base font-bold text-white">
-              {isConnected ? (
-                <span className="text-emerald-400">● Conectado (Online)</span>
-              ) : isConnecting ? (
-                <span className="text-amber-400">● Esperando Escaneo QR</span>
-              ) : (
-                <span className="text-rose-400">● Desconectado (Offline)</span>
-              )}
-            </span>
-          </div>
-        </div>
+        <button
+          onClick={() => setActiveTab("templates")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            activeTab === "templates"
+              ? "bg-purple-600 text-white shadow"
+              : "text-slate-300 hover:bg-[#21262D] hover:text-white"
+          }`}
+        >
+          <span>📝</span>
+          <span>Editor de Plantillas & Mensajes</span>
+        </button>
 
-        {/* LED Card 2: Instancia & Servidor */}
-        <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-5 flex flex-col justify-between shadow-sm">
-          <span className="text-[10px] font-mono text-slate-400 uppercase font-bold tracking-wider">
-            Instancia Activa
-          </span>
-          <div className="flex items-center justify-between mt-1">
-            <span className="font-mono text-sm font-bold text-purple-300">
-              {status?.instanceName || "dv_instance"}
-            </span>
-            <span className="text-[11px] font-mono text-slate-400 bg-[#0D1117] px-2 py-0.5 rounded border border-[#30363D]">
-              propodvps1
-            </span>
-          </div>
-        </div>
+        <button
+          onClick={() => setActiveTab("email")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            activeTab === "email"
+              ? "bg-purple-600 text-white shadow"
+              : "text-slate-300 hover:bg-[#21262D] hover:text-white"
+          }`}
+        >
+          <span>📧</span>
+          <span>Google Workspace Email</span>
+        </button>
 
-        {/* LED Card 3: Latencia & Ping */}
-        <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-5 flex flex-col justify-between shadow-sm">
-          <span className="text-[10px] font-mono text-slate-400 uppercase font-bold tracking-wider">
-            Respuesta API
-          </span>
-          <div className="flex items-center justify-between mt-1">
-            <span className="text-sm font-bold text-white">
-              {pingTime ? `${pingTime} ms` : "Listo"}
-            </span>
-            <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/30">
-              API v2.2 Active
-            </span>
-          </div>
-        </div>
-
+        <button
+          onClick={() => setActiveTab("whatsapp")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            activeTab === "whatsapp"
+              ? "bg-purple-600 text-white shadow"
+              : "text-slate-300 hover:bg-[#21262D] hover:text-white"
+          }`}
+        >
+          <span>📱</span>
+          <span>WhatsApp (Evolution API)</span>
+        </button>
       </div>
 
-      {/* Main Grid: Send Test & Template Launcher */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* Left: Interactive Test Sender Form (7 cols) */}
-        <div className="lg:col-span-7 bg-[#161B22] border border-[#30363D] rounded-2xl p-6 sm:p-8 flex flex-col gap-6 shadow-xl">
-          <div className="border-b border-[#30363D] pb-4">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <span>Prueba de Envío WhatsApp</span>
-              <span className="text-xs bg-emerald-500/20 text-emerald-400 font-mono px-2 py-0.5 rounded">
-                Live Test
-              </span>
-            </h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Envía un mensaje de prueba a cualquier número móvil mexicano para validar la recepción de folios.
-            </p>
-          </div>
+      {/* ================= 1. SWITCHES & GLOBAL SETTINGS TAB ================= */}
+      {activeTab === "switches" && settings && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* Master Toggles Card */}
+          <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-6 flex flex-col gap-6">
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <span>🎛️</span> Interruptores de Notificación Automática
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Pausa o reactiva en cualquier momento los canales de envío automático para registros de aspirantes y aprobaciones de casting.
+              </p>
+            </div>
 
-          <form onSubmit={handleSendTest} className="flex flex-col gap-4 text-xs">
-            {/* Target Phone */}
-            <div className="flex flex-col gap-1.5">
-              <label className="font-semibold text-slate-300">
-                Número de Teléfono / WhatsApp Destino (10 dígitos) *
-              </label>
-              <div className="flex items-center gap-2">
-                <span className="bg-[#0D1117] border border-[#30363D] px-3 py-2.5 rounded-lg text-slate-400 font-mono text-xs">
-                  🇲🇽 +52
+            {/* Email Switch */}
+            <div className="flex items-center justify-between p-4 bg-[#0D1117] border border-[#30363D] rounded-xl">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>📧</span> Correos por Google Workspace
                 </span>
+                <span className="text-[11px] text-slate-400">
+                  {settings.emailNotificationsEnabled ? "Activo: Se envían correos HTML con logo y firma" : "Pausado: No se emitirán correos automáticos"}
+                </span>
+              </div>
+
+              <label className="relative inline-flex items-center cursor-pointer">
                 <input
-                  type="tel"
-                  required
-                  placeholder="477 655 8156"
-                  value={testPhone}
-                  onChange={(e) => setTestPhone(e.target.value)}
-                  className="flex-1 bg-[#0D1117] border border-[#30363D] rounded-lg px-3.5 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-purple-500 placeholder:text-slate-600"
+                  type="checkbox"
+                  checked={settings.emailNotificationsEnabled}
+                  onChange={(e) =>
+                    setSettings({ ...settings, emailNotificationsEnabled: e.target.checked })
+                  }
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+              </label>
+            </div>
+
+            {/* WhatsApp Switch */}
+            <div className="flex items-center justify-between p-4 bg-[#0D1117] border border-[#30363D] rounded-xl">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>💬</span> Mensajería Instantánea de WhatsApp
+                </span>
+                <span className="text-[11px] text-slate-400">
+                  {settings.whatsappNotificationsEnabled ? "Activo: Se envían WhatsApps automáticos vía Evolution API" : "Pausado: No se emitirán WhatsApps"}
+                </span>
+              </div>
+
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.whatsappNotificationsEnabled}
+                  onChange={(e) =>
+                    setSettings({ ...settings, whatsappNotificationsEnabled: e.target.checked })
+                  }
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+              </label>
+            </div>
+
+            {/* Google Drive Material Link */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                <span>📁 Carpeta de Google Drive para Material de Audición</span>
+                <span className="text-[10px] text-slate-500 font-mono">Pistas, libretos, escenas</span>
+              </label>
+              <input
+                type="url"
+                value={settings.googleDriveMaterialUrl}
+                onChange={(e) =>
+                  setSettings({ ...settings, googleDriveMaterialUrl: e.target.value })
+                }
+                placeholder="https://drive.google.com/drive/folders/..."
+                className="bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none font-mono"
+              />
+            </div>
+
+          </div>
+
+          {/* Director Signature & Academy Config */}
+          <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-6 flex flex-col gap-5">
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <span>✍️</span> Firma Institucional del Director
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Datos que se insertan automáticamente al pie de todos los correos HTML y comunicados oficiales.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-slate-300">Nombre del Director</label>
+              <input
+                type="text"
+                value={settings.directorSignatureName}
+                onChange={(e) =>
+                  setSettings({ ...settings, directorSignatureName: e.target.value })
+                }
+                className="bg-[#0D1117] border border-[#30363D] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-slate-300">Cargo / Título Oficial</label>
+              <input
+                type="text"
+                value={settings.directorSignatureTitle}
+                onChange={(e) =>
+                  setSettings({ ...settings, directorSignatureTitle: e.target.value })
+                }
+                className="bg-[#0D1117] border border-[#30363D] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none"
+              />
+            </div>
+
+            {/* Quick Live Preview of Signature */}
+            <div className="p-4 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col gap-1 mt-2">
+              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider font-bold">
+                Vista Previa de Firma en Correo:
+              </span>
+              <span className="text-xs italic text-slate-400">Todo lo mejor,</span>
+              <span className="text-sm font-bold text-white">{settings.directorSignatureName || "Diego Vieyra"}</span>
+              <span className="text-xs text-rose-400 font-semibold">{settings.directorSignatureTitle || "Director General & Artístico"}</span>
+              <span className="text-[11px] text-slate-400">DV Performing Arts &bull; León, Gto.</span>
+            </div>
+
+          </div>
+
+        </div>
+      )}
+
+      {/* ================= 2. TEMPLATES EDITOR TAB ================= */}
+      {activeTab === "templates" && settings && (
+        <div className="flex flex-col gap-6">
+          <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-6 flex flex-col gap-6">
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <span>📝</span> Edición de Plantillas de Mensajes Automáticos
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Personaliza los textos que reciben los aspirantes. Puedes utilizar las variables dinámicas:{" "}
+                <code className="text-rose-400 font-mono font-bold">{"{nombre}"}</code>,{" "}
+                <code className="text-rose-400 font-mono font-bold">{"{folio}"}</code>,{" "}
+                <code className="text-rose-400 font-mono font-bold">{"{obra}"}</code>,{" "}
+                <code className="text-rose-400 font-mono font-bold">{"{drive_link}"}</code>.
+              </p>
+            </div>
+
+            {/* 1. Registration Notification Template */}
+            <div className="flex flex-col gap-4 border-t border-[#30363D] pt-5">
+              <h3 className="text-sm font-bold text-purple-300 flex items-center gap-2">
+                <span>1️⃣</span> Mensaje de Bienvenida / Registro a Audición
+              </h3>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300">Asunto del Correo Electrónico</label>
+                <input
+                  type="text"
+                  value={settings.templates.registrationEmailSubject}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      templates: { ...settings.templates, registrationEmailSubject: e.target.value },
+                    })
+                  }
+                  className="bg-[#0D1117] border border-[#30363D] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-mono"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300">Texto para WhatsApp (Formato Markdown)</label>
+                <textarea
+                  rows={8}
+                  value={settings.templates.registrationWhatsappText}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      templates: { ...settings.templates, registrationWhatsappText: e.target.value },
+                    })
+                  }
+                  className="bg-[#0D1117] border border-[#30363D] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-mono text-[11px] leading-relaxed resize-y"
                 />
               </div>
             </div>
 
-            {/* Template Buttons */}
-            <div className="flex flex-col gap-1.5 pt-1">
-              <span className="text-[11px] font-semibold text-slate-400">
-                Plantillas Oficiales de Audición:
-              </span>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setTestMessage(
-                      `🎭 *¡REGISTRO CONFIRMADO A AUDICIONES DV PERFORMING ARTS!* 🎭\n\n¡Hola *Sofía Hernández*! Hemos recibido tu postulación.\n\n📋 *Folio Oficial:* \`AUD-2026-DV-0042\`\n🎬 *Obra:* Si No Es Ahora (El Musical)\n🎭 *Taller:* Teatro Musical Integral\n📍 *Sede:* Paseo de los Insurgentes #1506, León, Gto.\n\n_DV Performing Arts &bull; Disciplina y Pasión._`
-                    )
+            {/* 2. Approval Notification Template */}
+            <div className="flex flex-col gap-4 border-t border-[#30363D] pt-5">
+              <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                <span>2️⃣</span> Mensaje de Aprobación de Audición / Noticia Exitosa
+              </h3>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300">Asunto del Correo Electrónico</label>
+                <input
+                  type="text"
+                  value={settings.templates.approvalEmailSubject}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      templates: { ...settings.templates, approvalEmailSubject: e.target.value },
+                    })
                   }
-                  className="px-2.5 py-1 bg-[#21262D] hover:bg-[#30363D] text-purple-300 border border-purple-500/30 rounded text-[11px] font-mono transition-colors"
-                >
-                  📨 Confirmación Folio
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setTestMessage(
-                      `🔔 *RECORDATORIO DE AUDICIÓN &bull; DV PERFORMING ARTS*\n\nEstimado/a *Aspirante*, te recordamos tu audición para *Si No Es Ahora*:\n\n📋 *Folio:* \`AUD-2026-DV-0042\`\n📅 *Horario:* 16:00 hrs\n📍 *Sede:* Auditorio DV (Jardines del Moral).\n\n¡Te esperamos!`
-                    )
+                  className="bg-[#0D1117] border border-[#30363D] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-mono"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300">Texto para WhatsApp (Formato Markdown)</label>
+                <textarea
+                  rows={6}
+                  value={settings.templates.approvalWhatsappText}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      templates: { ...settings.templates, approvalWhatsappText: e.target.value },
+                    })
                   }
-                  className="px-2.5 py-1 bg-[#21262D] hover:bg-[#30363D] text-emerald-300 border border-emerald-500/30 rounded text-[11px] font-mono transition-colors"
-                >
-                  🔔 Recordatorio de Cita
-                </button>
+                  className="bg-[#0D1117] border border-[#30363D] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-mono text-[11px] leading-relaxed resize-y"
+                />
               </div>
             </div>
 
-            {/* Message Body */}
+          </div>
+        </div>
+      )}
+
+      {/* ================= 3. GOOGLE WORKSPACE EMAIL TAB ================= */}
+      {activeTab === "email" && settings && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* SMTP Configuration */}
+          <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-6 flex flex-col gap-5">
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <span>📧</span> Servidor SMTP de Google Workspace
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Conexión segura SSL/TLS para el envío de correos corporativos institucionales.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="sm:col-span-2 flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300">Host SMTP</label>
+                <input
+                  type="text"
+                  value={settings.smtpHost || "smtp.gmail.com"}
+                  onChange={(e) => setSettings({ ...settings, smtpHost: e.target.value })}
+                  className="bg-[#0D1117] border border-[#30363D] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-mono"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300">Puerto (SSL)</label>
+                <input
+                  type="number"
+                  value={settings.smtpPort || 465}
+                  onChange={(e) => setSettings({ ...settings, smtpPort: Number(e.target.value) })}
+                  className="bg-[#0D1117] border border-[#30363D] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-mono"
+                />
+              </div>
+            </div>
+
             <div className="flex flex-col gap-1.5">
-              <label className="font-semibold text-slate-300">Cuerpo del Mensaje</label>
-              <textarea
-                rows={6}
-                required
-                value={testMessage}
-                onChange={(e) => setTestMessage(e.target.value)}
-                className="bg-[#0D1117] border border-[#30363D] rounded-lg p-3 text-xs text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-purple-500 resize-none"
+              <label className="text-xs font-semibold text-slate-300">Usuario / Correo Emisor</label>
+              <input
+                type="email"
+                value={settings.smtpUser || "contacto@dvperformingarts.com"}
+                onChange={(e) => setSettings({ ...settings, smtpUser: e.target.value })}
+                className="bg-[#0D1117] border border-[#30363D] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-mono"
               />
             </div>
 
-            {/* Feedback alert */}
-            {sendResult && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-slate-300">Nombre del Remitente (From)</label>
+              <input
+                type="text"
+                value={settings.smtpFrom || '"DV Performing Arts" <contacto@dvperformingarts.com>'}
+                onChange={(e) => setSettings({ ...settings, smtpFrom: e.target.value })}
+                className="bg-[#0D1117] border border-[#30363D] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-mono"
+              />
+            </div>
+          </div>
+
+          {/* Test Email Dispatch Card */}
+          <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-6 flex flex-col gap-5">
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <span>✉️</span> Probar Envío de Correo HTML en Vivo
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Ingresa una dirección de correo para recibir la plantilla oficial de audición con firma y diseño teatral.
+              </p>
+            </div>
+
+            <form onSubmit={handleSendTestEmail} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300">Correo de Destino para Prueba</label>
+                <input
+                  type="email"
+                  required
+                  value={testEmailTo}
+                  onChange={(e) => setTestEmailTo(e.target.value)}
+                  placeholder="tu-correo@gmail.com"
+                  className="bg-[#0D1117] border border-[#30363D] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none font-mono"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={sendingEmail || !testEmailTo.trim()}
+                className="py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {sendingEmail ? "Enviando correo..." : "Enviar Correo de Prueba 🚀"}
+              </button>
+            </form>
+
+            {emailSendResult && (
               <div
-                className={`p-4 rounded-xl text-xs font-mono border ${
-                  sendResult.success
-                    ? "bg-emerald-950/40 border-emerald-500/50 text-emerald-300"
-                    : "bg-rose-950/40 border-rose-500/50 text-rose-300"
+                className={`p-4 rounded-xl border text-xs font-mono flex flex-col gap-1 ${
+                  emailSendResult.success
+                    ? "bg-emerald-950/40 border-emerald-500 text-emerald-300"
+                    : "bg-rose-950/40 border-rose-500 text-rose-300"
                 }`}
               >
-                {sendResult.success ? (
-                  <div>
-                    <span className="font-bold block">✓ ¡Mensaje emitido con éxito!</span>
-                    <span className="text-[10px] text-slate-400 mt-0.5 block">
-                      Message ID: {sendResult.messageId}
-                    </span>
-                  </div>
-                ) : (
-                  <div>
-                    <span className="font-bold block">✕ Error al enviar mensaje</span>
-                    <span className="text-[10px] text-slate-400 mt-0.5 block">
-                      {sendResult.error}
-                    </span>
-                  </div>
+                <span className="font-bold">
+                  {emailSendResult.success ? "✓ Correo despachado correctamente" : "✕ Error al enviar correo"}
+                </span>
+                {emailSendResult.messageId && (
+                  <span className="text-[10px] text-zinc-400">ID: {emailSendResult.messageId}</span>
                 )}
+                {emailSendResult.error && (
+                  <span className="text-[11px]">{emailSendResult.error}</span>
+                )}
+              </div>
+            )}
+          </div>
+
+        </div>
+      )}
+
+      {/* ================= 4. WHATSAPP TAB ================= */}
+      {activeTab === "whatsapp" && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* Status & QR Connection */}
+          <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-6 flex flex-col gap-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  <span>📱</span> Estado de Instancia de WhatsApp
+                </h2>
+                <p className="text-xs text-slate-400 mt-1">Conexión con Evolution API</p>
+              </div>
+
+              <button
+                onClick={checkStatus}
+                disabled={checkingPing}
+                className="px-3 py-1.5 bg-[#21262D] hover:bg-[#30363D] text-slate-200 text-xs rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer font-mono"
+              >
+                <span>🔄</span>
+                <span>{checkingPing ? "Comprobando..." : "Refrescar"}</span>
+              </button>
+            </div>
+
+            <div className="p-4 bg-[#0D1117] border border-[#30363D] rounded-xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-3.5 h-3.5 rounded-full ${
+                    status?.connected ? "bg-emerald-400 animate-pulse" : "bg-rose-500"
+                  }`}
+                />
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-white">
+                    {status?.connected ? "Conectado / En Línea" : "Desconectado"}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    Instancia: {status?.instanceName || "dv_instance"} &bull; Estado: {status?.state || "close"}
+                  </span>
+                </div>
+              </div>
+
+              {pingTime !== null && (
+                <span className="text-[10px] text-slate-500 font-mono">
+                  {pingTime}ms
+                </span>
+              )}
+            </div>
+
+            <button
+              onClick={handleRequestQR}
+              className="py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-2"
+            >
+              <span>📲</span>
+              <span>Vincular Nuevo Teléfono / Ver Código QR</span>
+            </button>
+          </div>
+
+          {/* Test WhatsApp Send */}
+          <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-6 flex flex-col gap-5">
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <span>💬</span> Probar Envío de WhatsApp
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Envía un mensaje de prueba a tu número (10 dígitos).
+              </p>
+            </div>
+
+            <form onSubmit={handleSendTestWhatsApp} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300">Número de WhatsApp (10 dígitos)</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="4776558156"
+                  value={testPhone}
+                  onChange={(e) => setTestPhone(e.target.value)}
+                  className="bg-[#0D1117] border border-[#30363D] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none font-mono"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300">Mensaje</label>
+                <textarea
+                  rows={3}
+                  value={testMessage}
+                  onChange={(e) => setTestMessage(e.target.value)}
+                  className="bg-[#0D1117] border border-[#30363D] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-mono text-[11px]"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={sendingWp || !testPhone.trim()}
+                className="py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {sendingWp ? "Enviando mensaje..." : "Enviar WhatsApp de Prueba 🚀"}
+              </button>
+            </form>
+
+            {wpSendResult && (
+              <div
+                className={`p-4 rounded-xl border text-xs font-mono flex flex-col gap-1 ${
+                  wpSendResult.success
+                    ? "bg-emerald-950/40 border-emerald-500 text-emerald-300"
+                    : "bg-rose-950/40 border-rose-500 text-rose-300"
+                }`}
+              >
+                <span className="font-bold">
+                  {wpSendResult.success ? "✓ WhatsApp enviado correctamente" : "✕ Error al enviar WhatsApp"}
+                </span>
+                {wpSendResult.error && <span>{wpSendResult.error}</span>}
+              </div>
+            )}
+          </div>
+
+        </div>
+      )}
+
+      {/* QR Modal */}
+      {qrModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={() => setQrModalOpen(false)}
+        >
+          <div
+            className="bg-[#161B22] border-2 border-emerald-500/50 rounded-3xl max-w-sm w-full p-6 text-center flex flex-col items-center gap-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-white">Escanea el Código QR</h3>
+            <p className="text-xs text-slate-400">
+              Abre WhatsApp en tu teléfono ➔ Dispositivos Vinculados ➔ Vincular Dispositivo.
+            </p>
+
+            {qrLoading ? (
+              <div className="py-12 text-slate-400 font-mono text-xs animate-pulse">
+                Generando código QR...
+              </div>
+            ) : qrBase64 ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={qrBase64.startsWith("data:") ? qrBase64 : `data:image/png;base64,${qrBase64}`}
+                alt="QR Code"
+                className="w-56 h-56 bg-white p-2 rounded-2xl shadow"
+              />
+            ) : (
+              <div className="p-4 bg-rose-950/40 text-rose-300 text-xs rounded-xl">
+                {qrError || "No disponible."}
               </div>
             )}
 
             <button
-              type="submit"
-              disabled={sending}
-              className="py-3 px-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold uppercase tracking-wider text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              onClick={() => setQrModalOpen(false)}
+              className="mt-2 w-full py-2.5 bg-[#21262D] hover:bg-[#30363D] text-white text-xs font-bold rounded-xl"
             >
-              {sending ? (
-                <span>Enviando por WhatsApp...</span>
-              ) : (
-                <>
-                  <span>📱</span>
-                  <span>Enviar Mensaje de Prueba</span>
-                </>
-              )}
+              Cerrar
             </button>
-          </form>
-        </div>
-
-        {/* Right: Technical Guidelines & Quadlet Server Status (5 cols) */}
-        <div className="lg:col-span-5 flex flex-col gap-6">
-          
-          {/* Server Details Card */}
-          <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-6 shadow-sm flex flex-col gap-4 text-xs">
-            <h3 className="font-bold text-white flex items-center gap-2 border-b border-[#30363D] pb-3">
-              <span>Infraestructura Evolution API</span>
-              <span className="text-[10px] font-mono text-purple-400">propodvps1</span>
-            </h3>
-
-            <ul className="flex flex-col gap-2.5 text-slate-300 text-[11px] font-mono">
-              <li className="flex justify-between py-1 border-b border-[#252C35]">
-                <span className="text-slate-400">Contenedor:</span>
-                <span className="text-emerald-400 font-bold">evolution-api-v2</span>
-              </li>
-              <li className="flex justify-between py-1 border-b border-[#252C35]">
-                <span className="text-slate-400">Base de Datos:</span>
-                <span className="text-slate-200">Postgres Evolution</span>
-              </li>
-              <li className="flex justify-between py-1 border-b border-[#252C35]">
-                <span className="text-slate-400">Caché Redis:</span>
-                <span className="text-slate-200">Redis Evolution</span>
-              </li>
-              <li className="flex justify-between py-1">
-                <span className="text-slate-400">Auto-Reconexión:</span>
-                <span className="text-emerald-400">Habilitada (Systemd)</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Quick instructions */}
-          <div className="bg-gradient-to-br from-purple-950/30 to-[#161B22] border border-purple-500/30 rounded-2xl p-6 text-xs flex flex-col gap-3">
-            <span className="font-bold text-purple-300 flex items-center gap-2">
-              <span>💡 ¿Cómo vincular una nueva línea?</span>
-            </span>
-            <ol className="list-decimal pl-4 flex flex-col gap-2 text-slate-300 text-[11px] leading-relaxed">
-              <li>Haz clic en el botón superior <strong>&ldquo;Vincular WhatsApp (QR)&rdquo;</strong>.</li>
-              <li>Abre WhatsApp en el celular de la academia.</li>
-              <li>Ve a <strong>Dispositivos vinculados &rarr; Vincular un dispositivo</strong>.</li>
-              <li>Apunta la cámara al código QR en pantalla.</li>
-              <li>¡Listo! El semáforo LED cambiará a verde automáticamente.</li>
-            </ol>
-          </div>
-
-        </div>
-
-      </div>
-
-      {/* ================= QR CODE MODAL ================= */}
-      {qrModalOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer animate-fade-in"
-          onClick={() => setQrModalOpen(false)}
-        >
-          <div
-            className="bg-[#161B22] border-2 border-purple-500/50 rounded-3xl max-w-md w-full p-6 sm:p-8 flex flex-col items-center gap-6 shadow-2xl cursor-default text-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="w-full flex justify-between items-center border-b border-[#30363D] pb-3">
-              <div className="flex items-center gap-2 text-left">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                <h3 className="text-base font-bold text-white">Escanear Código QR de WhatsApp</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setQrModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-[#0D1117] border border-[#30363D] text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* QR Viewport */}
-            <div className="w-64 h-64 bg-black rounded-2xl border-2 border-[#30363D] p-4 flex items-center justify-center relative overflow-hidden shadow-inner">
-              {qrLoading ? (
-                <div className="flex flex-col items-center gap-2 text-xs text-purple-300 font-mono">
-                  <span className="w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                  <span>Generando código QR...</span>
-                </div>
-              ) : qrError ? (
-                <div className="p-4 text-xs text-rose-300 font-mono">
-                  ⚠️ {qrError}
-                </div>
-              ) : qrBase64 ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={qrBase64.startsWith("data:") ? qrBase64 : `data:image/png;base64,${qrBase64}`}
-                  alt="WhatsApp QR Code"
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <span className="text-xs text-slate-500 font-mono">Sin QR disponible</span>
-              )}
-            </div>
-
-            {/* Pairing Code if available */}
-            {qrPairingCode && (
-              <div className="bg-[#0D1117] border border-[#30363D] px-4 py-2 rounded-xl flex flex-col items-center">
-                <span className="text-[10px] font-mono text-slate-400 uppercase">Código de Emparejamiento:</span>
-                <span className="text-lg font-black font-mono text-purple-300 tracking-widest">{qrPairingCode}</span>
-              </div>
-            )}
-
-            <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
-              Abre WhatsApp en tu teléfono, toca <strong>Dispositivos vinculados</strong> y escanea este código.
-            </p>
-
-            <div className="flex items-center gap-3 w-full pt-2">
-              <button
-                type="button"
-                onClick={handleRequestQR}
-                disabled={qrLoading}
-                className="flex-1 py-2.5 bg-[#21262D] hover:bg-[#30363D] text-slate-200 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>🔄</span>
-                <span>Refrescar Código</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setQrModalOpen(false);
-                  checkStatus();
-                }}
-                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
-              >
-                Listo / Ya lo escaneé
-              </button>
-            </div>
-
           </div>
         </div>
       )}

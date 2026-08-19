@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateAuditionStatus, getStoredAuditions } from "@/lib/storage";
-import { sendAuditionReminder, sendAuditionConfirmation } from "@/features/messaging/services/evolution";
+import {
+  sendAuditionReminder,
+  sendAuditionConfirmation,
+  sendAuditionApprovalWhatsApp,
+} from "@/features/messaging/services/evolution";
+import { sendAuditionApprovalEmail, sendAuditionRegistrationEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, status, notes, action } = body;
+    const { id, status, notes, action, notifyCandidate } = body;
 
     if (!id) {
       return NextResponse.json({ error: "ID de registro requerido." }, { status: 400 });
@@ -17,38 +22,108 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Aspirante no encontrado." }, { status: 404 });
     }
 
-    let whatsappResult = null;
+    let whatsappSent = existing.whatsappNotified || false;
+    let emailSent = existing.emailNotified || false;
 
-    // Optional manual action to send reminder or resend confirmation
-    if (action === "SEND_REMINDER") {
-      whatsappResult = await sendAuditionReminder({
-        fullName: existing.fullName,
-        folio: existing.folio,
-        programName: existing.programName || "Teatro Musical",
-        phone: existing.phone,
-        auditionTime: existing.preferredSchedule,
-      });
+    const newStatus = status || existing.status;
+    const shouldNotifyApproval =
+      (newStatus === "APPROVED" && existing.status !== "APPROVED") ||
+      action === "APPROVE_AND_NOTIFY" ||
+      notifyCandidate;
+
+    // 1. If approving candidate, dispatch approval email & WhatsApp
+    if (shouldNotifyApproval) {
+      // WhatsApp
+      try {
+        const wpRes = await sendAuditionApprovalWhatsApp({
+          fullName: existing.fullName,
+          folio: existing.folio,
+          productionName: existing.productionName || "Si No Es Ahora (El Musical)",
+          programName: existing.programName || "Teatro Musical",
+          phone: existing.phone,
+          auditionTime: existing.preferredSchedule,
+        });
+        if (wpRes.success) whatsappSent = true;
+      } catch (err) {
+        console.error("[WHATSAPP APPROVAL ERROR]", err);
+      }
+
+      // Email
+      if (existing.email) {
+        try {
+          const mailRes = await sendAuditionApprovalEmail({
+            fullName: existing.fullName,
+            email: existing.email,
+            phone: existing.phone,
+            folio: existing.folio,
+            productionName: existing.productionName || "Si No Es Ahora (El Musical)",
+            programName: existing.programName,
+          });
+          if (mailRes.success) emailSent = true;
+        } catch (err) {
+          console.error("[EMAIL APPROVAL ERROR]", err);
+        }
+      }
+    } else if (action === "SEND_REMINDER") {
+      try {
+        const wpRes = await sendAuditionReminder({
+          fullName: existing.fullName,
+          folio: existing.folio,
+          productionName: existing.productionName || "Si No Es Ahora",
+          programName: existing.programName || "Teatro Musical",
+          phone: existing.phone,
+          auditionTime: existing.preferredSchedule,
+        });
+        if (wpRes.success) whatsappSent = true;
+      } catch (err) {
+        console.error("[WHATSAPP REMINDER ERROR]", err);
+      }
     } else if (action === "RESEND_CONFIRMATION") {
-      whatsappResult = await sendAuditionConfirmation({
-        fullName: existing.fullName,
-        folio: existing.folio,
-        programName: existing.programName || "Teatro Musical",
-        phone: existing.phone,
-        auditionTime: existing.preferredSchedule,
-      });
+      try {
+        const wpRes = await sendAuditionConfirmation({
+          fullName: existing.fullName,
+          folio: existing.folio,
+          productionName: existing.productionName || "Si No Es Ahora",
+          programName: existing.programName || "Teatro Musical",
+          phone: existing.phone,
+          auditionTime: existing.preferredSchedule,
+        });
+        if (wpRes.success) whatsappSent = true;
+      } catch (err) {
+        console.error("[WHATSAPP RESEND ERROR]", err);
+      }
+
+      if (existing.email) {
+        try {
+          const mailRes = await sendAuditionRegistrationEmail({
+            fullName: existing.fullName,
+            email: existing.email,
+            phone: existing.phone,
+            folio: existing.folio,
+            productionName: existing.productionName || "Si No Es Ahora (El Musical)",
+          });
+          if (mailRes.success) emailSent = true;
+        } catch (err) {
+          console.error("[EMAIL RESEND ERROR]", err);
+        }
+      }
     }
 
     const updated = updateAuditionStatus(
       id,
-      status || existing.status,
+      newStatus,
       notes,
-      whatsappResult?.success ? true : existing.whatsappNotified
+      whatsappSent,
+      emailSent
     );
 
     return NextResponse.json({
       success: true,
       audition: updated,
-      whatsappResult,
+      notifications: {
+        whatsapp: whatsappSent,
+        email: emailSent,
+      },
     });
   } catch (error) {
     console.error("[AUDITION UPDATE STATUS ERROR]", error);

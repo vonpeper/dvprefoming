@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAudition, updateAuditionStatus } from "@/lib/storage";
 import { sendAuditionConfirmation } from "@/features/messaging/services/evolution";
+import { sendAuditionRegistrationEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,10 +43,12 @@ export async function POST(req: NextRequest) {
       status: "PENDING_REVIEW",
     });
 
+    let whatsappSent = false;
+    let emailSent = false;
+
     // 2. Dispatch WhatsApp confirmation via Evolution API
-    let whatsappResult = null;
     try {
-      whatsappResult = await sendAuditionConfirmation({
+      const whatsappResult = await sendAuditionConfirmation({
         fullName: audition.fullName,
         folio: audition.folio,
         productionName: audition.productionName || "Si No Es Ahora (El Musical)",
@@ -53,19 +56,43 @@ export async function POST(req: NextRequest) {
         phone: audition.phone,
         auditionTime: audition.preferredSchedule,
       });
-
-      if (whatsappResult.success) {
-        updateAuditionStatus(audition.id, audition.status, undefined, true);
-        audition.whatsappNotified = true;
-      }
+      whatsappSent = Boolean(whatsappResult?.success);
     } catch (msgErr) {
       console.error("[WHATSAPP NOTIFICATION ERROR]", msgErr);
     }
 
+    // 3. Dispatch Email confirmation via Google Workspace SMTP
+    if (audition.email) {
+      try {
+        const emailResult = await sendAuditionRegistrationEmail({
+          fullName: audition.fullName,
+          email: audition.email,
+          phone: audition.phone,
+          folio: audition.folio,
+          productionName: audition.productionName || "Si No Es Ahora (El Musical)",
+          programName: audition.programName,
+          preferredSchedule: audition.preferredSchedule,
+        });
+        emailSent = Boolean(emailResult?.success);
+      } catch (mailErr) {
+        console.error("[EMAIL NOTIFICATION ERROR]", mailErr);
+      }
+    }
+
+    // Update notification flags
+    updateAuditionStatus(audition.id, audition.status, undefined, whatsappSent, emailSent);
+
     return NextResponse.json({
       success: true,
-      audition,
-      whatsappResult,
+      audition: {
+        ...audition,
+        whatsappNotified: whatsappSent,
+        emailNotified: emailSent,
+      },
+      notifications: {
+        whatsapp: whatsappSent,
+        email: emailSent,
+      },
     });
   } catch (error) {
     console.error("[AUDITION REGISTRATION API ERROR]", error);

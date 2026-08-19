@@ -387,25 +387,28 @@ export default function AuditionsDashboardPage() {
               </p>
             </div>
 
-            {/* Evolution API WhatsApp Quick Actions */}
+            {/* Evolution API & Email Quick Actions */}
             <div className="p-4 bg-[#0D1117] rounded-xl border border-emerald-500/30 flex flex-col gap-3">
-              <span className="text-emerald-400 font-mono text-xs font-bold uppercase flex items-center gap-2">
-                <span>📱 Acciones de Mensajería WhatsApp (Evolution API)</span>
+              <span className="text-emerald-400 font-mono text-xs font-bold uppercase flex items-center justify-between">
+                <span>📱 Canales de Notificación (Google Workspace &bull; WhatsApp)</span>
+                <span className="text-[10px] text-slate-400 font-mono">
+                  {selectedAudition.whatsappNotified ? "WhatsApp ✓" : "WhatsApp ⏳"} &bull; {selectedAudition.emailNotified ? "Email ✓" : "Email ⏳"}
+                </span>
               </span>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => handleUpdateStatus(selectedAudition.id, selectedAudition.status, "RESEND_CONFIRMATION")}
                   disabled={actionLoading}
-                  className="px-3 py-2 bg-[#161B22] hover:bg-[#21262D] text-slate-200 border border-[#30363D] rounded-lg text-xs font-semibold flex items-center gap-1.5"
+                  className="px-3 py-2 bg-[#161B22] hover:bg-[#21262D] text-slate-200 border border-[#30363D] rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
                 >
-                  <span>📨</span> Reenviar Folio y Cita
+                  <span>📨</span> Reenviar Folio y Consejos (Email + WhatsApp)
                 </button>
                 <button
                   type="button"
                   onClick={() => handleUpdateStatus(selectedAudition.id, selectedAudition.status, "SEND_REMINDER")}
                   disabled={actionLoading}
-                  className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow"
+                  className="px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow cursor-pointer"
                 >
                   <span>🔔</span> Enviar Recordatorio para el Día de Audición
                 </button>
@@ -414,26 +417,27 @@ export default function AuditionsDashboardPage() {
 
             {/* Status Change Buttons */}
             <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-[#30363D]">
-              <span className="text-xs font-semibold text-slate-400">Cambiar Estatus:</span>
+              <span className="text-xs font-semibold text-slate-400">Acción Oficial de Casting:</span>
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => handleUpdateStatus(selectedAudition.id, "APPROVED")}
                   disabled={actionLoading}
-                  className="px-3 py-1.5 bg-emerald-600/30 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 rounded-lg text-xs font-bold transition-colors"
+                  className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
                 >
-                  ✓ Aprobar
+                  <span>🎉</span>
+                  <span>Aprobar & Notificar Aspirante</span>
                 </button>
                 <button
                   onClick={() => handleUpdateStatus(selectedAudition.id, "CONFIRMED")}
                   disabled={actionLoading}
-                  className="px-3 py-1.5 bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 rounded-lg text-xs font-bold transition-colors"
+                  className="px-3 py-2 bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 rounded-xl text-xs font-bold transition-colors cursor-pointer"
                 >
                   🎯 Confirmar Asistencia
                 </button>
                 <button
                   onClick={() => handleUpdateStatus(selectedAudition.id, "REJECTED")}
                   disabled={actionLoading}
-                  className="px-3 py-1.5 bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/40 rounded-lg text-xs font-bold transition-colors"
+                  className="px-3 py-2 bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/40 rounded-xl text-xs font-bold transition-colors cursor-pointer"
                 >
                   ✕ Rechazar
                 </button>

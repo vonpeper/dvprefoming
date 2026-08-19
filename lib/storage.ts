@@ -57,7 +57,13 @@ export function createAudition(data: Omit<AuditionRegistration, "id" | "folio" |
   return newRecord;
 }
 
-export function updateAuditionStatus(id: string, status: AuditionRegistration["status"], notes?: string, whatsappNotified?: boolean): AuditionRegistration | null {
+export function updateAuditionStatus(
+  id: string,
+  status: AuditionRegistration["status"],
+  notes?: string,
+  whatsappNotified?: boolean,
+  emailNotified?: boolean
+): AuditionRegistration | null {
   const auditions = getStoredAuditions();
   const index = auditions.findIndex((a) => a.id === id);
   if (index === -1) return null;
@@ -67,11 +73,94 @@ export function updateAuditionStatus(id: string, status: AuditionRegistration["s
     status,
     notes: notes !== undefined ? notes : auditions[index].notes,
     whatsappNotified: whatsappNotified !== undefined ? whatsappNotified : auditions[index].whatsappNotified,
+    emailNotified: emailNotified !== undefined ? emailNotified : auditions[index].emailNotified,
     updatedAt: new Date(),
   };
 
   saveStoredAuditions(auditions);
   return auditions[index];
+}
+
+export function getAuditionByFolioOrContact(query: string): AuditionRegistration | null {
+  if (!query) return null;
+  const auditions = getStoredAuditions();
+  const cleanQuery = query.trim().toLowerCase();
+  const numericOnly = cleanQuery.replace(/\D/g, "");
+
+  return (
+    auditions.find((a) => {
+      // Direct Folio match
+      if (a.folio && a.folio.toLowerCase() === cleanQuery) return true;
+      // Sequence number match (e.g. 585 or 0585)
+      if (numericOnly && a.folio && a.folio.includes(numericOnly)) return true;
+      // Email match
+      if (a.email && a.email.toLowerCase() === cleanQuery) return true;
+      // Phone match
+      if (numericOnly && a.phone && a.phone.replace(/\D/g, "").includes(numericOnly)) return true;
+      return false;
+    }) || null
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Notification Settings & Automated Messaging Storage
+// ---------------------------------------------------------------------------
+const NOTIFICATION_SETTINGS_FILE = path.join(DATA_DIR, "notification-settings.json");
+
+export interface NotificationSettings {
+  emailNotificationsEnabled: boolean;
+  whatsappNotificationsEnabled: boolean;
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpUser?: string;
+  smtpFrom?: string;
+  googleDriveMaterialUrl: string;
+  directorSignatureName: string;
+  directorSignatureTitle: string;
+  templates: {
+    registrationEmailSubject: string;
+    registrationWhatsappText: string;
+    approvalEmailSubject: string;
+    approvalWhatsappText: string;
+  };
+}
+
+export function getNotificationSettings(): NotificationSettings {
+  ensureDirectoryExists();
+  const defaultSettings: NotificationSettings = {
+    emailNotificationsEnabled: true,
+    whatsappNotificationsEnabled: true,
+    smtpHost: "smtp.gmail.com",
+    smtpPort: 465,
+    smtpUser: "contacto@dvperformingarts.com",
+    smtpFrom: '"DV Performing Arts" <contacto@dvperformingarts.com>',
+    googleDriveMaterialUrl: "https://drive.google.com/drive/folders/1qadnY5yaF1ZXprIXP5NY1cmAJkvQU08C?usp=drive_link",
+    directorSignatureName: "Diego Vieyra",
+    directorSignatureTitle: "Director General & Artístico",
+    templates: {
+      registrationEmailSubject: "🎭 Confirmación de Registro a Audición • Folio #{folio} | DV Performing Arts",
+      registrationWhatsappText: `🎭 *¡HOLA {nombre}, YA DISTE EL PRIMER PASO!* 🎭\n\nEs hora de preparar la canción que te ayudará a obtener el papel de tus sueños.\n\n📋 *Tu número de audición para "{obra}" es:* \n*{folio}*\n\n💡 *Consejos para el día de la audición:*\n• Prepara una canción de teatro musical o contemporánea (1 minuto de duración).\n• Trae tu pista preparada. Puedes reproducirla desde tu celular.\n• Usa ropa cómoda. Después del canto, hay una audición de baile. *NO tienes que preparar ninguna coreografía previa*.\n• Lleva una botella de agua. Mantente hidratadx con pequeños sorbos.\n• Si estás nerviosx, respira profundo y recuerda que estás haciendo algo que amas.\n• No podrás entrar acompañado, pero te podrán esperar afuera de las instalaciones.\n\n📁 *Encuentra el material para realizar tu audición en este enlace:*\n{drive_link}\n\n🔍 *Consulta tu folio en línea:*\nhttps://prev.dvperformingarts.com/audiciones/consulta?folio={folio}\n\nTodo lo mejor,\n*Director Diego Vieyra*\n*DV Performing Arts*`,
+      approvalEmailSubject: "🎉 ¡Audición Exitosa! Has sido Aprobado(a) para \"{obra}\" | DV Performing Arts",
+      approvalWhatsappText: `🌟 *¡MUCHAS FELICIDADES {nombre}! TU AUDICIÓN FUE EXITOSA* 🌟\n\nNos complace informarte que has sido *APROBADO(A)* para formar parte del elenco de *"{obra}"* (Folio: *{folio}*).\n\n📋 *Siguientes pasos:*\n1. El equipo de dirección te enviará el llamado para la primera lectura y entrega de libreto.\n2. Inicia tu proceso de enrolamiento en la academia.\n\n💬 Si tienes dudas, contáctanos directamente a este WhatsApp.\n\n¡Bienvenidx a la compañía!\n*Diego Vieyra — Director Artístico*\n*DV Performing Arts*`,
+    },
+  };
+
+  if (!fs.existsSync(NOTIFICATION_SETTINGS_FILE)) {
+    saveNotificationSettings(defaultSettings);
+    return defaultSettings;
+  }
+
+  try {
+    const raw = fs.readFileSync(NOTIFICATION_SETTINGS_FILE, "utf-8");
+    return { ...defaultSettings, ...JSON.parse(raw) };
+  } catch {
+    return defaultSettings;
+  }
+}
+
+export function saveNotificationSettings(settings: NotificationSettings) {
+  ensureDirectoryExists();
+  fs.writeFileSync(NOTIFICATION_SETTINGS_FILE, JSON.stringify(settings, null, 2), "utf-8");
 }
 
 // ---------------------------------------------------------------------------
