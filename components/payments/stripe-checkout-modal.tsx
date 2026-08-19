@@ -221,12 +221,9 @@ export default function StripeCheckoutModal({
               className="flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-black font-black uppercase tracking-wider text-xs shadow-xl shadow-emerald-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {loading ? (
-                <span>Conectando con Stripe...</span>
+                <span>Procesando solicitud...</span>
               ) : (
-                <>
-                  <span>💳</span>
-                  <span>Pagar ${price} MXN con Stripe &rarr;</span>
-                </>
+                <span>Adquirir &bull; ${price} MXN &rarr;</span>
               )}
             </button>
           </div>

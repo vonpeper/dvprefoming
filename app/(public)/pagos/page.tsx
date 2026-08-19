@@ -95,8 +95,7 @@ export default function PaymentsPortalPage() {
                     onClick={() => setSelectedProgram(prog)}
                     className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-black font-black uppercase tracking-wider text-xs shadow-lg shadow-emerald-950/50 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span>💳</span>
-                    <span>Pagar con Stripe &rarr;</span>
+                    <span>Adquirir &rarr;</span>
                   </button>
                   <span className="text-[10px] text-zinc-500 text-center font-mono">
                     Cancela o pausa en cualquier momento sin penalizaciones.

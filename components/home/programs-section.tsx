@@ -157,8 +157,7 @@ export default function ProgramsSection() {
                         onClick={() => setSelectedProgramForCheckout(program)}
                         className="w-full sm:flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-black font-black uppercase tracking-wider text-xs shadow-lg shadow-emerald-950/50 transition-all flex items-center justify-center gap-2 cursor-pointer"
                       >
-                        <span>💳</span>
-                        <span>Inscribirme con Stripe</span>
+                        <span>Adquirir</span>
                       </button>
 
                       <a

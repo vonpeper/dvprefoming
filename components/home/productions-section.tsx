@@ -127,21 +127,15 @@ export default function ProductionsSection() {
 
                   {/* Actions Bar */}
                   <div className="flex items-center gap-3 pt-1">
-                    {isAudition ? (
-                      <ButtonLink href="#audiciones" variant="primary" className="flex-1 text-center text-xs py-3 rounded-xl font-bold">
-                        ★ Audicionar para esta Obra
-                      </ButtonLink>
-                    ) : (
-                      <a
-                        href={ticketLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 text-center text-xs py-3 rounded-xl font-bold bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-white shadow-lg shadow-rose-950/40 transition-all flex items-center justify-center gap-1.5"
-                      >
-                        <span>🎟️</span>
-                        <span>Tickets</span>
-                      </a>
-                    )}
+                    <a
+                      href={ticketLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 text-center text-xs py-3 rounded-xl font-bold bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-white shadow-lg shadow-rose-950/40 transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <span>🎟️</span>
+                      <span>Tickets</span>
+                    </a>
 
                     <button
                       type="button"
@@ -301,22 +295,11 @@ export default function ProductionsSection() {
                   href={selectedProduction.ticketUrl || "https://wa.me/524776558156?text=Hola%20DV%20Performing%20Arts,%20quiero%20comprar%20tickets%20para%20la%20obra"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-white rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 shadow-lg shadow-rose-950/40"
+                  className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-white rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 shadow-lg shadow-rose-950/40"
                 >
                   <span>🎟️</span>
                   <span>Tickets</span>
                 </a>
-
-                {selectedProduction.isAuditionActive && (
-                  <a
-                    href="#audiciones"
-                    onClick={() => setSelectedProduction(null)}
-                    className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-purple-950/50 text-center flex items-center justify-center gap-1.5"
-                  >
-                    <span>★</span>
-                    <span>Audicionar</span>
-                  </a>
-                )}
               </div>
             </div>
 
