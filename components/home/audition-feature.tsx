@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import SectionHeading from "@/components/ui/section-heading";
 import { Production } from "@/types/mock";
 
 export default function AuditionFeature() {
@@ -124,17 +123,47 @@ export default function AuditionFeature() {
     <section id="audiciones" className="relative w-full py-20 px-6 border-b-4 border-border-editorial" aria-labelledby="heading-audiciones">
       <div className="mx-auto max-w-4xl flex flex-col items-center">
         
-        {/* Section Heading */}
-        <SectionHeading
-          number="03"
-          label="Admisiones & Castings"
-          title="Registro de Audiciones"
-          className="text-center md:items-center"
-        />
+        {/* ================= URBAN STREET DANCE BRUSH HEADER ================= */}
+        <div className="flex flex-col items-center text-center mb-12 relative select-none">
+          {/* Top Label */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-purple-600/15 border border-purple-500/30 rounded-full text-xs font-semibold text-purple-300 mb-3 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse" />
+            <span className="tracking-wide uppercase text-[11px]">CONVOCATORIA DE TALENTO &bull; TEMPORADA 2026</span>
+          </div>
 
-        <p className="text-zinc-300 text-sm sm:text-base text-center max-w-xl -mt-6 mb-12 font-normal leading-relaxed">
-          Inicia tu registro oficial para formar parte de nuestras producciones en León, Gto. Te asignamos tu folio y confirmamos tu cita al instante por WhatsApp.
-        </p>
+          {/* Urban Brush Title with Drips & Paint Splatters (Reference Style) */}
+          <div className="relative inline-block my-3 px-8 py-3">
+            {/* Background Energetic Purple/Magenta Street Brush Stroke with Dynamic Skew */}
+            <div className="absolute inset-0 -inset-x-6 bg-gradient-to-r from-purple-700 via-fuchsia-600 to-purple-600 rounded-3xl transform -rotate-1 skew-x-[-5deg] opacity-95 shadow-[0_12px_35px_rgba(168,85,247,0.4)] -z-10" />
+            
+            {/* Paint Drips Hanging Down */}
+            <div className="absolute -bottom-6 left-12 w-1.5 h-7 bg-white rounded-full opacity-90 shadow-sm" />
+            <div className="absolute -bottom-9 left-20 w-1 h-9 bg-white rounded-full opacity-80" />
+            <div className="absolute -bottom-5 right-14 w-1.5 h-6 bg-white rounded-full opacity-85" />
+            <div className="absolute -bottom-8 right-28 w-1 h-8 bg-white rounded-full opacity-75" />
+            
+            {/* Paint Splatter Dots */}
+            <span className="absolute -top-3 right-8 w-2 h-2 rounded-full bg-white opacity-85 shadow" />
+            <span className="absolute -bottom-3 left-8 w-1.5 h-1.5 rounded-full bg-white opacity-75" />
+            <span className="absolute top-2 -left-4 w-2 h-2 rounded-full bg-purple-300 opacity-90" />
+            <span className="absolute -top-2 -right-3 w-2.5 h-2.5 rounded-full bg-fuchsia-300 opacity-90" />
+
+            {/* Spray Halo ring above title */}
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-12 h-3.5 border-2 border-white/90 rounded-full transform -rotate-6 shadow-sm pointer-events-none" />
+
+            {/* The Main Urban Brush Title */}
+            <h2
+              className="font-urban-brush text-white tracking-wider uppercase leading-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] transform -rotate-[1deg]"
+              style={{ fontSize: "clamp(3rem, 8vw, 6rem)" }}
+            >
+              AUDICIONES
+            </h2>
+          </div>
+
+          <p className="text-zinc-300 text-sm sm:text-base text-center max-w-xl mt-5 font-normal leading-relaxed">
+            Inicia tu registro oficial para formar parte de nuestras producciones en León, Gto. Te asignamos tu folio y confirmamos tu cita al instante por WhatsApp.
+          </p>
+        </div>
 
         {/* ================= SMARTPHONE CHAT & REGISTRATION SIMULATION ================= */}
         <div className="w-full max-w-[460px] bg-[#121218]/90 backdrop-blur-xl border-4 border-[#252532] rounded-[2.8rem] shadow-[0_25px_60px_rgba(0,0,0,0.8)] p-4 sm:p-6 relative overflow-hidden ring-1 ring-white/10">
@@ -361,7 +390,7 @@ export default function AuditionFeature() {
           <div className="w-32 h-1 bg-zinc-600 rounded-full mx-auto mt-4" />
         </div>
 
-        {/* ================= ACTION PILL BUTTONS BELOW PHONE (REFERENCED DESIGN) ================= */}
+        {/* ================= ACTION PILL BUTTONS BELOW PHONE ================= */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
           <a
             href="https://wa.me/524776558156?text=Hola%20DV%20Performing%20Arts,%20quiero%20informes%20sobre%20las%20audiciones"
