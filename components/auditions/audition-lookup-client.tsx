@@ -12,6 +12,11 @@ interface AuditionLookupResult {
   productionName: string;
   programName: string;
   status: "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "CONFIRMED" | "DRAFT";
+  assignedRole?: string;
+  overallScore?: number;
+  cantoAverage?: number;
+  danceAverage?: number;
+  actingAverage?: number;
   preferredSchedule: string;
   createdAt: string;
   venue: {
@@ -133,21 +138,47 @@ function AuditionLookupContent() {
             
             {/* Status Header Banner */}
             {result.status === "APPROVED" ? (
-              <div className="p-4 bg-emerald-950/60 border-2 border-emerald-500 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left shadow-lg shadow-emerald-950/50">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">🎉</span>
-                  <div className="flex flex-col">
-                    <span className="font-mono text-[10px] uppercase font-bold text-emerald-400 tracking-wider">
-                      Estatus Oficial del Casting
-                    </span>
-                    <span className="font-display font-black text-lg text-white">
-                      ¡AUDICIÓN APROBADA / SELECCIONADO(A)!
-                    </span>
+              <div className="flex flex-col gap-4">
+                <div className="p-4 bg-emerald-950/60 border-2 border-emerald-500 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left shadow-lg shadow-emerald-950/50">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">🎉</span>
+                    <div className="flex flex-col">
+                      <span className="font-mono text-[10px] uppercase font-bold text-emerald-400 tracking-wider">
+                        Estatus Oficial del Casting
+                      </span>
+                      <span className="font-display font-black text-lg text-white">
+                        ¡AUDICIÓN APROBADA / SELECCIONADO(A)!
+                      </span>
+                    </div>
                   </div>
+                  <span className="px-3.5 py-1 bg-emerald-500 text-white font-mono text-[10px] uppercase font-bold rounded-full">
+                    Aprobado ✅
+                  </span>
                 </div>
-                <span className="px-3.5 py-1 bg-emerald-500 text-white font-mono text-[10px] uppercase font-bold rounded-full">
-                  Aprobado ✅
-                </span>
+
+                {/* Assigned Character / Role Highlight Card */}
+                {result.assignedRole && (
+                  <div className="p-5 bg-gradient-to-r from-amber-950/50 via-[#161B22] to-amber-950/50 border-2 border-amber-400 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+                    <div className="flex items-center gap-3.5">
+                      <span className="text-3xl">🎭</span>
+                      <div className="flex flex-col text-center sm:text-left">
+                        <span className="font-mono text-[10px] uppercase font-black text-amber-300 tracking-widest">
+                          ★ TU PERSONAJE ASIGNADO EN LA OBRA
+                        </span>
+                        <span className="text-xl sm:text-2xl font-black text-white uppercase tracking-wide">
+                          {result.assignedRole}
+                        </span>
+                      </div>
+                    </div>
+
+                    {result.overallScore !== undefined && result.overallScore > 0 && (
+                      <div className="bg-black/60 border border-amber-400/50 px-3.5 py-1.5 rounded-xl font-mono text-center shrink-0">
+                        <span className="text-[9px] text-zinc-400 block uppercase">Puntaje Jurado</span>
+                        <span className="text-sm font-black text-amber-400">{result.overallScore} / 10 ⭐</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="p-4 bg-purple-950/40 border border-purple-500/40 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">

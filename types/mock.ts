@@ -61,6 +61,29 @@ export interface Production {
   updatedAt: Date;
 }
 
+export type EvaluationDiscipline = "CANTO" | "COREOGRAFIA" | "ACTUACION";
+
+export interface EvaluationCriteria {
+  id: string;
+  discipline: EvaluationDiscipline;
+  name: string;
+  description?: string;
+  maxScore: number; // default 10
+  order?: number;
+}
+
+export interface AuditionScore {
+  id: string;
+  auditionId: string;
+  judgeName: string;
+  judgeTitle?: string;
+  discipline: EvaluationDiscipline;
+  scores: Record<string, number>; // { [criteriaId]: score 0-10 }
+  averageScore: number; // 0 to 10
+  judgeNotes?: string;
+  createdAt: Date | string;
+}
+
 export interface AuditionRegistration {
   id: string;
   folio: string; // Structured sequence string (e.g. AUD-2026-DV-0042)
@@ -80,6 +103,16 @@ export interface AuditionRegistration {
   emailNotified?: boolean;
   auditionNumber?: number | string;
   notes?: string;
+  
+  // Casting & Scoring fields
+  assignedRole?: string; // Personaje o rol asignado (ej. "Benny - Protagónico")
+  roleAssignedAt?: Date | string;
+  scores?: AuditionScore[];
+  cantoAverage?: number;
+  danceAverage?: number;
+  actingAverage?: number;
+  overallScore?: number;
+
   createdAt: Date;
   updatedAt: Date;
 }

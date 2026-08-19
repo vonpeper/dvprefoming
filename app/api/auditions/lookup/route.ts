@@ -39,6 +39,11 @@ export async function GET(req: NextRequest) {
         productionName: audition.productionName || prod?.title || "Si No Es Ahora (El Musical)",
         programName: audition.programName || "Teatro Musical",
         status: audition.status,
+        assignedRole: audition.assignedRole,
+        overallScore: audition.overallScore,
+        cantoAverage: audition.cantoAverage,
+        danceAverage: audition.danceAverage,
+        actingAverage: audition.actingAverage,
         preferredSchedule: audition.preferredSchedule || "Turno Vespertino",
         createdAt: audition.createdAt,
         venue: {

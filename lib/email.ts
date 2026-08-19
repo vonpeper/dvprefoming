@@ -15,6 +15,8 @@ export interface AuditionEmailData {
   venueAddress?: string;
   venueMapsUrl?: string;
   googleDriveUrl?: string;
+  assignedRole?: string;
+  overallScore?: number;
   notes?: string;
 }
 
@@ -316,6 +318,25 @@ export async function sendAuditionApprovalEmail(data: AuditionEmailData): Promis
                     <span style="font-size: 13px; color: #A7F3D0; margin-top: 4px; display: block;">
                       Producción: ${data.productionName} &bull; Folio: ${data.folio}
                     </span>
+                    ${
+                      data.assignedRole
+                        ? `<div style="margin-top: 15px; padding: 12px; background: rgba(0,0,0,0.3); border: 1px dashed #34D399; border-radius: 12px;">
+                            <span style="font-size: 11px; color: #A7F3D0; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; display: block;">
+                              ★ PERSONAJE / ROL ASIGNADO:
+                            </span>
+                            <span style="font-size: 20px; font-weight: 900; color: #FBBF24; display: block; margin-top: 4px;">
+                              ${data.assignedRole.trim().toUpperCase()}
+                            </span>
+                          </div>`
+                        : ""
+                    }
+                    ${
+                      data.overallScore !== undefined && data.overallScore > 0
+                        ? `<span style="display: inline-block; margin-top: 10px; font-size: 12px; color: #E4E4E7; font-family: monospace; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px;">
+                            Puntaje Jurado: <strong>${data.overallScore} / 10 ⭐</strong>
+                          </span>`
+                        : ""
+                    }
                   </td>
                 </tr>
               </table>

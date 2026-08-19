@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { AuditionRegistration, Article, Program, Teacher, Production } from "@/types/mock";
+import { AuditionRegistration, Article, Program, Teacher, Production, EvaluationCriteria, AuditionScore, EvaluationDiscipline } from "@/types/mock";
 import { mockAuditions, mockArticles, mockPrograms, mockTeachers, mockProductions } from "@/data/mock";
 
 const DATA_DIR = path.join(process.cwd(), ".data");
@@ -528,3 +528,204 @@ export function setActiveAuditionProduction(id: string): Production | null {
   saveStoredWebsiteContent(content);
   return target;
 }
+
+// ---------------------------------------------------------------------------
+// Evaluation Criteria (Rubrics) & Audition Scores Storage
+// ---------------------------------------------------------------------------
+const CRITERIA_FILE = path.join(DATA_DIR, "evaluation-criteria.json");
+
+export const DEFAULT_EVALUATION_CRITERIA: EvaluationCriteria[] = [
+  // Canto
+  { id: "c_afinacion", discipline: "CANTO", name: "Afinación & Oído", description: "Precisión tonal, afinación en intervalos y limpieza armónica", maxScore: 10, order: 1 },
+  { id: "c_diccion", discipline: "CANTO", name: "Dicción & Colocación", description: "Claridad en vocales y consonantes, resonancia y apoyo", maxScore: 10, order: 2 },
+  { id: "c_resistencia", discipline: "CANTO", name: "Resistencia Vocal", description: "Control del aire, apoyo diafragmático y estabilidad", maxScore: 10, order: 3 },
+  { id: "c_tesitura", discipline: "CANTO", name: "Tesitura & Rango", description: "Extensión vocal, comodidad en agudos y graves", maxScore: 10, order: 4 },
+  { id: "c_armonia", discipline: "CANTO", name: "Armonía & Sentido Musical", description: "Capacidad de segundas voces y ensamble", maxScore: 10, order: 5 },
+  { id: "c_tempo", discipline: "CANTO", name: "Tempo & Ritmo", description: "Entrada a tiempo, cuadratura y métrica", maxScore: 10, order: 6 },
+  { id: "c_expresion", discipline: "CANTO", name: "Expresión & Emoción Vocal", description: "Matiz, dinámicas y transmisión del mensaje de la canción", maxScore: 10, order: 7 },
+
+  // Coreografía / Danza
+  { id: "d_coordinacion", discipline: "COREOGRAFIA", name: "Coordinación & Técnica", description: "Limpieza en extremidades, postura y alineación corporal", maxScore: 10, order: 1 },
+  { id: "d_memoria", discipline: "COREOGRAFIA", name: "Memoria Coreográfica", description: "Velocidad de retención de pasos y secuencias", maxScore: 10, order: 2 },
+  { id: "d_ritmo", discipline: "COREOGRAFIA", name: "Ritmo & Musicalidad", description: "Acentuación precisa con el compás de la música", maxScore: 10, order: 3 },
+  { id: "d_flexibilidad", discipline: "COREOGRAFIA", name: "Flexibilidad & Extensión", description: "Amplitud de movimiento, saltos y elongación", maxScore: 10, order: 4 },
+  { id: "d_fuerza", discipline: "COREOGRAFIA", name: "Fuerza & Energía", description: "Dinámica, resistencia física y ataque del movimiento", maxScore: 10, order: 5 },
+  { id: "d_proyeccion", discipline: "COREOGRAFIA", name: "Proyección Escénica", description: "Expresión corporal, mirada y carisma en el baile", maxScore: 10, order: 6 },
+
+  // Actuación
+  { id: "a_interpretacion", discipline: "ACTUACION", name: "Interpretación & Verdad", description: "Credibilidad emocional y autenticidad del personaje", maxScore: 10, order: 1 },
+  { id: "a_proyeccion", discipline: "ACTUACION", name: "Proyección & Dicción Escénica", description: "Volumen, articulación y llegada de la voz al público", maxScore: 10, order: 2 },
+  { id: "a_improvisacion", discipline: "ACTUACION", name: "Improvisación & Escucha", description: "Reacción espontánea a estímulos de dirección y compañeros", maxScore: 10, order: 3 },
+  { id: "a_presencia", discipline: "ACTUACION", name: "Presencia & Dominio Escénico", description: "Seguridad, uso del espacio escénico y magnetismo", maxScore: 10, order: 4 },
+  { id: "a_conexion", discipline: "ACTUACION", name: "Conexión con el Texto", description: "Comprensión del subtexto, pausas y arcos dramáticos", maxScore: 10, order: 5 },
+];
+
+export function getStoredCriteria(): EvaluationCriteria[] {
+  ensureDirectoryExists();
+  if (!fs.existsSync(CRITERIA_FILE)) {
+    saveStoredCriteria(DEFAULT_EVALUATION_CRITERIA);
+    return DEFAULT_EVALUATION_CRITERIA;
+  }
+  try {
+    const raw = fs.readFileSync(CRITERIA_FILE, "utf-8");
+    return JSON.parse(raw);
+  } catch {
+    return DEFAULT_EVALUATION_CRITERIA;
+  }
+}
+
+export function saveStoredCriteria(criteria: EvaluationCriteria[]) {
+  ensureDirectoryExists();
+  fs.writeFileSync(CRITERIA_FILE, JSON.stringify(criteria, null, 2), "utf-8");
+}
+
+export function saveCriteria(
+  criteria: Partial<EvaluationCriteria> & { name: string; discipline: EvaluationDiscipline }
+): EvaluationCriteria {
+  const allCriteria = getStoredCriteria();
+  if (criteria.id) {
+    const idx = allCriteria.findIndex((c) => c.id === criteria.id);
+    if (idx !== -1) {
+      allCriteria[idx] = {
+        ...allCriteria[idx],
+        ...criteria,
+      } as EvaluationCriteria;
+      saveStoredCriteria(allCriteria);
+      return allCriteria[idx];
+    }
+  }
+
+  const newId = `crit_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+  const newCriteria: EvaluationCriteria = {
+    id: newId,
+    name: criteria.name,
+    discipline: criteria.discipline,
+    description: criteria.description || "",
+    maxScore: criteria.maxScore || 10,
+    order: (criteria.order || allCriteria.filter((c) => c.discipline === criteria.discipline).length + 1),
+  };
+
+  allCriteria.push(newCriteria);
+  saveStoredCriteria(allCriteria);
+  return newCriteria;
+}
+
+export function deleteCriteria(id: string): boolean {
+  const allCriteria = getStoredCriteria();
+  const filtered = allCriteria.filter((c) => c.id !== id);
+  if (filtered.length !== allCriteria.length) {
+    saveStoredCriteria(filtered);
+    return true;
+  }
+  return false;
+}
+
+export function saveAuditionScore(data: {
+  auditionId: string;
+  judgeName: string;
+  judgeTitle?: string;
+  discipline: EvaluationDiscipline;
+  scores: Record<string, number>;
+  judgeNotes?: string;
+}): AuditionScore | null {
+  const auditions = getStoredAuditions();
+  const idx = auditions.findIndex((a) => a.id === data.auditionId || a.folio === data.auditionId);
+  if (idx === -1) return null;
+
+  const audition = auditions[idx];
+  const existingScores = audition.scores || [];
+
+  // Calculate average of provided rubric scores (0-10)
+  const scoreValues = Object.values(data.scores);
+  const total = scoreValues.reduce((acc, curr) => acc + (Number(curr) || 0), 0);
+  const averageScore = scoreValues.length > 0 ? Number((total / scoreValues.length).toFixed(2)) : 0;
+
+  const scoreEntry: AuditionScore = {
+    id: `score_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    auditionId: audition.id,
+    judgeName: data.judgeName,
+    judgeTitle: data.judgeTitle || "Juez Evaluador",
+    discipline: data.discipline,
+    scores: data.scores,
+    averageScore,
+    judgeNotes: data.judgeNotes || "",
+    createdAt: new Date(),
+  };
+
+  // Replace score if same judge & discipline exists, or push new
+  const existingIdx = existingScores.findIndex(
+    (s) => s.judgeName === data.judgeName && s.discipline === data.discipline
+  );
+  if (existingIdx !== -1) {
+    existingScores[existingIdx] = scoreEntry;
+  } else {
+    existingScores.push(scoreEntry);
+  }
+
+  audition.scores = existingScores;
+
+  // Recompute discipline averages and overall score
+  const cantoScores = existingScores.filter((s) => s.discipline === "CANTO");
+  const danceScores = existingScores.filter((s) => s.discipline === "COREOGRAFIA");
+  const actingScores = existingScores.filter((s) => s.discipline === "ACTUACION");
+
+  if (cantoScores.length > 0) {
+    audition.cantoAverage = Number(
+      (cantoScores.reduce((acc, curr) => acc + curr.averageScore, 0) / cantoScores.length).toFixed(2)
+    );
+  }
+
+  if (danceScores.length > 0) {
+    audition.danceAverage = Number(
+      (danceScores.reduce((acc, curr) => acc + curr.averageScore, 0) / danceScores.length).toFixed(2)
+    );
+  }
+
+  if (actingScores.length > 0) {
+    audition.actingAverage = Number(
+      (actingScores.reduce((acc, curr) => acc + curr.averageScore, 0) / actingScores.length).toFixed(2)
+    );
+  }
+
+  // Overall average across available disciplines
+  const activeAverages: number[] = [];
+  if (audition.cantoAverage !== undefined) activeAverages.push(audition.cantoAverage);
+  if (audition.danceAverage !== undefined) activeAverages.push(audition.danceAverage);
+  if (audition.actingAverage !== undefined) activeAverages.push(audition.actingAverage);
+
+  if (activeAverages.length > 0) {
+    audition.overallScore = Number(
+      (activeAverages.reduce((acc, curr) => acc + curr, 0) / activeAverages.length).toFixed(2)
+    );
+  }
+
+  audition.updatedAt = new Date();
+  auditions[idx] = audition;
+  saveStoredAuditions(auditions);
+
+  return scoreEntry;
+}
+
+export function assignRoleToApplicant(
+  auditionId: string,
+  assignedRole: string,
+  notes?: string
+): AuditionRegistration | null {
+  const auditions = getStoredAuditions();
+  const idx = auditions.findIndex((a) => a.id === auditionId || a.folio === auditionId);
+  if (idx === -1) return null;
+
+  const now = new Date();
+  auditions[idx] = {
+    ...auditions[idx],
+    status: "APPROVED",
+    assignedRole: assignedRole.trim(),
+    roleAssignedAt: now,
+    notes: notes !== undefined ? notes : auditions[idx].notes,
+    updatedAt: now,
+  };
+
+  saveStoredAuditions(auditions);
+  return auditions[idx];
+}
+

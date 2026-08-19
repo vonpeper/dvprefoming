@@ -128,23 +128,36 @@ Todo lo mejor,
 }
 
 /**
- * Builds and sends the Audition Approval / Successful Casting WhatsApp message
+ * Builds and sends the Audition Approval / Successful Casting WhatsApp message with Assigned Character / Role
  */
 export async function sendAuditionApprovalWhatsApp(data: AuditionNotificationData): Promise<SendMessageResult> {
   const auditionNum = data.folio.replace(/\D/g, "").slice(-4) || "585";
+  const driveLink = "https://drive.google.com/drive/folders/1qadnY5yaF1ZXprIXP5NY1cmAJkvQU08C?usp=drive_link";
+
+  let roleText = "";
+  if (data.assignedRole && data.assignedRole.trim()) {
+    roleText = `\n★ *TU PERSONAJE ASIGNADO:* \n👉 *${data.assignedRole.trim().toUpperCase()}*\n`;
+  }
+
+  let scoreText = "";
+  if (data.overallScore !== undefined && data.overallScore > 0) {
+    scoreText = `\n📊 *Puntaje Promedio de Jueces:* ${data.overallScore}/10 ⭐\n`;
+  }
 
   const messageBody = `🌟 *¡MUCHAS FELICIDADES ${data.fullName.trim().toUpperCase()}! TU AUDICIÓN FUE EXITOSA* 🌟
 
-Nos complace informarte que has sido *APROBADO(A)* para formar parte del elenco de la producción:
-🎭 *"${data.productionName || "Si No Es Ahora (El Musical)"}"* (Folio: \`${data.folio}\` • #${auditionNum})
-
+Nos complace informarte que la Dirección General y el Panel de Jueces te han *APROBADO* para formar parte del elenco de:
+🎭 *"${data.productionName || "Si No Es Ahora (El Musical)"}"* (Folio: \`${data.folio}\` • Turno #${auditionNum})
+${roleText}${scoreText}
 📋 *Siguientes pasos oficiales:*
-1. 📖 Nuestro equipo de dirección artística se coordinará contigo para la primera lectura y entrega de libreto.
-2. 📝 Proceso de enrolamiento y ficha artística en la academia.
+1. 📖 Descarga tu libreto, partituras y escenas en el Google Drive oficial:
+${driveLink}
+2. 🗓️ Asiste a la reunión de elenco y primera lectura de libreto.
+3. 📝 Completa tu enrolamiento y ficha artística en la recepción de la academia.
 
-💬 *¿Dudas o confirmación inmediata?* Responde directamente a este mensaje para comunicarte con coordinación.
+💬 *¿Dudas o confirmación inmediata?* Responde directamente a este mensaje de WhatsApp.
 
-¡Bienvenidx a la compañía!
+¡Bienvenidx a la compañía de DV Performing Arts!
 *Diego Vieyra — Dirección General & Artística*
 *DV Performing Arts*`;
 

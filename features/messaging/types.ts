@@ -23,8 +23,12 @@ export interface AuditionNotificationData {
   programName: string;
   productionName?: string;
   phone: string;
+  email?: string;
   auditionDate?: string;
   auditionTime?: string;
+  assignedRole?: string;
+  overallScore?: number;
+  notes?: string;
 }
 
 export interface EvolutionInstanceStatus {
