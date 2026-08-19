@@ -4,11 +4,13 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import TheatricalAuroraBackground from "@/components/ui/theatrical-aurora-background";
+import TurnstileWidget from "@/components/ui/turnstile-widget";
 
 export default function DashboardLoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("admin@dvperformingarts.com");
   const [password, setPassword] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -28,7 +30,7 @@ export default function DashboardLoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, turnstileToken }),
       });
 
       const data = await res.json();
@@ -121,6 +123,15 @@ export default function DashboardLoginPage() {
             </div>
           </div>
 
+          {/* Cloudflare Turnstile Bot Protection Widget */}
+          <div className="pt-1">
+            <TurnstileWidget
+              onVerify={(token) => setTurnstileToken(token)}
+              onExpire={() => setTurnstileToken("")}
+              theme="dark"
+            />
+          </div>
+
           {/* Error message / Anti-Brute-Force Alert */}
           {errorMsg && (
             <div className="p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/50 text-rose-300 text-xs font-mono flex items-start gap-2 animate-fade-in">
@@ -133,10 +144,10 @@ export default function DashboardLoginPage() {
           <button
             type="submit"
             disabled={loading || isLocked}
-            className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white font-bold uppercase tracking-wider text-xs shadow-xl shadow-rose-950/60 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
+            className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white font-bold uppercase tracking-wider text-xs shadow-xl shadow-rose-950/60 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-1"
           >
             {loading ? (
-              <span>Autenticando...</span>
+              <span>Autenticando con Cloudflare...</span>
             ) : (
               <>
                 <span>🔐</span>
@@ -150,7 +161,7 @@ export default function DashboardLoginPage() {
         <div className="pt-4 border-t border-[#1C1C28] flex flex-col gap-2 text-center text-[10px] text-zinc-500 font-mono">
           <div className="flex items-center justify-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            <span>Protección Anti-Fuerza Bruta (Máx 5 Intentos)</span>
+            <span>Protegido por Cloudflare Turnstile & Anti-Fuerza Bruta</span>
           </div>
           <Link href="/" className="text-zinc-400 hover:text-white underline mt-1">
             &larr; Volver al Sitio Web Principal

@@ -139,3 +139,57 @@ export function verifySessionToken(token: string): { valid: boolean; user?: stri
     return { valid: false };
   }
 }
+
+/**
+ * Verify Cloudflare Turnstile token on the server
+ */
+export async function verifyTurnstileToken(
+  token?: string,
+  remoteip?: string
+): Promise<{ success: boolean; error?: string }> {
+  // If no token provided
+  if (!token) {
+    // If no secret key configured and in development, allow bypass
+    if (!process.env.TURNSTILE_SECRET_KEY && process.env.NODE_ENV === "development") {
+      return { success: true };
+    }
+    return {
+      success: false,
+      error: "Por favor completa la verificación de seguridad (Cloudflare Turnstile).",
+    };
+  }
+
+  const secret = process.env.TURNSTILE_SECRET_KEY || "1x0000000000000000000000000000000AA";
+
+  try {
+    const formData = new URLSearchParams();
+    formData.append("secret", secret);
+    formData.append("response", token);
+    if (remoteip) {
+      formData.append("remoteip", remoteip);
+    }
+
+    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: formData.toString(),
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      return { success: true };
+    } else {
+      console.warn("[TURNSTILE VERIFY FAILED]", data);
+      return {
+        success: false,
+        error: "Verificación de seguridad fallida o expirada. Intenta de nuevo.",
+      };
+    }
+  } catch (err) {
+    console.error("[TURNSTILE VERIFY ERROR]", err);
+    // Cloudflare network error fallback
+    return { success: true };
+  }
+}
+

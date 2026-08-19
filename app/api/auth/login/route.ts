@@ -5,6 +5,7 @@ import {
   resetLoginAttempts,
   verifyCredentials,
   createSessionToken,
+  verifyTurnstileToken,
 } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { username, password } = body;
+    const { username, password, turnstileToken } = body;
 
     if (!username || !password) {
       return NextResponse.json(
@@ -38,7 +39,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Verify credentials
+    // 2. Verify Cloudflare Turnstile Captcha
+    const turnstileResult = await verifyTurnstileToken(turnstileToken, ip);
+    if (!turnstileResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: turnstileResult.error || "Validación de Cloudflare Turnstile fallida.",
+        },
+        { status: 403 }
+      );
+    }
+
+    // 3. Verify credentials
     const isValid = verifyCredentials(username, password);
 
     if (!isValid) {
