@@ -222,15 +222,15 @@ export default function AuditionFeature() {
               <span className="text-xs text-slate-500 font-mono font-semibold">León, GTO</span>
             </div>
 
-            {/* Incoming Message 1 (Dynamic Greeting synced with selected production) */}
-            <div className="bg-white border border-slate-200/90 rounded-2xl rounded-tl-sm p-4 text-xs text-slate-700 leading-relaxed shadow-sm text-left">
-              <p className="font-medium text-slate-800">
+            {/* Incoming Message 1 (Dynamic Greeting synced with selected production - Pure White) */}
+            <div className="bg-white border-2 border-slate-200 rounded-2xl rounded-tl-sm p-4 sm:p-5 text-xs text-slate-700 leading-relaxed shadow-md text-left">
+              <p className="font-semibold text-slate-800">
                 ¡Hola! 🎭 Queremos conocer tu talento. Completa tu ficha de registro para asignarte tu folio oficial y cita de audición:
               </p>
               
-              {/* Dynamic Active Production Banner that reacts to dropdown selection */}
+              {/* Dynamic Active Production Banner that reacts to dropdown selection (Pure Crisp White / Soft Slate) */}
               {activeProduction ? (
-                <div className="mt-3 p-3 bg-gradient-to-r from-purple-50 to-fuchsia-50 rounded-xl border border-purple-200 flex flex-col gap-1 shadow-sm">
+                <div className="mt-3 p-3.5 bg-[#F8F9FA] rounded-xl border-2 border-purple-200 flex flex-col gap-1.5 shadow-sm">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-purple-800 font-bold flex items-center gap-1.5 text-[11px]">
                       <span>🎬 Convocatoria Activa:</span>
@@ -239,16 +239,16 @@ export default function AuditionFeature() {
                       ● Abierta
                     </span>
                   </div>
-                  <span className="text-purple-950 font-extrabold text-sm tracking-tight">{activeProduction.title}</span>
-                  <div className="flex items-center justify-between text-[10px] text-slate-600 font-mono pt-1 border-t border-purple-200/80">
-                    <span>{activeProduction.auditionDates || activeProduction.season || "Temporada 2026"}</span>
+                  <span className="text-slate-900 font-black text-sm tracking-tight">{activeProduction.title}</span>
+                  <div className="flex items-center justify-between text-[10px] text-slate-600 font-mono pt-1.5 border-t border-slate-200">
+                    <span className="font-medium">{activeProduction.auditionDates || activeProduction.season || "Temporada 2026"}</span>
                     {activeProduction.auditionDeadline && (
                       <span className="text-purple-700 font-bold">Cierre: {activeProduction.auditionDeadline}</span>
                     )}
                   </div>
                 </div>
               ) : (
-                <div className="mt-3 p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs font-semibold">
+                <div className="mt-3 p-3.5 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs font-semibold">
                   ★ Convocatoria General para Próximos Montajes
                 </div>
               )}
