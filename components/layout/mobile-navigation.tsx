@@ -93,6 +93,15 @@ export default function MobileNavigation({
           </li>
           <li>
             <Link
+              href="/audiciones/consulta"
+              onClick={onClose}
+              className="font-display text-3xl sm:text-4xl text-purple-400 hover:text-white tracking-tighter transition-colors block uppercase font-extrabold leading-[0.85] bg-purple-950/40 border border-purple-500/40 rounded-2xl py-3 px-4"
+            >
+              🔍 Consultar Resultado
+            </Link>
+          </li>
+          <li>
+            <Link
               href="#noticias"
               onClick={onClose}
               className="font-display text-4xl sm:text-5xl hover:text-accent-red tracking-tighter text-text-main transition-colors block uppercase font-extrabold leading-[0.85]"

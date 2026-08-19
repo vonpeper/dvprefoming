@@ -1,9 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Production } from "@/types/mock";
 
 export default function AuditionFeature() {
+  const router = useRouter();
+  const [quickFolioInput, setQuickFolioInput] = useState("");
   const [productions, setProductions] = useState<Production[]>([]);
   const [activeProduction, setActiveProduction] = useState<Production | null>(null);
 
@@ -146,12 +150,19 @@ export default function AuditionFeature() {
     }
   };
 
+  const handleQuickLookup = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickFolioInput.trim()) return;
+    const clean = quickFolioInput.trim().toUpperCase();
+    router.push(`/audiciones/consulta?folio=${encodeURIComponent(clean)}`);
+  };
+
   return (
     <section id="audiciones" className="relative w-full py-20 px-4 sm:px-6 border-b-4 border-border-editorial" aria-labelledby="heading-audiciones">
       <div className="mx-auto max-w-4xl flex flex-col items-center">
         
         {/* ================= URBAN STREET DANCE BRUSH GRAFFITI HEADER ================= */}
-        <div className="flex flex-col items-center text-center mb-12 relative select-none">
+        <div className="flex flex-col items-center text-center mb-8 relative select-none">
           
           {/* Top Stage Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-purple-900/40 border border-purple-500/40 rounded-full text-xs font-semibold text-purple-300 mb-4 shadow-sm backdrop-blur-md">
@@ -192,6 +203,46 @@ export default function AuditionFeature() {
           <p className="text-zinc-300 text-sm sm:text-base text-center max-w-xl mt-5 font-normal leading-relaxed">
             Inicia tu registro oficial para formar parte de nuestras producciones en León, Gto. Te asignamos tu folio y confirmamos tu cita al instante por WhatsApp.
           </p>
+        </div>
+
+        {/* ================= CONSULTA DE RESULTADOS DIRECTA CON FOLIO / ID ================= */}
+        <div className="w-full max-w-xl bg-gradient-to-r from-purple-950/80 via-[#151522] to-rose-950/80 border-2 border-purple-500/60 rounded-3xl p-5 sm:p-6 mb-12 shadow-2xl flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="text-2xl">🔍</span>
+              <div>
+                <h3 className="text-base font-black text-white">¿Ya realizaste tu audición?</h3>
+                <p className="text-xs text-zinc-300">Ingresa tu Folio o ID para ver tu resultado, estatus y rol asignado.</p>
+              </div>
+            </div>
+            <span className="hidden sm:inline-block text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+              ● Consulta en Vivo
+            </span>
+          </div>
+
+          <form onSubmit={handleQuickLookup} className="flex flex-col sm:flex-row gap-2 mt-1">
+            <input
+              type="text"
+              placeholder="Ej. DV-585, DV-501 o tu teléfono..."
+              value={quickFolioInput}
+              onChange={(e) => setQuickFolioInput(e.target.value)}
+              className="flex-1 bg-black/60 border border-purple-500/50 focus:border-purple-400 rounded-2xl px-4 py-3 text-sm text-white font-mono font-bold placeholder-zinc-500 focus:outline-none uppercase"
+            />
+            <button
+              type="submit"
+              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg shadow-purple-950/50 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+            >
+              <span>Consultar Estatus</span>
+              <span>→</span>
+            </button>
+          </form>
+
+          <div className="flex items-center justify-between text-[11px] text-zinc-400 font-mono pt-1">
+            <span>¿No recuerdas tu folio? Busca con tu WhatsApp.</span>
+            <Link href="/audiciones/consulta" className="text-purple-400 hover:underline">
+              Ir a portal de consulta ↗
+            </Link>
+          </div>
         </div>
 
         {/* ================= SMARTPHONE CHAT & REGISTRATION SIMULATION ================= */}

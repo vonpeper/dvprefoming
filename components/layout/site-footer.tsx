@@ -172,6 +172,12 @@ export default function SiteFooter() {
               </Link>
             </li>
             <li>
+              <Link href="/audiciones/consulta" className="text-purple-400 font-semibold hover:text-white transition-colors flex items-center gap-1">
+                <span>🔍</span>
+                <span>Consulta de Resultados de Audición</span>
+              </Link>
+            </li>
+            <li>
               <Link href="/#maestros" className="hover:text-white transition-colors">
                 Cuerpo Docente
               </Link>

@@ -95,6 +95,15 @@ export default function SiteHeader() {
               </li>
               <li>
                 <Link
+                  href="/audiciones/consulta"
+                  className="text-purple-400 hover:text-purple-300 font-bold transition-colors focus:outline-none focus:ring-1 focus:ring-purple-500 px-1 py-1 flex items-center gap-1.5"
+                >
+                  <span>🔍</span>
+                  <span>Consultar Folio</span>
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/noticias"
                   className="text-zinc-400 hover:text-white hover:text-rose-400 transition-colors focus:outline-none focus:ring-1 focus:ring-rose-500 px-1 py-1"
                 >
@@ -105,7 +114,15 @@ export default function SiteHeader() {
           </nav>
 
           {/* Header Actions */}
-          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <Link
+              href="/audiciones/consulta"
+              className="hidden lg:inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#181824] hover:bg-purple-950/60 text-purple-300 hover:text-white border border-purple-500/40 hover:border-purple-400 rounded-full text-xs font-mono font-bold transition-all shadow-sm"
+            >
+              <span>🔍</span>
+              <span>Consultar Resultado</span>
+            </Link>
+
             <ButtonLink
               href="/#audiciones"
               variant="primary"
