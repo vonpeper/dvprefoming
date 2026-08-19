@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { mockTeachers } from "@/data/mock";
 import { Teacher } from "@/types/mock";
 import SectionHeading from "@/components/ui/section-heading";
-import MediaPlaceholder from "@/components/ui/media-placeholder";
 
 export default function TeachersSection() {
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
@@ -19,6 +18,16 @@ export default function TeachersSection() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedTeacher]);
 
+  // Concise punchlines for Apple-style high impact readability
+  const shortHighlights: Record<string, string> = {
+    teacher_diego_vieyra: "AMDA New York & PAA Londres. Dirección de Rent, Spring Awakening, Hoy No Me Puedo Levantar y Matilda.",
+    teacher_marena_segura: "Berklee College of Music. TEDx Performer y coach de artistas en La Voz México y producciones CDMX.",
+    teacher_fanny_monroy: "Campeona Nacional Infinity Championship & Coreógrafa en México y Festival Jorearte en España.",
+    teacher_andres_rodriguez: "Graduado de CEUVOZ (respaldado por INBAL). Formación en Linklater, Feldenkrais y Técnica Alexander.",
+    teacher_angel_piedra: "Licenciada con mención laureada (UG). Formación con Odin Teatret (Dinamarca) y Peeping Tom (Bélgica).",
+    teacher_carolina_torres: "Becaria Vincerò Academy. Solista con la Compañía de Ópera del Teatro del Bicentenario y Cervantino.",
+  };
+
   return (
     <section id="maestros" className="relative w-full py-20 px-4 sm:px-6 lg:px-8 border-b-4 border-border-editorial bg-transparent" aria-labelledby="heading-maestros">
       <div className="mx-auto max-w-container-max">
@@ -30,68 +39,68 @@ export default function TeachersSection() {
           title="Maestros y Dirección Artística"
         />
 
-        {/* Apple-like Subtitle */}
+        {/* Subtitle */}
         <div className="max-w-2xl mx-auto text-center mb-16 -mt-4">
           <p className="text-sm sm:text-base text-zinc-300 font-sans font-normal leading-relaxed">
-            Artistas en activo, directores escénicos y coaches certificados internacionalmente dedicados a potenciar tu talento.
+            Artistas en activo, directores escénicos y coaches certificados internacionalmente dedicados a potenciar tu talento en León, Gto.
           </p>
         </div>
 
-        {/* Teachers Grid - Minimalist, High-Impact Portrait Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-          {mockTeachers.map((teacher, index) => {
-            const variantHash = index % 2 === 0 ? "concrete" : "dark";
-
-            // Concise punchlines for Apple-style readability
-            const shortHighlights: Record<string, string> = {
-              teacher_diego_vieyra: "AMDA New York & PAA Londres. Dirección de Rent, Spring Awakening y Matilda.",
-              teacher_marena_segura: "Berklee College of Music. TEDx Performer y coach de artistas en La Voz.",
-              teacher_fanny_monroy: "Campeona Nacional Infinity Championship & Coreógrafa en México y España.",
-            };
-
+        {/* Teachers Grid - 2x2 Clean Spacious Layout on Desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 max-w-5xl mx-auto">
+          {mockTeachers.map((teacher) => {
             const punchline = shortHighlights[teacher.id] || "Formación actoral y dirección escénica de alto rendimiento.";
 
             return (
               <div
                 key={teacher.id}
-                className="group flex flex-col justify-between bg-[#0D0D12]/90 backdrop-blur-md p-5 rounded-3xl border border-[#22222C] hover:border-rose-500/70 transition-all duration-300 shadow-xl hover:-translate-y-1.5"
+                className="group flex flex-col justify-between bg-[#0E0E14]/95 backdrop-blur-md p-6 sm:p-7 rounded-[2rem] border-2 border-[#22222E] hover:border-purple-500/70 transition-all duration-300 shadow-2xl hover:-translate-y-1.5"
               >
-                <div className="flex flex-col gap-4">
-                  {/* Portrait Media Container */}
-                  <div className="w-full aspect-[3/4] rounded-2xl overflow-hidden relative bg-black border border-[#252535] shadow-md">
-                    <MediaPlaceholder
-                      src={teacher.imageUrl}
+                <div className="flex flex-col gap-5">
+                  {/* Portrait Media Container - Big & Cinematic 4:5 Aspect Ratio */}
+                  <div className="w-full aspect-[4/5] sm:aspect-[4/4.8] rounded-2xl overflow-hidden relative bg-black border border-[#252535] shadow-lg">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={teacher.imageUrl || "/images/teachers/diego-vieyra.jpg"}
                       alt={teacher.fullName}
-                      aspectRatio="3:4"
-                      title={teacher.fullName}
-                      description="FOTO OFICIAL"
-                      variant={variantHash}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
 
-                    {/* Bottom Title on Image */}
-                    <div className="absolute bottom-3 left-3 right-3 z-10">
-                      <span className="text-[9px] font-mono text-purple-300 uppercase font-bold tracking-wider block mb-0.5">
+                    {/* Top Subtle Frame Marks & Badge */}
+                    <div className="absolute top-3.5 left-3.5 right-3.5 flex justify-between items-center pointer-events-none z-10">
+                      <span className="px-3 py-1 bg-black/80 backdrop-blur-md border border-white/20 text-white font-mono text-[9px] uppercase font-bold tracking-wider rounded-full shadow">
+                        DV PERFORMING ARTS
+                      </span>
+                      <span className="px-2.5 py-0.5 bg-purple-950/90 border border-purple-500/50 text-purple-300 font-mono text-[9px] uppercase font-bold tracking-wider rounded-full">
+                        DOCENTE
+                      </span>
+                    </div>
+
+                    {/* Clean Dark Vignette Overlay for Crisp Text Contrast */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0E0E14] via-[#0E0E14]/20 to-transparent pointer-events-none" />
+
+                    {/* Bottom Title on Image (Single clean overlay with no duplication) */}
+                    <div className="absolute bottom-4 left-4 right-4 z-10 flex flex-col gap-1">
+                      <span className="text-[11px] font-mono text-purple-300 uppercase font-extrabold tracking-wider block">
                         {teacher.title || teacher.specialties[0]}
                       </span>
-                      <h3 className="font-display text-xl font-extrabold uppercase tracking-tight text-white leading-tight">
+                      <h3 className="font-display text-2xl sm:text-3xl font-black uppercase tracking-tight text-white leading-tight drop-shadow-md">
                         {teacher.fullName}
                       </h3>
                     </div>
                   </div>
 
-                  {/* Clean One-Liner (Apple Style) */}
-                  <p className="text-xs text-zinc-300 leading-relaxed font-sans font-normal">
+                  {/* Clean Highlight Punchline (Apple Style) */}
+                  <p className="text-sm text-zinc-300 leading-relaxed font-sans font-normal">
                     {punchline}
                   </p>
 
                   {/* Clean Specialty Pills */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {teacher.specialties.slice(0, 2).map((spec, idx) => (
+                  <div className="flex flex-wrap gap-2">
+                    {teacher.specialties.map((spec, idx) => (
                       <span
                         key={idx}
-                        className="px-2.5 py-1 bg-[#14141C] border border-[#252535] font-mono text-[9px] uppercase text-zinc-300 rounded-lg font-medium"
+                        className="px-3 py-1 bg-[#161622] border border-[#2B2B3E] font-mono text-[10px] uppercase text-zinc-300 rounded-lg font-medium tracking-wide"
                       >
                         {spec}
                       </span>
@@ -99,12 +108,12 @@ export default function TeachersSection() {
                   </div>
                 </div>
 
-                {/* Minimalist Action */}
-                <div className="pt-4 mt-2 border-t border-[#1E1E28]">
+                {/* Minimalist Action Button */}
+                <div className="pt-5 mt-4 border-t border-[#1E1E28]">
                   <button
                     type="button"
                     onClick={() => setSelectedTeacher(teacher)}
-                    className="w-full py-2 bg-[#171722] hover:bg-rose-600/20 text-zinc-300 hover:text-rose-400 border border-[#282838] hover:border-rose-500/40 rounded-xl text-xs font-mono font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="w-full py-3 bg-[#171724] hover:bg-purple-600 hover:text-white text-zinc-200 border border-[#2B2B3E] hover:border-purple-500 rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                   >
                     <span>Trayectoria Completa</span>
                     <span>&rarr;</span>
@@ -143,68 +152,58 @@ export default function TeachersSection() {
               <button
                 type="button"
                 onClick={() => setSelectedTeacher(null)}
-                className="w-8 h-8 rounded-full bg-black/60 border border-white/20 text-zinc-400 hover:text-white flex items-center justify-center text-sm cursor-pointer"
+                className="w-9 h-9 rounded-full bg-[#1C1C26] text-zinc-400 hover:text-white hover:bg-purple-600/30 flex items-center justify-center text-sm font-bold transition-colors cursor-pointer border border-[#303045]"
+                aria-label="Cerrar modal"
               >
                 ✕
               </button>
             </div>
 
-            {/* Content Split */}
-            <div className="flex flex-col sm:flex-row gap-6 items-start">
-              <div className="w-full sm:w-44 aspect-[3/4] rounded-2xl overflow-hidden bg-black border border-[#252535] shrink-0 shadow-lg">
-                <MediaPlaceholder
-                  src={selectedTeacher.imageUrl}
-                  alt={selectedTeacher.fullName}
-                  aspectRatio="3:4"
-                  title={selectedTeacher.fullName}
-                  description="FOTO OFICIAL"
-                  variant="dark"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              <div className="flex flex-col gap-4 text-xs text-zinc-300 flex-1">
-                <div className="flex flex-col gap-2">
-                  <h4 className="text-xs font-mono text-rose-400 font-bold uppercase tracking-wider">
-                    Semblanza Artística & Trayectoria:
-                  </h4>
-                  <p className="text-sm text-zinc-200 leading-relaxed font-sans font-normal">
-                    {selectedTeacher.bio}
-                  </p>
+            {/* Teacher Image & Info in Modal */}
+            <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={selectedTeacher.imageUrl || "/images/teachers/diego-vieyra.jpg"}
+                alt={selectedTeacher.fullName}
+                className="w-36 h-48 object-cover rounded-2xl border border-purple-500/30 shadow-lg shrink-0"
+              />
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedTeacher.specialties.map((spec, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2.5 py-1 bg-purple-950/40 border border-purple-500/40 font-mono text-[10px] uppercase text-purple-300 rounded-lg font-bold"
+                    >
+                      {spec}
+                    </span>
+                  ))}
                 </div>
-
-                <div className="flex flex-col gap-2 pt-2 border-t border-[#20202C]">
-                  <span className="text-[10px] font-mono text-zinc-400 font-bold uppercase">
-                    Especialidades & Disciplinas Impartidas:
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedTeacher.specialties.map((spec, sIdx) => (
-                      <span
-                        key={sIdx}
-                        className="px-3 py-1 bg-[#161622] border border-purple-500/30 text-purple-300 font-mono text-xs rounded-lg font-semibold"
-                      >
-                        ✓ {spec}
-                      </span>
-                    ))}
-                  </div>
+                <div className="text-xs text-zinc-400 font-mono">
+                  Sede: DV Performing Arts &bull; León, Gto.
                 </div>
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="flex justify-between items-center pt-4 border-t border-[#252535]">
-              <span className="text-[10px] font-mono text-zinc-500">
-                DV PERFORMING ARTS &bull; FORMACIÓN INTEGRAL
-              </span>
+            {/* Full Biography */}
+            <div className="flex flex-col gap-3 border-t border-[#252535] pt-4">
+              <h4 className="text-xs font-mono uppercase text-zinc-400 tracking-wider font-bold">
+                Semblanza & Trayectoria Escénica
+              </h4>
+              <p className="text-sm text-zinc-200 leading-relaxed font-sans font-normal whitespace-pre-line">
+                {selectedTeacher.bio}
+              </p>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="border-t border-[#252535] pt-4 flex justify-end">
               <button
                 type="button"
                 onClick={() => setSelectedTeacher(null)}
-                className="px-5 py-2.5 bg-[#1C1C26] hover:bg-[#252535] text-zinc-300 hover:text-white rounded-xl text-xs font-semibold border border-[#303045] transition-colors cursor-pointer"
+                className="py-2.5 px-6 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-colors cursor-pointer"
               >
-                Cerrar Ficha
+                Cerrar
               </button>
             </div>
-
           </div>
         </div>
       )}
