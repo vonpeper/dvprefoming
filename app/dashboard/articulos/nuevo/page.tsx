@@ -591,9 +591,11 @@ function ArticleEditorContent() {
                   {block.type === "image" && (
                     <div className="flex flex-col gap-3">
                       <ImageUploader
-                        label="Fotografía del Cuerpo"
+                        label="Fotografía del Cuerpo de Noticia"
                         value={block.content}
                         aspectRatio="16:9"
+                        recommendedSize="1200 × 800 px (3:2) o 1200 × 675 px (16:9)"
+                        description="Fotografía nítida para ilustrar el artículo en el cuerpo del texto."
                         onChange={(url) => updateBlockContent(block.id, url)}
                       />
                       <input
@@ -803,8 +805,9 @@ function ArticleEditorContent() {
                   label="Imagen Destacada / Portada Oficial"
                   value={featuredImage}
                   aspectRatio="16:9"
+                  recommendedSize="1200 × 675 px (16:9 Panorámica)"
                   onChange={(newUrl) => setFeaturedImage(newUrl)}
-                  description="Aparecerá como portada en el sitio y como tarjeta al compartir en WhatsApp / Facebook."
+                  description="Resolución recomendada: 1200 × 675 px o 1920 × 1080 px para web y tarjetas en redes sociales."
                 />
               </div>
 

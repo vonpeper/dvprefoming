@@ -107,6 +107,31 @@ export default function WebsiteContentEditorPage() {
         ))}
       </div>
 
+      {/* Quick Image Resolution Guide Banner */}
+      <div className="bg-[#161B22]/60 border border-purple-500/30 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2 text-purple-300 font-bold">
+          <span>📐</span>
+          <span>Guía de Tamaños de Imagen en Pixeles:</span>
+        </div>
+        <div className="flex flex-wrap gap-2 text-[11px] font-mono">
+          <span className="bg-[#0D1117] border border-[#30363D] px-2.5 py-1 rounded text-slate-300">
+            <strong className="text-purple-400">Hero Portada:</strong> 800×1067 px (3:4)
+          </span>
+          <span className="bg-[#0D1117] border border-[#30363D] px-2.5 py-1 rounded text-slate-300">
+            <strong className="text-purple-400">Manifiesto:</strong> 800×800 px (1:1)
+          </span>
+          <span className="bg-[#0D1117] border border-[#30363D] px-2.5 py-1 rounded text-slate-300">
+            <strong className="text-purple-400">Talleres:</strong> 1200×675 px (16:9)
+          </span>
+          <span className="bg-[#0D1117] border border-[#30363D] px-2.5 py-1 rounded text-slate-300">
+            <strong className="text-purple-400">Maestros:</strong> 600×800 px (3:4)
+          </span>
+          <span className="bg-[#0D1117] border border-[#30363D] px-2.5 py-1 rounded text-slate-300">
+            <strong className="text-purple-400">Obras / Cartel:</strong> 800×1067 px (3:4)
+          </span>
+        </div>
+      </div>
+
       {/* Tab Panels */}
       <div className="bg-[#161B22] border border-[#30363D] rounded-xl p-6 sm:p-8 shadow-sm">
         {/* ================= HERO TAB ================= */}
@@ -194,6 +219,8 @@ export default function WebsiteContentEditorPage() {
               label="Fotografía Principal de Escenario (Hero)"
               value={content.hero.heroImage}
               aspectRatio="3:4"
+              recommendedSize="800 × 1067 px (o 1200 × 1600 px • 3:4 Vertical)"
+              description="Fotografía vertical de alto impacto del escenario o elenco principal."
               onChange={(newUrl) =>
                 setContent({ ...content, hero: { ...content.hero, heroImage: newUrl } })
               }
@@ -249,6 +276,8 @@ export default function WebsiteContentEditorPage() {
               label="Fotografía de Ensayo en Backstage (Manifiesto)"
               value={content.manifesto.image}
               aspectRatio="1:1"
+              recommendedSize="800 × 800 px (o 1000 × 1000 px • 1:1 Cuadrado)"
+              description="Fotografía de ensayo en backstage, dirección artística o clases en aula."
               onChange={(newUrl) =>
                 setContent({ ...content, manifesto: { ...content.manifesto, image: newUrl } })
               }
@@ -304,6 +333,8 @@ export default function WebsiteContentEditorPage() {
                     label="Póster / Portada del Taller"
                     value={prog.imageUrl || ""}
                     aspectRatio="16:9"
+                    recommendedSize="1200 × 675 px (o 800 × 450 px • 16:9)"
+                    description="Fotografía horizontal representativa de la clase (canto, danza o teatro integral)."
                     onChange={(newUrl) => {
                       const updated = [...content.programs];
                       updated[idx].imageUrl = newUrl;
@@ -373,6 +404,8 @@ export default function WebsiteContentEditorPage() {
                     label="Retrato Oficial del Maestro"
                     value={teacher.imageUrl || ""}
                     aspectRatio="3:4"
+                    recommendedSize="600 × 800 px (3:4 Vertical)"
+                    description="Retrato profesional o headshot del maestro con fondo escénico o limpio."
                     onChange={(newUrl) => {
                       const updated = [...content.teachers];
                       updated[idx].imageUrl = newUrl;
@@ -428,6 +461,8 @@ export default function WebsiteContentEditorPage() {
                     label="Póster Oficial de la Obra"
                     value={prod.imageUrl || ""}
                     aspectRatio="3:4"
+                    recommendedSize="800 × 1067 px (3:4 Vertical Cartel)"
+                    description="Póster oficial con título, fecha y arte gráfico del montaje."
                     onChange={(newUrl) => {
                       const updated = [...content.productions];
                       updated[idx].imageUrl = newUrl;

@@ -478,11 +478,12 @@ export default function ProductionsDashboardPage() {
 
               {/* Reusable Image Uploader for Poster / Banner */}
               <ImageUploader
-                label="Póster Oficial / Imagen Panorámica de Cartelera"
+                label="Póster Oficial / Imagen de Cartelera"
                 value={editingProd.imageUrl || "/images/productions/si-no-es-ahora.jpg"}
                 aspectRatio="16:9"
+                recommendedSize="1200 × 675 px (16:9 Panorámica) o 800 × 1067 px (3:4 Vertical)"
                 onChange={(newUrl) => setEditingProd({ ...editingProd, imageUrl: newUrl })}
-                description="Formato panorámico recomendado 16:9 o 16:10 para lucir en la cartelera y ficha de estreno."
+                description="Resolución ideal para lucir nítido en la cartelera principal, popup de ficha técnica y boletos."
               />
 
               {/* Set Active Audition Checkbox */}

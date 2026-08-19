@@ -195,6 +195,76 @@ export default function MediaLibraryPage() {
         </div>
       </div>
 
+      {/* RECOMMENDED SIZES CHEAT SHEET */}
+      <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-5 flex flex-col gap-4">
+        <div className="flex items-center justify-between border-b border-[#30363D] pb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">📐</span>
+            <div>
+              <h2 className="text-sm font-bold text-white">
+                Guía de Medidas Oficiales & Tamaños en Pixeles para Diseño Web
+              </h2>
+              <p className="text-[11px] text-slate-400">
+                Consulta estas dimensiones para preparar y recortar las imágenes antes de publicarlas en el CMS.
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-mono text-purple-300 bg-purple-950/60 border border-purple-500/40 px-2.5 py-1 rounded-full font-bold">
+            Formatos: JPG / PNG / WebP
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-xs">
+          <div className="p-3.5 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col gap-1">
+            <span className="text-[10px] font-mono uppercase text-purple-400 font-bold">🌟 Hero / Portada Principal</span>
+            <span className="font-mono font-black text-white text-sm">800 × 1067 px</span>
+            <span className="text-[10px] text-slate-400">Ratio 3:4 Vertical (o 1200×1600 px HD)</span>
+          </div>
+
+          <div className="p-3.5 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col gap-1">
+            <span className="text-[10px] font-mono uppercase text-purple-400 font-bold">📜 Manifiesto & Filosofía</span>
+            <span className="font-mono font-black text-white text-sm">800 × 800 px</span>
+            <span className="text-[10px] text-slate-400">Ratio 1:1 Cuadrado (o 1000×1000 px)</span>
+          </div>
+
+          <div className="p-3.5 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col gap-1">
+            <span className="text-[10px] font-mono uppercase text-purple-400 font-bold">🎓 Talleres & Programas</span>
+            <span className="font-mono font-black text-white text-sm">1200 × 675 px</span>
+            <span className="text-[10px] text-slate-400">Ratio 16:9 Panorámica (o 800×450 px)</span>
+          </div>
+
+          <div className="p-3.5 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col gap-1">
+            <span className="text-[10px] font-mono uppercase text-purple-400 font-bold">👨‍🏫 Retratos de Docentes</span>
+            <span className="font-mono font-black text-white text-sm">600 × 800 px</span>
+            <span className="text-[10px] text-slate-400">Ratio 3:4 Vertical Headshot</span>
+          </div>
+
+          <div className="p-3.5 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col gap-1">
+            <span className="text-[10px] font-mono uppercase text-rose-400 font-bold">🎭 Póster de Obra / Cartelera</span>
+            <span className="font-mono font-black text-white text-sm">800 × 1067 px</span>
+            <span className="text-[10px] text-slate-400">Ratio 3:4 Cartel Publicitario</span>
+          </div>
+
+          <div className="p-3.5 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col gap-1">
+            <span className="text-[10px] font-mono uppercase text-rose-400 font-bold">📰 Portada de Blog / Noticia</span>
+            <span className="font-mono font-black text-white text-sm">1200 × 675 px</span>
+            <span className="text-[10px] text-slate-400">Ratio 16:9 HD Editorial</span>
+          </div>
+
+          <div className="p-3.5 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col gap-1">
+            <span className="text-[10px] font-mono uppercase text-emerald-400 font-bold">🌐 Tarjeta Redes Sociales (OG)</span>
+            <span className="font-mono font-black text-white text-sm">1200 × 630 px</span>
+            <span className="text-[10px] text-slate-400">Para WhatsApp y Facebook Share</span>
+          </div>
+
+          <div className="p-3.5 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col gap-1">
+            <span className="text-[10px] font-mono uppercase text-emerald-400 font-bold">💎 Logo / Emblema de Marca</span>
+            <span className="font-mono font-black text-white text-sm">512 × 512 px</span>
+            <span className="text-[10px] text-slate-400">PNG Transparente de Alta Definición</span>
+          </div>
+        </div>
+      </div>
+
       {/* Filters & Search */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center bg-[#161B22] p-4 rounded-xl border border-[#30363D]">
         {/* Search */}
