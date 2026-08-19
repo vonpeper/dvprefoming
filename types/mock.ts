@@ -14,6 +14,11 @@ export interface Program {
   ageGroup: string; // e.g. "Niños", "Jóvenes", "Adultos"
   scheduleDescription: string; // e.g. "Lunes y Miércoles 17:00 - 19:00"
   imageUrl?: string;
+  monthlyPrice?: number; // Mensualidad en MXN (ej. 2400)
+  registrationFee?: number; // Cuota de inscripción
+  stripePriceId?: string; // Stripe Price ID (ej. price_1N...)
+  stripePaymentLink?: string; // Enlace directo a Stripe Checkout / Payment Link
+  features?: string[];
   status: EntityStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -42,6 +47,7 @@ export interface Production {
   durationMinutes: number;
   season?: string; // e.g. "Temporada 2026"
   imageUrl?: string;
+  ticketUrl?: string; // Enlace externo al servicio de boletería (Boletópolis, etc.)
   productionStatus?: "AUDITIONS_OPEN" | "IN_SEASON" | "UPCOMING" | "ARCHIVED";
   isAuditionActive?: boolean; // If true, this production is the active call for auditions
   auditionDates?: string; // e.g. "Sábados de Marzo 2026"

@@ -381,12 +381,28 @@ export default function ProductionsDashboardPage() {
                 </div>
               </div>
 
-              {/* Reusable Image Uploader for Poster */}
+              {/* Ticket URL (External ticketing provider) */}
+              <div className="flex flex-col gap-1.5">
+                <label className="font-semibold text-slate-300 flex items-center justify-between">
+                  <span>🎟️ Enlace Externo de Boletería / Tickets</span>
+                  <span className="text-[10px] text-slate-500 font-mono">Boletópolis, Ticketmaster, etc.</span>
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://boletopolis.com/es/evento/tu-obra..."
+                  value={editingProd.ticketUrl || ""}
+                  onChange={(e) => setEditingProd({ ...editingProd, ticketUrl: e.target.value })}
+                  className="bg-[#0D1117] border border-[#30363D] rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-purple-500 font-mono text-[11px]"
+                />
+              </div>
+
+              {/* Reusable Image Uploader for Poster / Banner */}
               <ImageUploader
-                label="Póster Oficial / Imagen de Cartelera"
+                label="Póster Oficial / Imagen Panorámica de Cartelera"
                 value={editingProd.imageUrl || "/images/productions/si-no-es-ahora.jpg"}
-                aspectRatio="3:4"
+                aspectRatio="16:9"
                 onChange={(newUrl) => setEditingProd({ ...editingProd, imageUrl: newUrl })}
+                description="Formato panorámico recomendado 16:9 o 16:10 para lucir en la cartelera y ficha de estreno."
               />
 
               {/* Set Active Audition Checkbox */}
