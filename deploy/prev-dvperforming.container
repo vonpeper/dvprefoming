@@ -1,0 +1,31 @@
+[Unit]
+Description=DV Performing Arts Preview Environment (Next.js Standalone)
+After=network-online.target traefik.service
+Wants=network-online.target
+
+[Container]
+ContainerName=prev-dvperforming
+Image=ghcr.io/vonpeper/dvprefoming:latest
+Network=prosuite.network
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=NEXT_PUBLIC_SITE_URL=https://prev.dvperformingarts.com
+Environment=ADMIN_USER=admin@dvperformingarts.com
+Environment=ADMIN_PASSWORD=DVPerforming@2026!Admin
+Environment=EVOLUTION_API_URL=http://evolution-api-v2:8080
+Environment=EVOLUTION_INSTANCE=dv_instance
+Environment=EVOLUTION_API_KEY=B6D711FCDE4D4FD5936544120E713976
+
+# Traefik v3.3 Routing & Let's Encrypt SSL
+Label=traefik.enable=true
+Label=traefik.http.routers.prev-dvp.rule=Host(`prev.dvperformingarts.com`)
+Label=traefik.http.routers.prev-dvp.entrypoints=websecure
+Label=traefik.http.routers.prev-dvp.tls.certresolver=letsencrypt
+Label=traefik.http.services.prev-dvp.loadbalancer.server.port=3000
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target default.target

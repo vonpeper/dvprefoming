@@ -63,16 +63,103 @@ const permanentMarker = Permanent_Marker({
   display: "swap",
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prev.dvperformingarts.com";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     template: "%s | DV Performing Arts",
-    default: "DV Performing Arts • Academia de Teatro Musical & Danza",
+    default: "DV Performing Arts • Academia de Teatro Musical, Danza & Canto en León Gto",
   },
-  description: "Formación integral en artes escénicas, teatro musical, danza urbana y técnica vocal en León, Guanajuato.",
+  description: "Formación integral en artes escénicas, teatro musical, danza urbana, canto y actuación en León, Guanajuato. Convocatoria y audiciones abiertas.",
+  keywords: [
+    "Teatro Musical León",
+    "Clases de Canto León Gto",
+    "Danza Urbana",
+    "Audiciones Teatro Musical",
+    "DV Performing Arts",
+    "Academia de Artes Escénicas",
+    "Diego Vieyra",
+  ],
+  authors: [{ name: "DV Performing Arts", url: siteUrl }],
+  creator: "DV Performing Arts",
+  publisher: "DV Performing Arts",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_MX",
+    url: siteUrl,
+    siteName: "DV Performing Arts",
+    title: "DV Performing Arts • Academia de Teatro Musical & Danza",
+    description: "Formación integral en artes escénicas en León, Gto. Disciplina, compromiso y pasión sobre el escenario.",
+    images: [
+      {
+        url: "/images/hero/hero-stage.jpg",
+        width: 1200,
+        height: 630,
+        alt: "DV Performing Arts Escenario",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DV Performing Arts • Academia de Teatro Musical",
+    description: "Formación integral en artes escénicas en León, Gto.",
+    images: ["/images/hero/hero-stage.jpg"],
+  },
   robots: {
-    index: process.env.SITE_INDEXING_ENABLED === "true",
-    follow: process.env.SITE_INDEXING_ENABLED === "true",
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
+};
+
+// JSON-LD Structured Data Schema for Local Business / Performing Arts Theater
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "PerformingArtsTheater",
+  name: "DV Performing Arts",
+  description: "Academia de formación integral en Teatro Musical, Canto, Danza Urbana y Actuación en León, Guanajuato.",
+  url: siteUrl,
+  telephone: "+524776558156",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Paseo de los Insurgentes #1506",
+    addressLocality: "León",
+    addressRegion: "Guanajuato",
+    postalCode: "37160",
+    addressCountry: "MX",
+  },
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: 21.1444,
+    longitude: -101.6989,
+  },
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      opens: "16:00",
+      closes: "20:00",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Saturday"],
+      opens: "10:00",
+      closes: "15:00",
+    },
+  ],
+  sameAs: ["https://dvperformingarts.com"],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -90,6 +177,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         h-full antialiased
       `}
     >
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

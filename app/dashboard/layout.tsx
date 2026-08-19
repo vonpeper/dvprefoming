@@ -2,15 +2,22 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [evolutionStatus, setEvolutionStatus] = useState<{
     connected: boolean;
     state: string;
   }>({ connected: true, state: "open" });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  // If on login page, render children cleanly without dashboard frame
+  if (pathname === "/dashboard/login") {
+    return <>{children}</>;
+  }
 
   useEffect(() => {
     fetch("/api/messaging/evolution/status")
@@ -22,6 +29,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       })
       .catch(() => {});
   }, []);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/dashboard/login");
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      window.location.href = "/dashboard/login";
+    }
+  };
 
   const navItems = [
     {
@@ -140,15 +159,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <span className="hidden sm:inline">Ver Sitio Web</span>
           </Link>
 
-          {/* User Profile */}
-          <div className="flex items-center gap-2.5 pl-2 border-l border-[#30363D]">
-            <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center font-bold text-white text-xs shadow">
-              DV
+          {/* User Profile & Logout */}
+          <div className="flex items-center gap-3 pl-2 border-l border-[#30363D]">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center font-bold text-white text-xs shadow">
+                DV
+              </div>
+              <div className="hidden md:flex flex-col text-left">
+                <span className="text-xs font-semibold text-white">admin@dvperformingarts.com</span>
+                <span className="text-[10px] text-emerald-400 font-mono">Sesión Segura</span>
+              </div>
             </div>
-            <div className="hidden md:flex flex-col text-left">
-              <span className="text-xs font-semibold text-white">Redacción DV</span>
-              <span className="text-[10px] text-slate-400">Administrador</span>
-            </div>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="p-2 text-slate-400 hover:text-rose-400 hover:bg-[#21262D] rounded-lg transition-colors cursor-pointer"
+              title="Cerrar Sesión"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
           </div>
         </div>
       </header>
@@ -205,7 +238,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 DV Performing Arts v1.0
               </span>
-              <span className="text-[10px] text-slate-400">León, Guanajuato</span>
+              <span className="text-[10px] text-slate-400">propodvps1 &bull; Producción</span>
             </div>
           </div>
         </aside>
