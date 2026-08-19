@@ -13,8 +13,8 @@ Environment=NEXT_PUBLIC_SITE_URL=https://prev.dvperformingarts.com
 Environment=ADMIN_USER=admin@dvperformingarts.com
 Environment=ADMIN_PASSWORD=DVPerforming@2026!Admin
 Environment=EVOLUTION_API_URL=http://evolution-api-v2:8080
-Environment=EVOLUTION_INSTANCE=dv_instance
-Environment=EVOLUTION_API_KEY=B6D711FCDE4D4FD5936544120E713976
+Environment=EVOLUTION_INSTANCE=dvp
+Environment=EVOLUTION_API_KEY=Gr4feno-EvAPI-2026-SecretKey
 
 # Traefik v3.3 Routing & Let's Encrypt SSL
 Label=traefik.enable=true

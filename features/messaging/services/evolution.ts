@@ -25,7 +25,7 @@ export function formatMexicanPhoneNumber(phone: string): string {
 export async function sendWhatsAppMessage(payload: MessagePayload): Promise<SendMessageResult> {
   const apiUrl = process.env.EVOLUTION_API_URL?.trim();
   const apiKey = process.env.EVOLUTION_API_KEY?.trim();
-  const instance = process.env.EVOLUTION_INSTANCE?.trim() || "dv_instance";
+  const instance = process.env.EVOLUTION_INSTANCE?.trim() || "dvp";
 
   const formattedNumber = formatMexicanPhoneNumber(payload.to);
   const now = new Date().toISOString();
@@ -179,10 +179,10 @@ Recuerda presentarte con ropa cómoda de trabajo escénico e hidratación. ¡Te 
 /**
  * Checks connectivity and state of Evolution API instance
  */
-export async function checkEvolutionInstance(): Promise<EvolutionInstanceStatus> {
+export async function checkEvolutionInstance(instanceName?: string): Promise<EvolutionInstanceStatus> {
   const apiUrl = process.env.EVOLUTION_API_URL?.trim();
   const apiKey = process.env.EVOLUTION_API_KEY?.trim();
-  const instance = process.env.EVOLUTION_INSTANCE?.trim() || "dv_instance";
+  const instance = instanceName || process.env.EVOLUTION_INSTANCE?.trim() || "dvp";
 
   if (!apiUrl || apiUrl.includes("example.com") || !apiKey || apiKey.includes("apikey_")) {
     return {
@@ -212,6 +212,15 @@ export async function checkEvolutionInstance(): Promise<EvolutionInstanceStatus>
         state: state === "open" ? "open" : state === "connecting" ? "connecting" : "close",
         profileName: "DV Performing Arts",
       };
+    } else if (res.status === 404) {
+      // If instance doesn't exist, auto-create it
+      await ensureEvolutionInstanceExists(instance);
+      return {
+        connected: false,
+        instanceName: instance,
+        state: "connecting",
+        profileName: "DV Performing Arts",
+      };
     }
   } catch (err) {
     console.error("[EVOLUTION CHECK ERROR]", err);
@@ -222,6 +231,36 @@ export async function checkEvolutionInstance(): Promise<EvolutionInstanceStatus>
     instanceName: instance,
     state: "close",
   };
+}
+
+/**
+ * Ensures that an instance exists in Evolution API, creating it if necessary
+ */
+export async function ensureEvolutionInstanceExists(instanceName = "dvp"): Promise<boolean> {
+  const apiUrl = process.env.EVOLUTION_API_URL?.trim();
+  const apiKey = process.env.EVOLUTION_API_KEY?.trim();
+  if (!apiUrl || !apiKey) return false;
+
+  try {
+    const cleanUrl = apiUrl.replace(/\/$/, "");
+    const res = await fetch(`${cleanUrl}/instance/create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": apiKey,
+      },
+      body: JSON.stringify({
+        instanceName,
+        token: `${instanceName}_token_2026`,
+        qrcode: true,
+        integration: "WHATSAPP-BAILEYS",
+      }),
+    });
+    return res.ok;
+  } catch (err) {
+    console.error("[AUTO CREATE EVOLUTION INSTANCE ERROR]", err);
+    return false;
+  }
 }
 
 /**
@@ -236,7 +275,7 @@ export async function getEvolutionQRCode(instanceName?: string): Promise<{
 }> {
   const apiUrl = process.env.EVOLUTION_API_URL?.trim();
   const apiKey = process.env.EVOLUTION_API_KEY?.trim();
-  const instance = instanceName || process.env.EVOLUTION_INSTANCE?.trim() || "dv_instance";
+  const instance = instanceName || process.env.EVOLUTION_INSTANCE?.trim() || "dvp";
 
   if (!apiUrl || apiUrl.includes("example.com") || !apiKey || apiKey.includes("apikey_")) {
     // Return a mock base64 QR SVG for development preview
@@ -250,13 +289,25 @@ export async function getEvolutionQRCode(instanceName?: string): Promise<{
 
   try {
     const cleanUrl = apiUrl.replace(/\/$/, "");
-    const res = await fetch(`${cleanUrl}/instance/connect/${instance}`, {
+    let res = await fetch(`${cleanUrl}/instance/connect/${instance}`, {
       method: "GET",
       headers: {
         "apikey": apiKey,
       },
       cache: "no-store",
     });
+
+    // If instance is 404 (does not exist), auto create it and retry connect
+    if (!res.ok && res.status === 404) {
+      await ensureEvolutionInstanceExists(instance);
+      res = await fetch(`${cleanUrl}/instance/connect/${instance}`, {
+        method: "GET",
+        headers: {
+          "apikey": apiKey,
+        },
+        cache: "no-store",
+      });
+    }
 
     if (res.ok) {
       const data = await res.json();
