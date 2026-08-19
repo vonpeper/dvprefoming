@@ -4,7 +4,7 @@ import MediaPlaceholder from "@/components/ui/media-placeholder";
 
 export default function HomeHero() {
   return (
-    <section className="relative w-full py-16 md:py-28 px-6 bg-background-main overflow-hidden border-b-4 border-border-editorial" aria-label="Introducción principal">
+    <section className="relative w-full py-16 md:py-24 px-6 bg-background-main overflow-hidden border-b-4 border-border-editorial" aria-label="Introducción principal">
       {/* Background signal coords text */}
       <div className="absolute top-4 right-6 font-mono text-[9px] text-text-muted tracking-widest uppercase pointer-events-none select-none">
         LOC: LEÓN, GTO / 21.1219° N, 101.6825° W
@@ -21,7 +21,7 @@ export default function HomeHero() {
               <span>ACTO I</span>
             </div>
 
-            {/* Giant, tall condensed display title with words broken asymmetrically */}
+            {/* Giant, tall condensed display title */}
             <h1 className="font-display text-5xl sm:text-7xl md:text-8xl lg:text-[7.2rem] font-extrabold uppercase tracking-tighter text-text-main leading-[0.78] select-none">
               DISCIPLINA
               <br />
@@ -31,12 +31,12 @@ export default function HomeHero() {
             </h1>
           </div>
 
-          <div className="flex flex-col gap-6 max-w-md">
-            <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-sans font-bold uppercase tracking-widest">
-              Academia de Teatro Musical en León, Gto. Teatro, Canto y Danza para formar artistas que transforman a través de la disciplina, el compromiso y la pasión.
+          <div className="flex flex-col gap-6 max-w-lg">
+            <p className="text-base sm:text-lg text-zinc-300 leading-relaxed font-sans font-normal">
+              Academia de formación integral en Teatro Musical en León, Gto. Desarrollamos el talento escénico a través de canto, danza y actuación con rigor técnico, pasión y compromiso artístico.
             </p>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4 pt-1">
               <ButtonLink href="#programas" variant="primary">
                 Ver Programas
               </ButtonLink>
@@ -60,10 +60,10 @@ export default function HomeHero() {
               className="w-full max-w-[400px] mx-auto border-4 border-text-main shadow-[12px_12px_0px_0px_rgba(30,30,36,0.8)]"
             />
             
-            {/* Superimposed label card to create layers/tension */}
-            <div className="absolute -bottom-4 -left-2 md:left-2 bg-[#0A0A0C] border-2 border-border-editorial-light p-4 z-10 font-mono text-[9px] uppercase tracking-widest text-text-main max-w-[200px]">
+            {/* Superimposed label card */}
+            <div className="absolute -bottom-4 -left-2 md:left-2 bg-[#0A0A0C] border-2 border-border-editorial-light p-4 z-10 font-mono text-[9px] uppercase tracking-widest text-text-main max-w-[220px]">
               <span className="text-accent-red block font-bold mb-1">CONVOCATORIA ACTIVA</span>
-              <span>Audiciones abiertas para el musical &ldquo;Si no es ahora&rdquo;. Inicia tu registro.</span>
+              <span className="text-zinc-300 font-normal leading-tight block">Audiciones abiertas para el musical &ldquo;Si no es ahora&rdquo;. Inicia tu registro oficial.</span>
             </div>
           </div>
         </div>

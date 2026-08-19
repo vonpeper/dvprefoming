@@ -14,13 +14,13 @@ import ProductionsSection from "@/components/home/productions-section";
 import AuditionFeature from "@/components/home/audition-feature";
 import ShowreelSection from "@/components/home/showreel-section";
 import TeachersSection from "@/components/home/teachers-section";
-import EditorialSection from "@/components/home/editorial-section";
+import NewsSection from "@/components/home/news-section";
 import FinalCta from "@/components/home/final-cta";
 import { getLatestArticles } from "@/features/editorial/services/manifiesto";
 
 export const metadata: Metadata = {
   title: "Inicio | DV Performing Arts",
-  description: "Plataforma de alta fidelidad en desarrollo para la academia de artes escénicas DV Performing Arts en León, Guanajuato. Dirección visual: Backstage Editorial.",
+  description: "Plataforma de alta fidelidad para la academia de artes escénicas DV Performing Arts en León, Guanajuato.",
 };
 
 export default async function HomePage() {
@@ -31,7 +31,7 @@ export default async function HomePage() {
       {/* Dynamic Header */}
       <SiteHeader />
 
-      {/* Main Content Area (supports accessibility skip link target) */}
+      {/* Main Content Area */}
       <main id="main-content" className="flex-1 flex flex-col focus:outline-none">
         
         {/* Hero Section */}
@@ -46,7 +46,7 @@ export default async function HomePage() {
         {/* Program / Class Cards Section */}
         <ProgramsSection />
 
-        {/* Shows / Production Billboard Section */}
+        {/* Shows / Production Billboard Section (Movie Poster Style) */}
         <ProductionsSection />
 
         {/* Convocatorias / Audition Call Section */}
@@ -58,8 +58,8 @@ export default async function HomePage() {
         {/* Staff / Teacher Roster Section */}
         <TeachersSection />
 
-        {/* Blog / Manifiesto 21 Revista Section */}
-        <EditorialSection articles={articles} />
+        {/* Noticias & Novedades Section */}
+        <NewsSection initialArticles={articles} />
 
         {/* Call to Action Section */}
         <FinalCta />

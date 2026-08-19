@@ -21,8 +21,8 @@ export default function FinalCta() {
           EL PRIMER PASO PARA DOMINAR EL ESCENARIO COMIENZA AQUÍ.
         </h2>
 
-        <p className="text-xs sm:text-sm text-text-main/80 leading-relaxed max-w-xl font-sans font-bold uppercase tracking-widest mb-4">
-          Solicita informes sobre nuestras disciplinas, inscripciones y agenda una sesión en nuestras instalaciones en Paseo de los Insurgentes #1506, Jardines del Moral, León, Gto.
+        <p className="text-sm sm:text-base text-text-main/90 leading-relaxed max-w-2xl font-sans font-normal mb-4">
+          Solicita informes sobre nuestras disciplinas, inscripciones y agenda una clase muestra en nuestras instalaciones de Paseo de los Insurgentes #1506, Jardines del Moral, León, Gto.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4">

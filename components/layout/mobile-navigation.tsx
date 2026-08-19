@@ -93,11 +93,11 @@ export default function MobileNavigation({
           </li>
           <li>
             <Link
-              href="#revista"
+              href="#noticias"
               onClick={onClose}
               className="font-display text-4xl sm:text-5xl hover:text-accent-red tracking-tighter text-text-main transition-colors block uppercase font-extrabold leading-[0.85]"
             >
-              Revista Editorial
+              Noticias & Novedades
             </Link>
           </li>
         </ul>

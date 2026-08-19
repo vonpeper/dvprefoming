@@ -9,6 +9,7 @@ export default function ArticlesListPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState("ALL");
 
   useEffect(() => {
     fetch("/api/articles")
@@ -20,8 +21,8 @@ export default function ArticlesListPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("¿Estás seguro de eliminar este artículo?")) return;
+  const handleDelete = async (id: string, title: string) => {
+    if (!confirm(`¿Estás seguro de eliminar la noticia "${title}"?`)) return;
     try {
       const res = await fetch(`/api/articles?id=${id}`, { method: "DELETE" });
       if (res.ok) {
@@ -37,10 +38,19 @@ export default function ArticlesListPage() {
       a.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (a.excerpt && a.excerpt.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = categoryFilter === "ALL" || a.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+    const matchesStatus = statusFilter === "ALL" || (a.status || "PUBLISHED") === statusFilter;
+    return matchesSearch && matchesCategory && matchesStatus;
   });
 
-  const categories = ["ALL", "Teatro Musical", "Canto & Técnica Vocal", "Danza Urbana", "Valores & Formación", "Convocatorias"];
+  const categories = [
+    "ALL",
+    "Noticias & Novedades",
+    "Montajes & Cartelera",
+    "Audiciones & Castings",
+    "Masterclasses & Talleres",
+    "Vida Estudiantil",
+    "Consejos de Formación Escénica",
+  ];
 
   return (
     <div className="flex flex-col gap-6">
@@ -48,135 +58,185 @@ export default function ArticlesListPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-[#30363D]">
         <div>
           <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
-            <span>Revista & Artículos Editoriales (CMS)</span>
-            <span className="text-xs font-mono bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full font-bold">
-              {articles.length}
+            <span>Noticias & Artículos Web (CMS)</span>
+            <span className="text-xs font-mono bg-purple-600/20 text-purple-400 border border-purple-500/30 px-2.5 py-0.5 rounded-full font-bold">
+              {articles.length} Artículos
             </span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Crea, edita y publica contenido editorial optimizado para SEO y redes sociales (OpenGraph).
+            Gestión de publicaciones, notas de prensa y novedades del sitio con SEO y tarjetas OpenGraph.
           </p>
         </div>
 
         <Link
           href="/dashboard/articulos/nuevo"
-          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-2 shadow"
+          className="px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-2 shadow"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
           </svg>
-          <span>Redactar Artículo (Gutenberg)</span>
+          <span>+ Redactar Nueva Noticia</span>
         </Link>
       </div>
 
       {/* Filters & Search */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center bg-[#161B22] p-4 rounded-xl border border-[#30363D]">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-[#161B22] p-4 rounded-xl border border-[#30363D]">
         {/* Search */}
-        <div className="relative flex-1 max-w-md">
+        <div className="relative">
           <input
             type="text"
-            placeholder="Buscar artículo por título o palabra clave..."
+            placeholder="Buscar por título, extracto o palabra..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#0D1117] border border-[#30363D] rounded-lg px-3.5 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+            className="w-full bg-[#0D1117] border border-[#30363D] rounded-lg px-3.5 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500 font-sans"
           />
         </div>
 
-        {/* Category tabs */}
-        <div className="flex flex-wrap gap-1.5 text-xs">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setCategoryFilter(cat)}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                categoryFilter === cat
-                  ? "bg-blue-600 text-white font-bold"
-                  : "bg-[#21262D] text-slate-300 hover:bg-[#30363D]"
-              }`}
-            >
-              {cat === "ALL" ? "Todos" : cat}
-            </button>
-          ))}
+        {/* Category Filter */}
+        <div>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="w-full bg-[#0D1117] border border-[#30363D] rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none"
+          >
+            <option value="ALL">Todas las Categorías</option>
+            {categories.filter((c) => c !== "ALL").map((c, i) => (
+              <option key={i} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Status Filter */}
+        <div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full bg-[#0D1117] border border-[#30363D] rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none"
+          >
+            <option value="ALL">Todos los Estados</option>
+            <option value="PUBLISHED">Publicados</option>
+            <option value="DRAFT">Borradores</option>
+          </select>
         </div>
       </div>
 
-      {/* Articles Grid / Table */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredArticles.map((article) => (
-          <div
-            key={article.id}
-            className="bg-[#161B22] border border-[#30363D] rounded-xl overflow-hidden flex flex-col justify-between shadow-sm hover:border-slate-500 transition-all group"
-          >
-            {/* Image banner */}
-            <div className="w-full h-44 relative bg-[#0D1117] overflow-hidden border-b border-[#30363D]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={article.featuredImage || "/images/productions/galeria-show.jpg"}
-                alt={article.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-mono text-white border border-white/20">
-                {article.category || "Teatro Musical"}
-              </div>
-              <div className="absolute bottom-3 left-3 bg-emerald-500/90 text-black px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
-                Publicado
-              </div>
-            </div>
+      {/* Articles Table */}
+      <div className="bg-[#161B22] border border-[#30363D] rounded-xl overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-[#0D1117] text-slate-400 font-mono uppercase text-[10px] border-b border-[#30363D]">
+              <tr>
+                <th className="py-3 px-4">Portada</th>
+                <th className="py-3 px-4">Título & Extracto</th>
+                <th className="py-3 px-4">Categoría</th>
+                <th className="py-3 px-4">Autor</th>
+                <th className="py-3 px-4">Fecha</th>
+                <th className="py-3 px-4">Estado</th>
+                <th className="py-3 px-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#30363D]">
+              {filteredArticles.map((article) => {
+                const dateStr = article.publishedAt
+                  ? new Date(article.publishedAt).toLocaleDateString("es-MX", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : "Reciente";
+                const isPublished = (article.status || "PUBLISHED") === "PUBLISHED";
 
-            {/* Content */}
-            <div className="p-5 flex-1 flex flex-col justify-between gap-4">
-              <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-mono text-slate-400 flex items-center gap-1.5">
-                  <span>✍️ {article.authorName || "Redacción DV"}</span>
-                  <span>&bull;</span>
-                  <span>{article.publishedAt ? new Date(article.publishedAt).toLocaleDateString("es-MX") : "Reciente"}</span>
-                </span>
+                return (
+                  <tr key={article.id} className="hover:bg-[#21262D]/60 transition-colors">
+                    {/* Thumbnail */}
+                    <td className="py-3 px-4 w-16">
+                      <div className="w-14 h-10 rounded-lg overflow-hidden bg-black border border-[#30363D]">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={article.featuredImage || "/images/hero/hero-stage.jpg"}
+                          alt={article.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </td>
 
-                <h3 className="font-bold text-white text-base leading-snug group-hover:text-blue-400 transition-colors line-clamp-2">
-                  {article.title}
-                </h3>
+                    {/* Title & Excerpt */}
+                    <td className="py-3.5 px-4 max-w-xs">
+                      <Link
+                        href={`/dashboard/articulos/nuevo?edit=${article.id}`}
+                        className="font-bold text-white hover:text-purple-400 transition-colors block text-sm"
+                      >
+                        {article.title}
+                      </Link>
+                      <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
+                        {article.excerpt || "Sin extracto registrado."}
+                      </p>
+                    </td>
 
-                <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed">
-                  {article.excerpt || "Sin resumen provisto."}
-                </p>
-              </div>
+                    {/* Category */}
+                    <td className="py-3.5 px-4">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-purple-500/10 text-purple-300 border border-purple-500/20 font-bold">
+                        {article.category || "Noticias"}
+                      </span>
+                    </td>
 
-              {/* SEO & OG Badges */}
-              <div className="pt-3 border-t border-[#30363D] flex items-center justify-between text-[10px] font-mono text-slate-400">
-                <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                  <span>✓</span> SEO / OpenGraph
-                </span>
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/dashboard/articulos/nuevo?edit=${article.id}`}
-                    className="px-2.5 py-1 bg-[#21262D] hover:bg-blue-600 hover:text-white rounded text-slate-300 font-semibold transition-colors"
-                  >
-                    Editar
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(article.id)}
-                    className="p-1 hover:text-red-400 text-slate-500 transition-colors"
-                    title="Eliminar artículo"
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
+                    {/* Author */}
+                    <td className="py-3.5 px-4 text-slate-300 text-[11px]">
+                      {article.authorName || "Redacción"}
+                    </td>
 
-        {filteredArticles.length === 0 && !loading && (
-          <div className="col-span-full py-16 text-center bg-[#161B22] rounded-xl border border-dashed border-[#30363D]">
-            <p className="text-sm text-slate-400">No se encontraron artículos con los filtros seleccionados.</p>
-            <Link
-              href="/dashboard/articulos/nuevo"
-              className="inline-block mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold"
-            >
-              Crear el primer artículo
-            </Link>
-          </div>
-        )}
+                    {/* Date */}
+                    <td className="py-3.5 px-4 font-mono text-[11px] text-slate-400">
+                      {dateStr}
+                    </td>
+
+                    {/* Status */}
+                    <td className="py-3.5 px-4">
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                          isPublished
+                            ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                            : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                        }`}
+                      >
+                        {isPublished ? "Publicado" : "Borrador"}
+                      </span>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link
+                          href={`/dashboard/articulos/nuevo?edit=${article.id}`}
+                          className="px-2.5 py-1 bg-[#21262D] hover:bg-purple-600 hover:text-white rounded text-[11px] font-semibold text-slate-200 transition-colors"
+                        >
+                          Editar
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(article.id, article.title)}
+                          className="p-1 hover:text-red-400 text-slate-500 transition-colors"
+                          title="Eliminar noticia"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+
+              {filteredArticles.length === 0 && !loading && (
+                <tr>
+                  <td colSpan={7} className="text-center py-12 text-slate-400 text-xs">
+                    No se encontraron noticias con los filtros seleccionados.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

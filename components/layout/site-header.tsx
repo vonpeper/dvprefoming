@@ -68,10 +68,10 @@ export default function SiteHeader() {
               </li>
               <li>
                 <Link
-                  href="#revista"
+                  href="#noticias"
                   className="text-text-muted hover:text-text-main transition-colors focus:outline-none focus:ring-1 focus:ring-accent-red px-1"
                 >
-                  Revista
+                  Noticias
                 </Link>
               </li>
             </ul>

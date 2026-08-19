@@ -77,7 +77,7 @@ export default function QuickReaderModal({
 
           <div className="flex justify-between items-center text-[10px] font-mono uppercase tracking-widest text-text-muted pb-4 border-b border-border-editorial-light">
             <span>Escrito por: {article.authorName}</span>
-            <span>Fecha: {article.publishedAt ? article.publishedAt.toLocaleDateString("es-MX") : "PENDIENTE DE PUBLICACIÓN"}</span>
+            <span>Fecha: {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString("es-MX") : "PENDIENTE DE PUBLICACIÓN"}</span>
           </div>
 
           {/* Simulated Magazine Full Text content */}

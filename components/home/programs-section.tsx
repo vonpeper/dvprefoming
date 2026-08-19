@@ -29,58 +29,58 @@ export default function ProgramsSection() {
         />
 
         {/* Dynamic Category Tabs Selector */}
-        <div className="flex flex-wrap gap-4 mb-16 border-b-2 border-border-editorial-light pb-6 justify-center sm:justify-start">
+        <div className="flex flex-wrap gap-3 mb-16 border-b-2 border-border-editorial-light pb-6 justify-center sm:justify-start">
           <button
             onClick={() => setActiveFilter("ALL")}
-            className={`px-4 py-2 font-mono text-[10px] uppercase tracking-widest transition-all duration-200 cursor-pointer ${
+            className={`px-4 py-2 font-mono text-[10px] uppercase tracking-wider transition-all duration-200 cursor-pointer rounded ${
               activeFilter === "ALL"
-                ? "bg-accent-red text-text-main font-bold border-2 border-accent-red"
-                : "bg-transparent text-text-muted hover:text-text-main border-2 border-border-editorial-light"
+                ? "bg-accent-red text-text-main font-bold border border-accent-red"
+                : "bg-[#161B22] text-zinc-400 hover:text-white border border-[#30363D]"
             }`}
           >
-            [ MOSTRAR TODO ]
+            Mostrar Todo
           </button>
           <button
             onClick={() => setActiveFilter("TEATRO")}
-            className={`px-4 py-2 font-mono text-[10px] uppercase tracking-widest transition-all duration-200 cursor-pointer ${
+            className={`px-4 py-2 font-mono text-[10px] uppercase tracking-wider transition-all duration-200 cursor-pointer rounded ${
               activeFilter === "TEATRO"
-                ? "bg-accent-red text-text-main font-bold border-2 border-accent-red"
-                : "bg-transparent text-text-muted hover:text-text-main border-2 border-border-editorial-light"
+                ? "bg-accent-red text-text-main font-bold border border-accent-red"
+                : "bg-[#161B22] text-zinc-400 hover:text-white border border-[#30363D]"
             }`}
           >
-            [ TEATRO & ACTUACIÓN ]
+            Teatro & Actuación
           </button>
           <button
             onClick={() => setActiveFilter("CANTO")}
-            className={`px-4 py-2 font-mono text-[10px] uppercase tracking-widest transition-all duration-200 cursor-pointer ${
+            className={`px-4 py-2 font-mono text-[10px] uppercase tracking-wider transition-all duration-200 cursor-pointer rounded ${
               activeFilter === "CANTO"
-                ? "bg-accent-red text-text-main font-bold border-2 border-accent-red"
-                : "bg-transparent text-text-muted hover:text-text-main border-2 border-border-editorial-light"
+                ? "bg-accent-red text-text-main font-bold border border-accent-red"
+                : "bg-[#161B22] text-zinc-400 hover:text-white border border-[#30363D]"
             }`}
           >
-            [ CANTO & VOZ ]
+            Canto & Voz
           </button>
           <button
             onClick={() => setActiveFilter("DANZA")}
-            className={`px-4 py-2 font-mono text-[10px] uppercase tracking-widest transition-all duration-200 cursor-pointer ${
+            className={`px-4 py-2 font-mono text-[10px] uppercase tracking-wider transition-all duration-200 cursor-pointer rounded ${
               activeFilter === "DANZA"
-                ? "bg-accent-red text-text-main font-bold border-2 border-accent-red"
-                : "bg-transparent text-text-muted hover:text-text-main border-2 border-border-editorial-light"
+                ? "bg-accent-red text-text-main font-bold border border-accent-red"
+                : "bg-[#161B22] text-zinc-400 hover:text-white border border-[#30363D]"
             }`}
           >
-            [ DANZA & HIP HOP ]
+            Danza Urbana
           </button>
         </div>
 
         {/* Programs Listing */}
-        <div className="flex flex-col gap-20">
+        <div className="flex flex-col gap-16">
           {filteredPrograms.length > 0 ? (
             filteredPrograms.map((program, index) => {
               const isEven = index % 2 === 0;
               return (
                 <div
                   key={program.id}
-                  className={`flex flex-col lg:flex-row gap-12 items-center transition-all duration-300 animate-fade-in ${
+                  className={`flex flex-col lg:flex-row gap-10 items-center p-6 md:p-8 bg-[#0D0D10] border-2 border-[#26262B] hover:border-accent-red/60 transition-all duration-300 rounded-2xl ${
                     isEven ? "" : "lg:flex-row-reverse"
                   }`}
                 >
@@ -93,7 +93,7 @@ export default function ProgramsSection() {
                       title={program.name}
                       description="FOTOGRAFÍA OFICIAL DE PROGRAMA"
                       variant={isEven ? "concrete" : "red"}
-                      className="w-full border-2 border-text-main shadow-lg"
+                      className="w-full rounded-xl overflow-hidden border border-text-main/20 shadow-md"
                     />
                   </div>
 
@@ -101,27 +101,27 @@ export default function ProgramsSection() {
                   <div className="w-full lg:w-1/2 flex flex-col gap-4">
                     <div className="flex justify-between items-center pb-2 border-b border-border-editorial-light">
                       <span className="font-mono text-[9px] tracking-widest text-text-muted">
-                        PROG-COD: {program.id}
+                        COD: {program.id}
                       </span>
-                      <EditorialLabel status={program.status} className="opacity-70" />
+                      <EditorialLabel status={program.status} className="scale-90" />
                     </div>
 
-                    <h3 className="font-display text-4xl sm:text-5xl font-extrabold uppercase tracking-tighter text-text-main leading-[0.82]">
+                    <h3 className="font-display text-3xl sm:text-4xl font-extrabold uppercase tracking-tight text-text-main leading-tight">
                       {program.name}
                     </h3>
 
-                    <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-sans font-bold uppercase tracking-widest">
+                    <p className="text-sm sm:text-base text-zinc-300 leading-relaxed font-sans font-normal">
                       {program.description}
                     </p>
 
-                    <div className="grid grid-cols-2 gap-4 border-t border-border-editorial-light pt-4 font-mono text-[9px] uppercase tracking-wider text-text-main">
+                    <div className="grid grid-cols-2 gap-4 border-t border-border-editorial-light pt-4 font-mono text-[10px] text-zinc-300">
                       <div>
-                        <span className="block text-accent-red text-[8px] font-bold mb-1">RANGO DE EDAD</span>
-                        <span>{program.ageGroup}</span>
+                        <span className="block text-accent-red text-[9px] font-bold mb-0.5 uppercase tracking-wider">RANGO DE EDAD</span>
+                        <span className="font-medium">{program.ageGroup}</span>
                       </div>
                       <div>
-                        <span className="block text-accent-red text-[8px] font-bold mb-1">HORARIOS PREVISTOS</span>
-                        <span>{program.scheduleDescription}</span>
+                        <span className="block text-accent-red text-[9px] font-bold mb-0.5 uppercase tracking-wider">HORARIOS</span>
+                        <span className="font-medium">{program.scheduleDescription}</span>
                       </div>
                     </div>
                   </div>

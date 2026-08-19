@@ -84,7 +84,9 @@ export interface Article {
   seoDescription?: string;
   ogImage?: string;
   tags?: string[];
-  publishedAt: Date | null;
+  keywords?: string[] | string;
+  readTimeMinutes?: number;
+  publishedAt: Date | string | null;
   status: EntityStatus;
   createdAt: Date;
   updatedAt: Date;
