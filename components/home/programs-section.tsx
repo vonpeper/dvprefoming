@@ -161,7 +161,7 @@ export default function ProgramsSection() {
                       </button>
 
                       <a
-                        href={`https://wa.me/524776558156?text=Hola%20DV%20Performing%20Arts,%20quiero%20agendar%20una%20clase%20muestra%20para%20${encodeURIComponent(program.name)}`}
+                        href="https://wa.me/524776558156?text=Hola,%20quiero%20una%20clase%20muestra"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="w-full sm:w-auto py-3 px-4 rounded-xl bg-[#1C1C26] hover:bg-[#252535] text-zinc-200 hover:text-white border border-[#303045] text-xs font-semibold transition-colors text-center"

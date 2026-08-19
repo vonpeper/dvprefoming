@@ -105,14 +105,16 @@ export default function MobileNavigation({
 
       {/* Footer / CTA inside overlay */}
       <div className="border-t border-border-editorial pt-6 flex flex-col gap-4">
-        <ButtonLink
-          href="#contacto"
+        <a
+          href="https://wa.me/524776558156?text=Hola,%20quiero%20una%20clase%20muestra"
+          target="_blank"
+          rel="noopener noreferrer"
           onClick={onClose}
-          variant="primary"
-          className="w-full text-center"
+          className="w-full py-3.5 px-6 rounded-xl bg-accent-red text-text-main font-bold text-center uppercase tracking-wider text-xs shadow-lg flex items-center justify-center gap-2"
         >
-          Solicitar Clase Muestra
-        </ButtonLink>
+          <span>📱</span>
+          <span>Solicitar Clase Muestra</span>
+        </a>
         <div className="text-center font-mono text-[9px] text-text-muted uppercase tracking-widest">
           LEÓN, GUANAJUATO &bull; MÉXICO
         </div>
