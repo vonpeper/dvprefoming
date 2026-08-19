@@ -5,33 +5,36 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const sessionCookie = req.cookies.get("dv_admin_session")?.value;
 
-  // 1. Check Dashboard Protected Routes
-  if (pathname.startsWith("/dashboard")) {
-    const isLoginPage = pathname === "/dashboard/login";
+  // 1. Alias /login -> /admin
+  if (pathname === "/login" || pathname === "/dashboard/login") {
+    return NextResponse.redirect(new URL("/admin", req.url));
+  }
 
-    // If on login page and already authenticated, redirect to /dashboard
-    if (isLoginPage) {
-      if (sessionCookie) {
-        const { valid } = verifySessionToken(sessionCookie);
-        if (valid) {
-          return NextResponse.redirect(new URL("/dashboard", req.url));
-        }
+  // 2. Direct Admin Login route /admin
+  if (pathname === "/admin") {
+    if (sessionCookie) {
+      const { valid } = verifySessionToken(sessionCookie);
+      if (valid) {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
       }
-      const res = NextResponse.next();
-      applySecurityHeaders(res);
-      return res;
     }
+    const res = NextResponse.next();
+    applySecurityHeaders(res);
+    return res;
+  }
 
+  // 3. Check Dashboard Protected Routes
+  if (pathname.startsWith("/dashboard")) {
     // For any other /dashboard page, verify authentication
     if (!sessionCookie) {
-      const loginUrl = new URL("/dashboard/login", req.url);
+      const loginUrl = new URL("/admin", req.url);
       loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);
     }
 
     const { valid } = verifySessionToken(sessionCookie);
     if (!valid) {
-      const loginUrl = new URL("/dashboard/login", req.url);
+      const loginUrl = new URL("/admin", req.url);
       loginUrl.searchParams.set("redirect", pathname);
       const res = NextResponse.redirect(loginUrl);
       res.cookies.delete("dv_admin_session");
@@ -39,7 +42,7 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  // 2. Pass request and apply Security Headers
+  // 4. Pass request and apply Security Headers
   const response = NextResponse.next();
   applySecurityHeaders(response);
   return response;
@@ -62,11 +65,11 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
+     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - images/ (public static images)
+     * - images, favicon.ico, etc.
      */
-    "/((?!_next/static|_next/image|favicon.ico|images/).*)",
+    "/((?!api|_next/static|_next/image|images|favicon.ico).*)",
   ],
 };

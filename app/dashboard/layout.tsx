@@ -15,7 +15,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [loggingOut, setLoggingOut] = useState(false);
 
   // If on login page, render children cleanly without dashboard frame
-  if (pathname === "/dashboard/login") {
+  if (pathname === "/dashboard/login" || pathname === "/admin") {
     return <>{children}</>;
   }
 
@@ -34,11 +34,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setLoggingOut(true);
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/dashboard/login");
+      router.push("/admin");
       router.refresh();
     } catch (err) {
       console.error(err);
-      window.location.href = "/dashboard/login";
+      window.location.href = "/admin";
     }
   };
 
