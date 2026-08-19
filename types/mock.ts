@@ -53,6 +53,9 @@ export interface Production {
   auditionDates?: string; // e.g. "Sábados de Marzo 2026"
   auditionDeadline?: string; // e.g. "2026-11-30" Fecha límite para registrarse a audición
   eventDate?: string; // e.g. "2026-12-15" Fecha de estreno / función
+  venueName?: string; // e.g. "Teatro Manuel Doblado" o "Auditorio DV Performing Arts"
+  venueAddress?: string; // e.g. "Pedro Moreno esq. Hermanos Aldama, Centro, León, Gto."
+  venueMapsUrl?: string; // e.g. "https://maps.app.goo.gl/..." Enlace a Google Maps
   status: EntityStatus;
   createdAt: Date;
   updatedAt: Date;

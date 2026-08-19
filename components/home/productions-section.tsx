@@ -125,7 +125,7 @@ export default function ProductionsSection() {
                       ELENCO & ENSAMBLE OFICIAL &bull; DIRECCIÓN VOCAL &bull; COREOGRAFÍA ORIGINAL
                     </div>
                     <div className="font-mono text-[8px] uppercase tracking-[0.2em] text-rose-400 font-bold mt-0.5">
-                      DURACIÓN: {production.durationMinutes || 110} MINUTOS &bull; AUDITORIO DV LEÓN GTO
+                      DURACIÓN: {production.durationMinutes || 110} MIN &bull; {production.venueName ? production.venueName.toUpperCase() : "AUDITORIO DV LEÓN GTO"}
                     </div>
                   </div>
 
@@ -145,7 +145,7 @@ export default function ProductionsSection() {
                       type="button"
                       onClick={() => setSelectedProduction(production)}
                       className="px-4 py-3 bg-[#1C1C26] hover:bg-[#252535] text-zinc-200 hover:text-white border border-[#303045] rounded-xl text-xs font-mono font-semibold transition-colors cursor-pointer flex items-center gap-1.5"
-                      title="Ver Ficha y Créditos Completos"
+                      title="Ver Ficha, Recinto y Créditos Completos"
                     >
                       <span>🔍</span>
                       <span>Ficha</span>
@@ -160,83 +160,65 @@ export default function ProductionsSection() {
 
       </div>
 
-      {/* ================= WIDE-FORMAT MOVIE & SHOW PRODUCTION MODAL ================= */}
+      {/* ================= DETAILED PRODUCTION MODAL (POPUP ON CLICK) ================= */}
       {selectedProduction && (
         <div
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-4 sm:p-6 overflow-y-auto cursor-pointer"
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-4 sm:p-6 overflow-y-auto cursor-pointer animate-fade-in"
           role="dialog"
           aria-modal="true"
-          aria-label={`Ficha de ${selectedProduction.title}`}
+          aria-label={`Ficha técnica de ${selectedProduction.title}`}
           onClick={() => setSelectedProduction(null)}
         >
           <div
-            className="bg-[#101016] border-2 border-rose-500/40 rounded-3xl max-w-3xl w-full overflow-hidden shadow-[0_25px_80px_rgba(0,0,0,0.95)] flex flex-col max-h-[92vh] animate-fade-in relative cursor-default"
+            className="bg-[#101016] border-2 border-rose-500/50 rounded-3xl max-w-3xl w-full flex flex-col shadow-2xl max-h-[90vh] overflow-y-auto cursor-default relative"
             onClick={(e) => e.stopPropagation()}
           >
-            
-            {/* 1. CINEMATIC WIDE HERO HEADER (16:9 / 21:9) */}
-            <div className="w-full aspect-[16/9] sm:aspect-[21/9] bg-black overflow-hidden relative shrink-0 border-b border-[#252535]">
-              {/* Wide Artwork */}
+            {/* 1. MODAL HEADER & POSTER HERO */}
+            <div className="relative aspect-[16/9] w-full bg-black shrink-0 border-b border-[#20202C]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={selectedProduction.imageUrl || "/images/productions/si-no-es-ahora.jpg"}
                 alt={selectedProduction.title}
-                className="w-full h-full object-cover object-center"
+                className="w-full h-full object-cover"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#101016] via-transparent to-black/60" />
 
-              {/* Dramatic Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#101016] via-black/40 to-black/70 pointer-events-none" />
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setSelectedProduction(null)}
+                className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-black/70 text-zinc-300 hover:text-white hover:bg-rose-600 flex items-center justify-center text-sm font-bold transition-colors cursor-pointer border border-white/20"
+                aria-label="Cerrar ventana"
+              >
+                ✕
+              </button>
 
-              {/* Floating Top Header inside Wide Banner */}
-              <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
-                <span className="px-3.5 py-1 bg-black/80 backdrop-blur-md border border-purple-500/40 text-purple-300 font-mono text-[10px] uppercase font-bold tracking-wider rounded-full shadow">
-                  ★ CARTELERA OFICIAL &bull; {selectedProduction.season || "TEMPORADA 2026"}
+              {/* Title & Season on Poster Hero */}
+              <div className="absolute bottom-4 left-6 right-6 z-10">
+                <span className="px-3 py-1 bg-rose-600 text-white font-mono text-[10px] uppercase font-bold tracking-wider rounded-full inline-block mb-2 shadow">
+                  {selectedProduction.season || "TEMPORADA 2026"}
                 </span>
-
-                {/* Close Button */}
-                <button
-                  type="button"
-                  onClick={() => setSelectedProduction(null)}
-                  className="w-9 h-9 rounded-full bg-black/70 backdrop-blur-md border border-white/20 hover:bg-rose-600 text-white flex items-center justify-center transition-colors cursor-pointer shadow-lg"
-                  aria-label="Cerrar ficha de la obra"
-                >
-                  ✕
-                </button>
-              </div>
-
-              {/* Title & Category Overlaid at bottom of wide hero */}
-              <div className="absolute bottom-4 left-6 right-6 z-10 flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono font-bold text-rose-400 uppercase tracking-widest bg-rose-950/80 px-2.5 py-0.5 rounded border border-rose-500/40">
-                    DIRECCIÓN: {selectedProduction.director}
-                  </span>
-                  {selectedProduction.isAuditionActive && (
-                    <span className="text-[10px] font-mono font-bold text-emerald-300 uppercase tracking-widest bg-emerald-950/80 px-2.5 py-0.5 rounded border border-emerald-500/40">
-                      ● Convocatoria Activa
-                    </span>
-                  )}
-                </div>
-                <h3 className="font-display text-2xl sm:text-4xl font-extrabold uppercase text-white tracking-tight leading-tight drop-shadow-lg">
+                <h3 className="font-display text-3xl sm:text-4xl font-extrabold uppercase text-white tracking-tight leading-none drop-shadow-lg">
                   {selectedProduction.title}
                 </h3>
               </div>
             </div>
 
-            {/* 2. MODAL BODY (STRUCTURED TECHNICAL SPECS & SYNOPSIS) */}
-            <div className="p-6 sm:p-8 overflow-y-auto flex flex-col gap-6 text-sm text-zinc-300">
+            {/* 2. MODAL BODY (SYNOPSIS, CREDITS, VENUE & MAPS) */}
+            <div className="p-6 sm:p-8 flex flex-col gap-6 text-left">
               
-              {/* Synopsis Section */}
+              {/* Synopsis */}
               <div className="flex flex-col gap-2">
-                <h4 className="text-xs font-mono text-zinc-400 font-bold uppercase tracking-wider">
-                  Sinopsis & Argumento:
+                <h4 className="text-xs font-mono uppercase text-rose-400 tracking-wider font-bold">
+                  Sinopsis del Montaje
                 </h4>
-                <p className="text-sm sm:text-base text-zinc-200 leading-relaxed font-sans font-normal">
-                  {selectedProduction.synopsis || "Una puesta en escena original de gran formato de la academia DV Performing Arts. Una historia vibrante sobre la juventud, las decisiones decisivas y el poder transformador de la música sobre el escenario."}
+                <p className="text-sm text-zinc-200 leading-relaxed font-sans font-normal">
+                  {selectedProduction.synopsis}
                 </p>
               </div>
 
-              {/* Modern Theatrical Specs Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-[#0A0A0E] border border-[#20202C] rounded-2xl p-4 sm:p-5">
+              {/* Production Technical Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-[#0A0A0E] border border-[#20202C] rounded-2xl">
                 <div className="flex flex-col gap-1">
                   <span className="text-[10px] font-mono text-rose-400 font-bold uppercase tracking-wider">
                     🎬 Dirección Escénica:
@@ -274,12 +256,38 @@ export default function ProductionsSection() {
                 </div>
               </div>
 
-              {/* Theatrical Production Notice */}
-              <div className="p-4 bg-purple-950/20 border border-purple-500/30 rounded-xl text-xs text-purple-200 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <span>📍</span>
-                  <span>Sede oficial: Auditorio DV Performing Arts &bull; Paseo de los Insurgentes #1506, León, Gto.</span>
+              {/* Theatrical Venue & Google Maps Location Box */}
+              <div className="p-4 sm:p-5 bg-[#14141E] border border-purple-500/40 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl mt-0.5">🏛️</span>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-mono text-purple-300 uppercase font-bold tracking-wider">
+                      Recinto & Ubicación del Montaje
+                    </span>
+                    <span className="text-sm font-bold text-white mt-0.5">
+                      {selectedProduction.venueName || "Auditorio DV Performing Arts"}
+                    </span>
+                    <span className="text-xs text-zinc-300 mt-0.5">
+                      {selectedProduction.venueAddress || "Paseo de los Insurgentes #1506, Col. Jardines del Moral, León, Gto."}
+                    </span>
+                  </div>
                 </div>
+
+                <a
+                  href={
+                    selectedProduction.venueMapsUrl ||
+                    `https://maps.google.com/?q=${encodeURIComponent(
+                      selectedProduction.venueName || "DV Performing Arts Leon Guanajuato"
+                    )}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-mono font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-md"
+                >
+                  <span>📍</span>
+                  <span>Ver en Google Maps</span>
+                  <span>↗</span>
+                </a>
               </div>
 
             </div>

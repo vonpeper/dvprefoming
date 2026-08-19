@@ -416,6 +416,51 @@ export default function ProductionsDashboardPage() {
                 </div>
               </div>
 
+              {/* Venue / Recinto & Google Maps Location */}
+              <div className="flex flex-col gap-3 p-4 bg-[#0D1117] border border-[#30363D] rounded-xl my-1">
+                <span className="font-mono text-[11px] uppercase text-purple-300 font-bold flex items-center gap-1.5">
+                  <span>📍</span> Ubicación & Recinto de la Puesta en Escena
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-semibold text-slate-300">Recinto / Teatro Oficial</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Teatro Manuel Doblado / Foro DV"
+                      value={editingProd.venueName || ""}
+                      onChange={(e) => setEditingProd({ ...editingProd, venueName: e.target.value })}
+                      className="bg-[#161B22] border border-[#30363D] focus:border-purple-500 rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-semibold text-slate-300">Dirección del Recinto</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Pedro Moreno esq. Hermanos Aldama, León, Gto."
+                      value={editingProd.venueAddress || ""}
+                      onChange={(e) => setEditingProd({ ...editingProd, venueAddress: e.target.value })}
+                      className="bg-[#161B22] border border-[#30363D] focus:border-purple-500 rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-slate-300 flex items-center justify-between">
+                    <span>🗺️ Enlace de Google Maps / Waze del Recinto</span>
+                    <span className="text-[10px] text-slate-500 font-mono">https://maps.app.goo.gl/...</span>
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://maps.google.com/?q=Teatro+Manuel+Doblado..."
+                    value={editingProd.venueMapsUrl || ""}
+                    onChange={(e) => setEditingProd({ ...editingProd, venueMapsUrl: e.target.value })}
+                    className="bg-[#161B22] border border-[#30363D] focus:border-purple-500 rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none font-mono text-[11px]"
+                  />
+                </div>
+              </div>
+
               {/* Ticket URL (External ticketing provider) */}
               <div className="flex flex-col gap-1.5">
                 <label className="font-semibold text-slate-300 flex items-center justify-between">
