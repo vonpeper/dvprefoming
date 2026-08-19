@@ -9,7 +9,7 @@ export default function WebsiteContentEditorPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
-  const [activeTab, setActiveTab] = useState<"hero" | "manifesto" | "programs" | "teachers" | "productions" | "contact">("hero");
+  const [activeTab, setActiveTab] = useState<"hero" | "manifesto" | "programs" | "teachers" | "productions" | "contact" | "footer">("hero");
 
   useEffect(() => {
     fetch("/api/pages")
@@ -58,6 +58,7 @@ export default function WebsiteContentEditorPage() {
     { id: "teachers", label: "👨‍🏫 Planta Docente" },
     { id: "productions", label: "🎭 Cartelera & Obras" },
     { id: "contact", label: "📍 Contacto & Horarios" },
+    { id: "footer", label: "🦶 Footer & Redes Sociales" },
   ];
 
   return (
@@ -506,6 +507,169 @@ export default function WebsiteContentEditorPage() {
                     setContent({ ...content, contact: { ...content.contact, hoursSaturday: e.target.value } })
                   }
                   className="bg-[#0D1117] border border-[#30363D] rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ================= FOOTER & REDES SOCIALES TAB ================= */}
+        {activeTab === "footer" && (
+          <div className="flex flex-col gap-6 max-w-3xl">
+            <div>
+              <h2 className="text-lg font-bold text-white border-b border-[#30363D] pb-3">
+                Pie de Página (Footer) & Redes Sociales
+              </h2>
+              <p className="text-xs text-slate-400 mt-2">
+                Personaliza los textos institucionales y los enlaces de redes sociales (Instagram, Facebook y TikTok) que se muestran en el pie de página de todo el sitio web.
+              </p>
+            </div>
+
+            {/* Slogan / Descripción institucional */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-slate-300">
+                Descripción Institucional / Slogan del Footer
+              </label>
+              <textarea
+                rows={2}
+                value={content.footer?.description || ""}
+                onChange={(e) =>
+                  setContent({
+                    ...content,
+                    footer: {
+                      ...(content.footer || {
+                        description: "",
+                        copyright: "© 2026 DV PERFORMING ARTS. Todos los derechos reservados.",
+                        socialLinks: { instagram: "", facebook: "", tiktok: "" },
+                      }),
+                      description: e.target.value,
+                    },
+                  })
+                }
+                placeholder="Academia de formación integral en Teatro Musical, Danza Urbana, Canto y Actuación en León, Guanajuato."
+                className="bg-[#0D1117] border border-[#30363D] rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none resize-none"
+              />
+            </div>
+
+            {/* Copyright */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-slate-300">
+                Texto de Derechos Reservados (Copyright)
+              </label>
+              <input
+                type="text"
+                value={content.footer?.copyright || ""}
+                onChange={(e) =>
+                  setContent({
+                    ...content,
+                    footer: {
+                      ...(content.footer || {
+                        description: "",
+                        copyright: "© 2026 DV PERFORMING ARTS.",
+                        socialLinks: { instagram: "", facebook: "", tiktok: "" },
+                      }),
+                      copyright: e.target.value,
+                    },
+                  })
+                }
+                placeholder="© 2026 DV PERFORMING ARTS. Todos los derechos reservados."
+                className="bg-[#0D1117] border border-[#30363D] rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none font-mono"
+              />
+            </div>
+
+            {/* Redes Sociales Oficiales */}
+            <div className="flex flex-col gap-4 border-t border-[#30363D] pt-5 mt-2">
+              <h3 className="text-sm font-bold text-purple-300 flex items-center gap-2">
+                <span>🌐</span> Redes Sociales Oficiales (Exclusivas)
+              </h3>
+              <p className="text-xs text-slate-400 -mt-2">
+                Ingresa los perfiles oficiales. El sitio web mostrará sus respectivos iconos interactivos en el footer.
+              </p>
+
+              {/* Instagram */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300 flex items-center gap-2">
+                  <span>📸</span> Enlace a Instagram
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://www.instagram.com/dvperformingarts"
+                  value={content.footer?.socialLinks?.instagram || ""}
+                  onChange={(e) =>
+                    setContent({
+                      ...content,
+                      footer: {
+                        ...(content.footer || {
+                          description: "",
+                          copyright: "© 2026 DV PERFORMING ARTS.",
+                          socialLinks: { instagram: "", facebook: "", tiktok: "" },
+                        }),
+                        socialLinks: {
+                          ...(content.footer?.socialLinks || { instagram: "", facebook: "", tiktok: "" }),
+                          instagram: e.target.value,
+                        },
+                      },
+                    })
+                  }
+                  className="bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none font-mono"
+                />
+              </div>
+
+              {/* Facebook */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300 flex items-center gap-2">
+                  <span>📘</span> Enlace a Facebook
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://www.facebook.com/dvperformingarts"
+                  value={content.footer?.socialLinks?.facebook || ""}
+                  onChange={(e) =>
+                    setContent({
+                      ...content,
+                      footer: {
+                        ...(content.footer || {
+                          description: "",
+                          copyright: "© 2026 DV PERFORMING ARTS.",
+                          socialLinks: { instagram: "", facebook: "", tiktok: "" },
+                        }),
+                        socialLinks: {
+                          ...(content.footer?.socialLinks || { instagram: "", facebook: "", tiktok: "" }),
+                          facebook: e.target.value,
+                        },
+                      },
+                    })
+                  }
+                  className="bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none font-mono"
+                />
+              </div>
+
+              {/* TikTok */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300 flex items-center gap-2">
+                  <span>🎵</span> Enlace a TikTok
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://www.tiktok.com/@dvperformingarts"
+                  value={content.footer?.socialLinks?.tiktok || ""}
+                  onChange={(e) =>
+                    setContent({
+                      ...content,
+                      footer: {
+                        ...(content.footer || {
+                          description: "",
+                          copyright: "© 2026 DV PERFORMING ARTS.",
+                          socialLinks: { instagram: "", facebook: "", tiktok: "" },
+                        }),
+                        socialLinks: {
+                          ...(content.footer?.socialLinks || { instagram: "", facebook: "", tiktok: "" }),
+                          tiktok: e.target.value,
+                        },
+                      },
+                    })
+                  }
+                  className="bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none font-mono"
                 />
               </div>
             </div>

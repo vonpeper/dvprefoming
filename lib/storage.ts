@@ -191,6 +191,15 @@ export interface WebsiteContent {
     hoursWeekday: string;
     hoursSaturday: string;
   };
+  footer: {
+    description: string;
+    copyright: string;
+    socialLinks: {
+      instagram: string;
+      facebook: string;
+      tiktok: string;
+    };
+  };
   programs: Program[];
   teachers: Teacher[];
   productions: Production[];
@@ -198,6 +207,16 @@ export interface WebsiteContent {
 
 export function getStoredWebsiteContent(): WebsiteContent {
   ensureDirectoryExists();
+  const defaultFooter = {
+    description: "Academia de formación integral en Teatro Musical, Danza Urbana, Canto y Actuación en León, Guanajuato.",
+    copyright: "© 2026 DV PERFORMING ARTS. Todos los derechos reservados.",
+    socialLinks: {
+      instagram: "https://www.instagram.com/dvperformingarts",
+      facebook: "https://www.facebook.com/dvperformingarts",
+      tiktok: "https://www.tiktok.com/@dvperformingarts",
+    },
+  };
+
   if (!fs.existsSync(PAGES_FILE)) {
     const initialContent: WebsiteContent = {
       hero: {
@@ -224,6 +243,7 @@ export function getStoredWebsiteContent(): WebsiteContent {
         hoursWeekday: "Lunes a Viernes 16:00 - 20:00",
         hoursSaturday: "Sábados 10:00 - 15:00",
       },
+      footer: defaultFooter,
       programs: mockPrograms,
       teachers: mockTeachers,
       productions: mockProductions,
@@ -234,7 +254,20 @@ export function getStoredWebsiteContent(): WebsiteContent {
 
   try {
     const raw = fs.readFileSync(PAGES_FILE, "utf-8");
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return {
+      ...parsed,
+      footer: parsed.footer
+        ? {
+            ...defaultFooter,
+            ...parsed.footer,
+            socialLinks: {
+              ...defaultFooter.socialLinks,
+              ...(parsed.footer.socialLinks || {}),
+            },
+          }
+        : defaultFooter,
+    };
   } catch {
     return {
       hero: {
@@ -261,6 +294,7 @@ export function getStoredWebsiteContent(): WebsiteContent {
         hoursWeekday: "L-V 16:00 - 20:00",
         hoursSaturday: "Sáb 10:00 - 15:00",
       },
+      footer: defaultFooter,
       programs: mockPrograms,
       teachers: mockTeachers,
       productions: mockProductions,
