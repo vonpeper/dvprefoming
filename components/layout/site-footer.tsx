@@ -3,8 +3,9 @@ import Link from "next/link";
 
 export default function SiteFooter() {
   return (
-    <footer className="w-full border-t border-border-editorial bg-background-main py-16 px-6">
-      <div className="mx-auto max-w-container-max grid grid-cols-1 md:grid-cols-4 gap-12">
+    <footer className="w-full border-t border-border-editorial bg-[#07070A] py-14 px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="mx-auto max-w-container-max grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+        
         {/* Brand identity column */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
@@ -15,113 +16,107 @@ export default function SiteFooter() {
               className="h-10 w-auto object-contain"
             />
           </div>
-          <p className="text-xs text-text-muted leading-relaxed font-sans">
-            Academia de Teatro Musical y Artes Escénicas en León, Guanajuato. Disciplina, compromiso y pasión en el escenario.
+          <p className="text-xs text-zinc-400 leading-relaxed font-sans font-normal">
+            Academia de formación integral en Teatro Musical, Danza Urbana, Canto y Actuación en León, Guanajuato.
           </p>
-          <div className="font-mono text-[9px] text-text-muted mt-2 uppercase">
+          <div className="font-mono text-[10px] text-zinc-500 mt-2 uppercase">
             &copy; 2026 DV PERFORMING ARTS.
           </div>
         </div>
 
         {/* Navigation column */}
-        <div className="flex flex-col gap-4">
-          <span className="font-mono text-[10px] tracking-widest text-accent-red uppercase font-semibold">
+        <div className="flex flex-col gap-3.5">
+          <span className="font-mono text-[11px] tracking-widest text-rose-400 uppercase font-bold">
             Navegación
           </span>
-          <ul className="flex flex-col gap-2.5 text-xs text-text-muted font-sans">
+          <ul className="flex flex-col gap-2.5 text-xs text-zinc-400 font-sans font-medium">
             <li>
-              <Link href="#programas" className="hover:text-text-main transition-colors">
+              <Link href="/#programas" className="hover:text-white transition-colors">
                 Programas Académicos
               </Link>
             </li>
             <li>
-              <Link href="#producciones" className="hover:text-text-main transition-colors">
-                Cartelera de Obras
+              <Link href="/#producciones" className="hover:text-white transition-colors">
+                Cartelera & Obras
               </Link>
             </li>
             <li>
-              <Link href="#audiciones" className="hover:text-text-main transition-colors">
-                Audiciones Abiertas
+              <Link href="/#audiciones" className="hover:text-white transition-colors">
+                Registro de Audiciones
               </Link>
             </li>
             <li>
-              <Link href="#revista" className="hover:text-text-main transition-colors">
-                Revista Editorial
+              <Link href="/noticias" className="hover:text-white transition-colors">
+                Noticias & Novedades
               </Link>
             </li>
           </ul>
         </div>
 
         {/* Contact column */}
-        <div className="flex flex-col gap-4">
-          <span className="font-mono text-[10px] tracking-widest text-accent-red uppercase font-semibold">
-            Ubicación y Contacto
+        <div className="flex flex-col gap-3.5">
+          <span className="font-mono text-[11px] tracking-widest text-rose-400 uppercase font-bold">
+            Ubicación & Atención
           </span>
-          <ul className="flex flex-col gap-2.5 text-xs text-text-muted font-sans">
+          <ul className="flex flex-col gap-2 text-xs text-zinc-400 font-sans">
             <li>
-              <strong className="text-text-main">Dirección:</strong> Paseo de los Insurgentes #1506, Col. Jardines del Moral, CP 37160, León, Gto.
+              <strong className="text-zinc-200">Sede:</strong> Paseo de los Insurgentes #1506, Col. Jardines del Moral, CP 37160, León, Gto.
             </li>
             <li>
-              <strong className="text-text-main">Teléfono:</strong>{" "}
-              <a href="tel:4776558156" className="hover:text-accent-red transition-colors">
+              <strong className="text-zinc-200">WhatsApp / Tel:</strong>{" "}
+              <a
+                href="https://wa.me/524776558156?text=Hola%20DV%20Performing%20Arts,%20me%20gustar%C3%ADa%20solicitar%20informes"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-rose-400 hover:underline font-semibold"
+              >
                 477 655 8156
               </a>
             </li>
             <li>
-              <strong className="text-text-main">Email:</strong>{" "}
-              <a href="mailto:contacto@dvperformingarts.com" className="hover:text-accent-red transition-colors">
-                contacto@dvperformingarts.com
-              </a>
-            </li>
-            <li>
-              <strong className="text-text-main">Horarios:</strong> L-V 16:00 - 20:00 | Sáb 10:00 - 15:00
+              <strong className="text-zinc-200">Horarios:</strong> Lunes a Viernes 16:00 - 20:00 | Sábados 10:00 - 15:00
             </li>
           </ul>
         </div>
 
-        {/* Social Media column */}
-        <div className="flex flex-col gap-4">
-          <span className="font-mono text-[10px] tracking-widest text-accent-red uppercase font-semibold">
+        {/* Direct Channels */}
+        <div className="flex flex-col gap-3.5">
+          <span className="font-mono text-[11px] tracking-widest text-rose-400 uppercase font-bold">
             Canales Directos
           </span>
-          <ul className="flex flex-col gap-2.5 text-xs text-text-muted font-sans">
+          <ul className="flex flex-col gap-2.5 text-xs text-zinc-400 font-sans">
             <li>
               <a
-                href="https://wa.me/524776558156?text=Hola%20DV%20Performing%20Arts,%20me%20gustaría%20solicitar%20informes"
+                href="https://wa.me/524776558156?text=Hola%20DV%20Performing%20Arts,%20quiero%20informes%20de%20audiciones"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-accent-red transition-colors font-medium flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all font-semibold flex items-center gap-2 w-fit"
               >
+                <span>💬</span>
                 <span>WhatsApp: 477 655 8156</span>
               </a>
             </li>
-            <li>
-              <a
-                href="https://dvperformingarts.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-accent-red transition-colors"
-              >
-                Sitio Web: dvperformingarts.com
-              </a>
-            </li>
-            <li>
-              <Link href="#audiciones" className="hover:text-accent-red transition-colors">
-                Convocatoria: &ldquo;Si no es ahora&rdquo;
+            <li className="mt-1">
+              <Link href="/#audiciones" className="text-zinc-400 hover:text-white transition-colors">
+                ★ Convocatoria: &ldquo;Si No Es Ahora (El Musical)&rdquo;
               </Link>
             </li>
           </ul>
         </div>
       </div>
 
-      {/* Legal & Credits bar */}
-      <div className="mx-auto max-w-container-max border-t border-border-editorial mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-text-muted font-mono uppercase tracking-wider">
-        <div className="flex gap-6">
-          <span className="italic">Aviso de Privacidad (Pendiente)</span>
-          <span className="italic">Términos de Servicio (Pendiente)</span>
+      {/* Legal & Policies bar */}
+      <div className="mx-auto max-w-container-max border-t border-[#20202B] mt-12 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-[11px] text-zinc-500 font-mono">
+        <div className="flex flex-wrap gap-4 sm:gap-6">
+          <Link href="/aviso-de-privacidad" className="hover:text-rose-400 transition-colors">
+            Aviso de Privacidad
+          </Link>
+          <Link href="/terminos-y-condiciones" className="hover:text-rose-400 transition-colors">
+            Términos y Condiciones
+          </Link>
         </div>
-        <div>
-          MIGRACIÓN WORDPRESS A NEXT.JS &bull; BASE TÉCNICA LOCAL
+        <div className="text-zinc-600 text-[10px]">
+          DV PERFORMING ARTS &bull; LEÓN, GUANAJUATO
         </div>
       </div>
     </footer>
