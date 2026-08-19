@@ -2,14 +2,19 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { AuditionRegistration, EvaluationCriteria, EvaluationDiscipline, AuditionScore } from "@/types/mock";
+import {
+  AuditionRegistration,
+  EvaluationCriteria,
+  EvaluationDiscipline,
+  Production,
+} from "@/types/mock";
 
 const DEFAULT_JUDGES = [
-  { name: "Diego Vieyra", title: "Director General & Artístico" },
-  { name: "Fanny Monroy", title: "Directora Vocal & Canto" },
-  { name: "Andrés Rodríguez", title: "Coreógrafo & Director de Danza" },
-  { name: "Angel Piedra", title: "Docente de Actuación & Texto" },
-  { name: "Carolina Torres", title: "Docente de Expresión Corporal" },
+  { name: "Diego Vieyra", title: "Director General & Artístico", defaultDiscipline: "CANTO" as EvaluationDiscipline },
+  { name: "Fanny Monroy", title: "Directora Vocal & Maestra de Canto", defaultDiscipline: "CANTO" as EvaluationDiscipline },
+  { name: "Andrés Rodríguez", title: "Coreógrafo & Director de Danza", defaultDiscipline: "COREOGRAFIA" as EvaluationDiscipline },
+  { name: "Angel Piedra", title: "Docente de Actuación & Texto Teatral", defaultDiscipline: "ACTUACION" as EvaluationDiscipline },
+  { name: "Carolina Torres", title: "Docente de Expresión Corporal & Danza", defaultDiscipline: "COREOGRAFIA" as EvaluationDiscipline },
 ];
 
 export default function JudgesPortalPage() {
@@ -17,10 +22,12 @@ export default function JudgesPortalPage() {
   const [judgeName, setJudgeName] = useState("");
   const [judgeTitle, setJudgeTitle] = useState("");
   const [discipline, setDiscipline] = useState<EvaluationDiscipline>("CANTO");
+  const [selectedProductionId, setSelectedProductionId] = useState<string>("ALL");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Data State
   const [auditions, setAuditions] = useState<AuditionRegistration[]>([]);
+  const [productions, setProductions] = useState<Production[]>([]);
   const [criteria, setCriteria] = useState<EvaluationCriteria[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -32,24 +39,28 @@ export default function JudgesPortalPage() {
   const [savingScore, setSavingScore] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  // Load criteria and auditions
+  // Load criteria, auditions, and productions
   const loadData = async () => {
     setLoading(true);
     try {
-      const [critRes, audRes] = await Promise.all([
+      const [critRes, audRes, prodRes] = await Promise.all([
         fetch("/api/auditions/criteria"),
         fetch("/api/auditions/list"),
+        fetch("/api/productions"),
       ]);
 
       const critData = await critRes.json();
       const audData = await audRes.json();
+      const prodData = await prodRes.json();
 
       if (critData?.criteria) setCriteria(critData.criteria);
-      if (audData?.registrations) {
-        setAuditions(audData.registrations);
-        if (!selectedAuditionId && audData.registrations.length > 0) {
-          setSelectedAuditionId(audData.registrations[0].id);
-        }
+      if (prodData?.productions) setProductions(prodData.productions);
+
+      const audList: AuditionRegistration[] = audData?.auditions || audData?.registrations || [];
+      setAuditions(audList);
+
+      if (!selectedAuditionId && audList.length > 0) {
+        setSelectedAuditionId(audList[0].id);
       }
     } catch (err) {
       console.error(err);
@@ -60,7 +71,8 @@ export default function JudgesPortalPage() {
 
   useEffect(() => {
     loadData();
-    // Check saved session in local storage
+
+    // Check saved session in localStorage
     const savedJudge = localStorage.getItem("dv_judge_session");
     if (savedJudge) {
       try {
@@ -69,6 +81,7 @@ export default function JudgesPortalPage() {
           setJudgeName(parsed.name);
           setJudgeTitle(parsed.title || "Juez Evaluador");
           setDiscipline(parsed.discipline);
+          if (parsed.productionId) setSelectedProductionId(parsed.productionId);
           setIsLoggedIn(true);
         }
       } catch {
@@ -80,10 +93,15 @@ export default function JudgesPortalPage() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!judgeName.trim()) {
-      alert("Por favor selecciona o ingresa tu nombre de docente.");
+      alert("Por favor selecciona o escribe tu nombre de docente.");
       return;
     }
-    const session = { name: judgeName.trim(), title: judgeTitle, discipline };
+    const session = {
+      name: judgeName.trim(),
+      title: judgeTitle || "Juez Evaluador",
+      discipline,
+      productionId: selectedProductionId,
+    };
     localStorage.setItem("dv_judge_session", JSON.stringify(session));
     setIsLoggedIn(true);
   };
@@ -93,13 +111,37 @@ export default function JudgesPortalPage() {
     setIsLoggedIn(false);
   };
 
+  const selectJudgePreset = (preset: typeof DEFAULT_JUDGES[0]) => {
+    setJudgeName(preset.name);
+    setJudgeTitle(preset.title);
+    setDiscipline(preset.defaultDiscipline);
+  };
+
   // Filter criteria by active discipline
   const activeCriteria = criteria.filter((c) => c.discipline === discipline);
 
-  // Find selected audition
-  const currentAudition = auditions.find((a) => a.id === selectedAuditionId) || auditions[0];
+  // Filter auditions by search and production
+  const filteredAuditions = auditions.filter((a) => {
+    const matchesSearch =
+      a.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      a.folio.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      a.phone.includes(searchTerm);
 
-  // When selected audition changes or discipline changes, load existing scores if already scored by this judge
+    const matchesProd =
+      selectedProductionId === "ALL" ||
+      a.productionId === selectedProductionId ||
+      a.productionName === selectedProductionId;
+
+    return matchesSearch && matchesProd;
+  });
+
+  // Find selected audition
+  const currentAudition =
+    filteredAuditions.find((a) => a.id === selectedAuditionId) ||
+    filteredAuditions[0] ||
+    auditions[0];
+
+  // When selected audition or discipline changes, load existing scores if already scored by this judge
   useEffect(() => {
     if (currentAudition && currentAudition.scores) {
       const existing = currentAudition.scores.find(
@@ -109,7 +151,6 @@ export default function JudgesPortalPage() {
         setScores(existing.scores || {});
         setJudgeNotes(existing.judgeNotes || "");
       } else {
-        // Default initial scores empty or 8
         const initial: Record<string, number> = {};
         activeCriteria.forEach((c) => {
           initial[c.id] = 8;
@@ -126,7 +167,7 @@ export default function JudgesPortalPage() {
       setJudgeNotes("");
     }
     setSavedSuccess(false);
-  }, [selectedAuditionId, discipline, judgeName, criteria]);
+  }, [selectedAuditionId, discipline, judgeName, criteria, currentAudition]);
 
   // Compute live average
   const currentValues = Object.values(scores);
@@ -134,6 +175,13 @@ export default function JudgesPortalPage() {
     currentValues.length > 0
       ? (currentValues.reduce((acc, curr) => acc + (Number(curr) || 0), 0) / currentValues.length).toFixed(1)
       : "0.0";
+
+  const handleScoreChange = (criteriaId: string, val: number) => {
+    setScores((prev) => ({
+      ...prev,
+      [criteriaId]: val,
+    }));
+  };
 
   const handleSaveScore = async () => {
     if (!currentAudition) return;
@@ -145,8 +193,8 @@ export default function JudgesPortalPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           auditionId: currentAudition.id,
-          judgeName,
-          judgeTitle,
+          judgeName: judgeName.trim(),
+          judgeTitle: judgeTitle || "Juez Evaluador",
           discipline,
           scores,
           judgeNotes,
@@ -157,7 +205,6 @@ export default function JudgesPortalPage() {
       if (res.ok && data.success) {
         setSavedSuccess(true);
         setTimeout(() => setSavedSuccess(false), 3000);
-        // Refresh local list
         loadData();
       } else {
         alert(data.error || "Error al guardar calificación.");
@@ -171,493 +218,476 @@ export default function JudgesPortalPage() {
   };
 
   const handleNextAudition = () => {
-    const currentIndex = auditions.findIndex((a) => a.id === selectedAuditionId);
-    if (currentIndex !== -1 && currentIndex < auditions.length - 1) {
-      setSelectedAuditionId(auditions[currentIndex + 1].id);
+    const currentIndex = filteredAuditions.findIndex((a) => a.id === selectedAuditionId);
+    if (currentIndex !== -1 && currentIndex < filteredAuditions.length - 1) {
+      setSelectedAuditionId(filteredAuditions[currentIndex + 1].id);
     }
   };
 
   const handlePrevAudition = () => {
-    const currentIndex = auditions.findIndex((a) => a.id === selectedAuditionId);
+    const currentIndex = filteredAuditions.findIndex((a) => a.id === selectedAuditionId);
     if (currentIndex > 0) {
-      setSelectedAuditionId(auditions[currentIndex - 1].id);
+      setSelectedAuditionId(filteredAuditions[currentIndex - 1].id);
     }
   };
 
-  // Filter list
-  const filteredAuditions = auditions.filter(
-    (a) =>
-      a.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      a.folio.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // ================= RENDER: LOGIN SCREEN IF NOT AUTHENTICATED =================
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-[#07070A] text-white flex flex-col justify-center items-center p-4 font-sans relative overflow-hidden">
+        {/* Background Glows */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-rose-600/15 rounded-full blur-3xl pointer-events-none" />
 
-  // Helper score color
-  const getScoreColor = (val: number) => {
-    if (val >= 9) return "bg-amber-400 text-black border-amber-300 font-black shadow-lg shadow-amber-400/30";
-    if (val >= 7) return "bg-emerald-600 text-white border-emerald-400 font-bold";
-    if (val >= 5) return "bg-orange-500 text-white border-orange-400";
-    return "bg-rose-600 text-white border-rose-400";
-  };
-
-  return (
-    <div className="min-h-screen bg-[#07070A] text-slate-100 flex flex-col font-sans selection:bg-purple-500 selection:text-white">
-      
-      {/* TOP BRAND BAR */}
-      <header className="bg-[#0D1117] border-b border-[#30363D] px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-40">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-xl">🎭</span>
-            <span className="font-black text-sm tracking-wider uppercase bg-gradient-to-r from-purple-400 to-rose-400 bg-clip-text text-transparent">
-              DV Performing Arts
+        <div className="max-w-xl w-full bg-[#12121A]/95 backdrop-blur-2xl border-2 border-[#28283C] rounded-3xl p-6 sm:p-10 shadow-2xl relative z-10 flex flex-col gap-6">
+          
+          {/* Header */}
+          <div className="text-center flex flex-col items-center gap-2">
+            <span className="text-3xl">⚖️</span>
+            <span className="font-mono text-[10px] uppercase font-bold text-amber-400 tracking-widest bg-amber-950/60 border border-amber-500/30 px-3 py-1 rounded-full">
+              DV Performing Arts &bull; Portal de Jurado
             </span>
-          </Link>
-          <span className="hidden sm:inline text-slate-600 text-xs font-mono">/</span>
-          <span className="bg-purple-950/80 text-purple-300 border border-purple-500/40 text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
-            Panel de Jueces &bull; Casting en Vivo
-          </span>
+            <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight mt-1">
+              Mesa de Jueces & Calificación en Vivo
+            </h1>
+            <p className="text-xs text-zinc-400 max-w-md">
+              Ingresa con tu perfil docente o juez invitado y selecciona tu disciplina de evaluación para calificar las audiciones en tiempo real.
+            </p>
+          </div>
+
+          <form onSubmit={handleLogin} className="flex flex-col gap-5 text-xs">
+            
+            {/* Preset Teachers Chips */}
+            <div className="flex flex-col gap-2">
+              <label className="font-semibold text-zinc-300">
+                Selecciona tu perfil de docente o ingresa tu nombre:
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {DEFAULT_JUDGES.map((j) => (
+                  <button
+                    key={j.name}
+                    type="button"
+                    onClick={() => selectJudgePreset(j)}
+                    className={`p-2.5 rounded-xl border text-left transition-all flex flex-col gap-0.5 cursor-pointer ${
+                      judgeName === j.name
+                        ? "bg-purple-950/80 border-purple-500 text-white shadow-md shadow-purple-950/50"
+                        : "bg-[#1A1A26] border-[#2A2A3E] text-zinc-300 hover:border-zinc-500"
+                    }`}
+                  >
+                    <span className="font-bold text-xs">{j.name}</span>
+                    <span className="text-[10px] text-zinc-400 truncate">{j.title}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom Name & Title Inputs */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-zinc-300">Nombre del Juez</label>
+                <input
+                  type="text"
+                  placeholder="Ej. Mtro. Juan Pérez"
+                  value={judgeName}
+                  onChange={(e) => setJudgeName(e.target.value)}
+                  className="bg-[#181824] border border-[#2E2E44] focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-white font-bold focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-zinc-300">Título / Cargo</label>
+                <input
+                  type="text"
+                  placeholder="Ej. Jurado Invitado de Canto"
+                  value={judgeTitle}
+                  onChange={(e) => setJudgeTitle(e.target.value)}
+                  className="bg-[#181824] border border-[#2E2E44] focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-zinc-200 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Discipline Selection */}
+            <div className="flex flex-col gap-1.5">
+              <label className="font-semibold text-zinc-300">
+                Disciplina / Mesa Evaluadora a Calificar:
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: "CANTO", label: "🎤 Canto", desc: "Voz y afinación" },
+                  { id: "COREOGRAFIA", label: "💃 Danza", desc: "Coreo y ritmo" },
+                  { id: "ACTUACION", label: "🎭 Actuación", desc: "Texto y escena" },
+                ].map((d) => (
+                  <button
+                    key={d.id}
+                    type="button"
+                    onClick={() => setDiscipline(d.id as EvaluationDiscipline)}
+                    className={`py-3 px-2 rounded-xl border font-bold text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
+                      discipline === d.id
+                        ? "bg-gradient-to-b from-purple-600 to-rose-600 border-rose-400 text-white shadow-lg shadow-purple-950/50"
+                        : "bg-[#181824] border-[#2E2E44] text-zinc-300 hover:border-zinc-500"
+                    }`}
+                  >
+                    <span className="text-sm">{d.label}</span>
+                    <span className="text-[9px] font-mono text-zinc-300 opacity-80">{d.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Target Production Filter */}
+            <div className="flex flex-col gap-1">
+              <label className="font-semibold text-zinc-300">
+                Obra / Montaje a Evaluar (Opcional):
+              </label>
+              <select
+                value={selectedProductionId}
+                onChange={(e) => setSelectedProductionId(e.target.value)}
+                className="bg-[#181824] border border-[#2E2E44] focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-white font-bold focus:outline-none"
+              >
+                <option value="ALL">🌟 Todas las Obras / Montajes</option>
+                {productions.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    🎭 {p.title} {p.isAuditionActive ? " (Convocatoria Activa)" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Enter Button */}
+            <button
+              type="submit"
+              className="w-full py-4 bg-gradient-to-r from-purple-600 via-rose-600 to-amber-500 hover:from-purple-500 hover:to-rose-500 text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-rose-950/60 transition-all cursor-pointer mt-2"
+            >
+              🚀 Entrar a Mesa de Calificación
+            </button>
+          </form>
+
+          <div className="text-center pt-2 border-t border-[#202030]">
+            <Link
+              href="/dashboard/audiciones"
+              className="text-xs text-zinc-500 hover:text-white transition-colors font-mono"
+            >
+              ← Ir al Panel de Control de Administrador
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ================= RENDER: ACTIVE JUDGE EVALUATION CONSOLE =================
+  return (
+    <div className="min-h-screen bg-[#07070A] text-white flex flex-col font-sans">
+      
+      {/* Top Judge Bar */}
+      <header className="bg-[#12121A] border-b border-[#242436] px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-30 shadow-md">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">⚖️</span>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="font-black text-sm text-white">{judgeName}</span>
+              <span className="text-[10px] font-mono bg-purple-900/60 text-purple-300 border border-purple-500/40 px-2 py-0.2 rounded font-bold">
+                {judgeTitle || "Juez"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
+              <span>Mesa:</span>
+              <span className="font-bold text-amber-400">
+                {discipline === "CANTO" ? "🎤 Canto" : discipline === "COREOGRAFIA" ? "💃 Coreografía" : "🎭 Actuación"}
+              </span>
+              <span>&bull;</span>
+              <span>Obra: {selectedProductionId === "ALL" ? "Todas" : productions.find(p => p.id === selectedProductionId)?.title || "General"}</span>
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* Action Controls */}
+        <div className="flex items-center gap-2.5">
+          <div className="flex bg-[#1A1A28] border border-[#2B2B3E] rounded-xl p-1 text-xs">
+            {(["CANTO", "COREOGRAFIA", "ACTUACION"] as EvaluationDiscipline[]).map((d) => (
+              <button
+                key={d}
+                type="button"
+                onClick={() => setDiscipline(d)}
+                className={`px-3 py-1 rounded-lg font-bold transition-all ${
+                  discipline === d ? "bg-purple-600 text-white shadow" : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                {d === "CANTO" ? "🎤 Canto" : d === "COREOGRAFIA" ? "💃 Danza" : "🎭 Actuación"}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={handleLogout}
+            className="px-3 py-1.5 bg-[#202030] hover:bg-[#2C2C40] text-zinc-300 border border-[#303046] rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+          >
+            🔄 Cambiar Juez
+          </button>
+
           <Link
             href="/dashboard/audiciones"
-            className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors"
+            className="px-3 py-1.5 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-bold transition-colors"
           >
-            <span>📊 Ver Ranking General</span>
+            📊 Ranking
           </Link>
-          {isLoggedIn && (
-            <button
-              onClick={handleLogout}
-              className="text-xs bg-[#21262D] hover:bg-[#30363D] text-slate-300 px-3 py-1.5 rounded-lg border border-[#30363D] transition-colors"
-            >
-              Cambiar Juez
-            </button>
-          )}
         </div>
       </header>
 
-      {/* ================= STEP 1: JUDGE LOGIN MODAL ================= */}
-      {!isLoggedIn ? (
-        <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
-          <div className="max-w-md w-full bg-[#161B22] border-2 border-[#30363D] rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6">
-            <div className="text-center flex flex-col items-center gap-2">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-rose-600 flex items-center justify-center text-3xl shadow-lg shadow-purple-950/60 mb-1">
-                ⭐
-              </div>
-              <h1 className="text-2xl font-black text-white tracking-tight">
-                Acceso para Jueces & Docentes
-              </h1>
-              <p className="text-xs text-slate-400">
-                Selecciona tu nombre y la mesa de disciplina que vas a calificar durante las audiciones.
-              </p>
+      {/* Main Scoring Grid */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 max-w-7xl w-full mx-auto p-4 sm:p-6 gap-6">
+        
+        {/* Left Column: Candidates Selector (4 Cols) */}
+        <div className="lg:col-span-4 flex flex-col gap-3 bg-[#101018] border border-[#222232] rounded-3xl p-4 h-[calc(100vh-140px)] overflow-hidden">
+          
+          <div className="flex flex-col gap-2 pb-2 border-b border-[#222232]">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black uppercase tracking-wider text-zinc-400 font-mono">
+                Aspirantes ({filteredAuditions.length})
+              </span>
+              <span className="text-[10px] font-mono text-purple-400">
+                {selectedProductionId === "ALL" ? "Todas las Obras" : "Filtrado por Obra"}
+              </span>
             </div>
 
-            <form onSubmit={handleLogin} className="flex flex-col gap-5">
-              {/* Judge Selection */}
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold text-slate-300">Selecciona tu Nombre de Docente:</label>
-                <div className="grid grid-cols-1 gap-2">
-                  {DEFAULT_JUDGES.map((j) => (
-                    <button
-                      key={j.name}
-                      type="button"
-                      onClick={() => {
-                        setJudgeName(j.name);
-                        setJudgeTitle(j.title);
-                      }}
-                      className={`p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
-                        judgeName === j.name
-                          ? "bg-purple-950/70 border-purple-400 text-white shadow-md shadow-purple-950/40"
-                          : "bg-[#0D1117] border-[#30363D] text-slate-300 hover:border-slate-500"
-                      }`}
-                    >
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold">{j.name}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">{j.title}</span>
+            <input
+              type="text"
+              placeholder="Buscar por folio, nombre o teléfono..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-[#181824] border border-[#28283C] rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none font-sans"
+            />
+          </div>
+
+          {/* List of Candidates */}
+          <div className="flex-1 overflow-y-auto flex flex-col gap-2 pr-1">
+            {filteredAuditions.length === 0 ? (
+              <div className="py-12 text-center text-zinc-500 font-mono text-xs">
+                No hay aspirantes registrados con los filtros activos.
+              </div>
+            ) : (
+              filteredAuditions.map((aud) => {
+                const isSelected = aud.id === currentAudition?.id;
+                const hasMyScore = aud.scores?.some(
+                  (s) => s.judgeName === judgeName && s.discipline === discipline
+                );
+
+                return (
+                  <button
+                    key={aud.id}
+                    type="button"
+                    onClick={() => setSelectedAuditionId(aud.id)}
+                    className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col gap-1 cursor-pointer relative ${
+                      isSelected
+                        ? "bg-purple-950/80 border-purple-500 text-white shadow-lg shadow-purple-950/60"
+                        : "bg-[#14141E] border-[#222230] text-zinc-300 hover:border-zinc-500"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono font-bold text-xs text-purple-300">
+                        {aud.folio}
+                      </span>
+                      {hasMyScore ? (
+                        <span className="text-[9px] font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-1.5 py-0.2 rounded font-bold">
+                          ✓ Calificado
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-mono bg-zinc-800 text-zinc-400 px-1.5 py-0.2 rounded">
+                          Pendiente
+                        </span>
+                      )}
+                    </div>
+
+                    <span className="font-bold text-sm text-white truncate">{aud.fullName}</span>
+                    <span className="text-[10px] text-zinc-400 truncate">
+                      {aud.productionName || "Si No Es Ahora"} &bull; {aud.programName}
+                    </span>
+
+                    {aud.overallScore !== undefined && aud.overallScore > 0 && (
+                      <div className="mt-1 flex items-center gap-2 text-[10px] font-mono text-amber-400">
+                        <span>Puntaje Jurado:</span>
+                        <span className="font-black">⭐ {aud.overallScore}/10</span>
                       </div>
-                      {judgeName === j.name && <span className="text-purple-400 font-bold">✓</span>}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[11px] text-slate-500">O escribe otro nombre:</span>
-                  <input
-                    type="text"
-                    placeholder="Nombre del juez invitado..."
-                    value={judgeName}
-                    onChange={(e) => {
-                      setJudgeName(e.target.value);
-                      setJudgeTitle("Juez Invitado");
-                    }}
-                    className="flex-1 bg-[#0D1117] border border-[#30363D] rounded-lg px-3 py-1 text-xs text-white"
-                  />
-                </div>
-              </div>
-
-              {/* Discipline Selection */}
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold text-slate-300">Mesa / Disciplina a Evaluar:</label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setDiscipline("CANTO")}
-                    className={`py-3 px-2 rounded-xl border flex flex-col items-center gap-1 transition-all ${
-                      discipline === "CANTO"
-                        ? "bg-purple-600 border-purple-400 text-white font-bold shadow-lg shadow-purple-950/50"
-                        : "bg-[#0D1117] border-[#30363D] text-slate-400 hover:border-slate-500"
-                    }`}
-                  >
-                    <span className="text-xl">🎤</span>
-                    <span className="text-xs font-bold">Canto</span>
+                    )}
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setDiscipline("COREOGRAFIA")}
-                    className={`py-3 px-2 rounded-xl border flex flex-col items-center gap-1 transition-all ${
-                      discipline === "COREOGRAFIA"
-                        ? "bg-rose-600 border-rose-400 text-white font-bold shadow-lg shadow-rose-950/50"
-                        : "bg-[#0D1117] border-[#30363D] text-slate-400 hover:border-slate-500"
-                    }`}
-                  >
-                    <span className="text-xl">💃</span>
-                    <span className="text-xs font-bold">Coreografía</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setDiscipline("ACTUACION")}
-                    className={`py-3 px-2 rounded-xl border flex flex-col items-center gap-1 transition-all ${
-                      discipline === "ACTUACION"
-                        ? "bg-amber-600 border-amber-400 text-white font-bold shadow-lg shadow-amber-950/50"
-                        : "bg-[#0D1117] border-[#30363D] text-slate-400 hover:border-slate-500"
-                    }`}
-                  >
-                    <span className="text-xl">🎭</span>
-                    <span className="text-xs font-bold">Actuación</span>
-                  </button>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3.5 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-xl transition-all cursor-pointer mt-2"
-              >
-                Ingresar a la Mesa de Evaluación ➔
-              </button>
-            </form>
+                );
+              })
+            )}
           </div>
         </div>
-      ) : (
-        /* ================= STEP 2: LIVE SCORING CONSOLE ================= */
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-          
-          {/* LEFT SIDEBAR: CANDIDATES QUEUE (4 COLS) */}
-          <aside className="w-full lg:w-80 lg:min-w-[320px] bg-[#0D1117] border-r border-[#30363D] flex flex-col h-auto lg:h-[calc(100vh-61px)]">
-            
-            {/* Active Judge Status Card */}
-            <div className="p-4 border-b border-[#30363D] bg-[#161B22] flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-600/30 border border-purple-500/50 flex items-center justify-center text-lg">
-                  {discipline === "CANTO" ? "🎤" : discipline === "COREOGRAFIA" ? "💃" : "🎭"}
+
+        {/* Right Column: Live Scoring Console (8 Cols) */}
+        <div className="lg:col-span-8 flex flex-col gap-4">
+          {currentAudition ? (
+            <div className="bg-[#12121A] border-2 border-[#28283C] rounded-3xl p-5 sm:p-7 flex flex-col gap-6 shadow-2xl">
+              
+              {/* Candidate Info Header */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-5 border-b border-[#242436]">
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2 font-mono text-xs">
+                    <span className="bg-purple-600 text-white px-2 py-0.5 rounded font-black">
+                      {currentAudition.folio}
+                    </span>
+                    <span className="text-zinc-400">&bull;</span>
+                    <span className="text-zinc-400">{currentAudition.phone}</span>
+                  </div>
+                  <h2 className="text-2xl font-black text-white mt-1">
+                    {currentAudition.fullName}
+                  </h2>
+                  <p className="text-xs text-rose-400 font-medium">
+                    🎭 Obra: {currentAudition.productionName || "Si No Es Ahora (El Musical)"} &bull; {currentAudition.programName}
+                  </p>
                 </div>
-                <div>
-                  <span className="text-xs font-bold text-white block truncate">{judgeName}</span>
-                  <span className="text-[10px] font-mono text-purple-400 uppercase font-bold tracking-wider">
-                    Mesa: {discipline}
+
+                {/* Live Average Score Display */}
+                <div className="bg-black/60 border-2 border-purple-500/60 px-5 py-3 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-lg">
+                  <span className="text-[10px] font-mono uppercase text-purple-300 font-bold tracking-wider">
+                    Promedio de {discipline}
+                  </span>
+                  <span className="text-3xl font-black text-amber-400 font-mono mt-0.5">
+                    {liveAverage} <span className="text-sm text-zinc-400">/ 10</span>
                   </span>
                 </div>
               </div>
 
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-mono font-bold animate-pulse">
-                EN VIVO
-              </span>
-            </div>
-
-            {/* Search and Candidate Count */}
-            <div className="p-3 border-b border-[#30363D] flex flex-col gap-2">
-              <input
-                type="text"
-                placeholder="🔍 Buscar por Folio o Nombre..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-[#161B22] border border-[#30363D] rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
-              />
-              <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono px-1">
-                <span>{filteredAuditions.length} Aspirantes registrados</span>
-                <span>{auditions.filter((a) => a.scores?.some((s) => s.judgeName === judgeName && s.discipline === discipline)).length} calificados por ti</span>
-              </div>
-            </div>
-
-            {/* Candidate List */}
-            <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-1.5 max-h-[35vh] lg:max-h-none">
-              {loading ? (
-                <div className="p-8 text-center text-slate-500 font-mono text-xs animate-pulse">
-                  Cargando lista de aspirantes...
-                </div>
-              ) : filteredAuditions.length === 0 ? (
-                <div className="p-8 text-center text-slate-500 text-xs">
-                  No se encontraron aspirantes.
-                </div>
-              ) : (
-                filteredAuditions.map((aud) => {
-                  const isSelected = aud.id === (currentAudition?.id || "");
-                  const scoredByMe = aud.scores?.find(
-                    (s) => s.judgeName === judgeName && s.discipline === discipline
-                  );
-
-                  return (
-                    <button
-                      key={aud.id}
-                      onClick={() => setSelectedAuditionId(aud.id)}
-                      className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${
-                        isSelected
-                          ? "bg-purple-950/80 border-purple-400 text-white shadow-md shadow-purple-950/50"
-                          : "bg-[#161B22] border-[#30363D] hover:border-slate-500 text-slate-300"
-                      }`}
-                    >
-                      <div className="flex flex-col gap-0.5 overflow-hidden pr-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-bold text-[11px] text-purple-300">
-                            {aud.folio}
-                          </span>
-                          {aud.assignedRole && (
-                            <span className="bg-amber-400/20 text-amber-300 text-[9px] px-1.5 py-0.2 rounded border border-amber-400/30 font-bold">
-                              {aud.assignedRole}
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-xs font-bold text-white truncate">{aud.fullName}</span>
-                        <span className="text-[10px] text-slate-400 truncate">{aud.productionName || "Si No Es Ahora"}</span>
-                      </div>
-
-                      {scoredByMe ? (
-                        <div className="flex flex-col items-end shrink-0">
-                          <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono px-2 py-0.5 rounded font-black">
-                            ⭐ {scoredByMe.averageScore}
-                          </span>
-                          <span className="text-[9px] text-emerald-400 font-mono mt-0.5">Listo ✓</span>
-                        </div>
-                      ) : (
-                        <span className="text-[10px] font-mono text-slate-500 bg-[#0D1117] px-2 py-0.5 rounded border border-[#30363D]">
-                          Pendiente
+              {/* Other Judges Existing Scores Badges (Cross-Discipline Correlation) */}
+              {currentAudition.scores && currentAudition.scores.length > 0 && (
+                <div className="p-3.5 bg-[#181824] border border-[#2C2C40] rounded-2xl flex flex-col gap-2">
+                  <span className="text-[10px] font-mono uppercase font-bold text-zinc-400 tracking-wider">
+                    📋 Evaluaciones registradas por el jurado para este aspirante:
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {currentAudition.scores.map((sc) => (
+                      <div
+                        key={sc.id}
+                        className="px-3 py-1.5 bg-[#0E0E14] border border-purple-500/30 rounded-xl text-xs flex items-center gap-2 font-mono"
+                      >
+                        <span className="font-bold text-white">
+                          {sc.discipline === "CANTO" ? "🎤" : sc.discipline === "COREOGRAFIA" ? "💃" : "🎭"} {sc.judgeName}:
                         </span>
-                      )}
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </aside>
-
-          {/* MAIN SCORING CONSOLE (8 COLS) */}
-          <main className="flex-1 bg-[#07070A] p-4 sm:p-6 lg:p-8 flex flex-col gap-6 overflow-y-auto lg:h-[calc(100vh-61px)]">
-            
-            {currentAudition ? (
-              <>
-                {/* Candidate Header Profile Banner */}
-                <div className="bg-gradient-to-r from-purple-950/40 via-[#161B22] to-[#161B22] border-2 border-purple-500/50 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-xl">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-black border-2 border-purple-400/60 flex items-center justify-center text-2xl font-mono text-purple-300 font-black shadow">
-                      {currentAudition.folio.slice(-3) || "DV"}
-                    </div>
-
-                    <div className="flex flex-col gap-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-xs bg-purple-600 text-white px-2 py-0.5 rounded font-bold">
-                          {currentAudition.folio}
-                        </span>
-                        <span className="text-xs text-slate-400 font-mono">
-                          {currentAudition.programName || "Teatro Musical"}
-                        </span>
-                        {currentAudition.assignedRole && (
-                          <span className="bg-amber-400 text-black px-2 py-0.5 rounded text-xs font-black uppercase">
-                            🎭 Rol: {currentAudition.assignedRole}
+                        <span className="font-black text-amber-400">{sc.averageScore} / 10</span>
+                        {sc.judgeNotes && (
+                          <span className="text-[10px] text-zinc-400 italic truncate max-w-[150px]">
+                            "{sc.judgeNotes}"
                           </span>
                         )}
                       </div>
-
-                      <h2 className="text-xl sm:text-2xl font-black text-white">
-                        {currentAudition.fullName}
-                      </h2>
-
-                      <span className="text-xs text-purple-300 font-medium">
-                        Obra postulada: <strong>{currentAudition.productionName || "Si No Es Ahora"}</strong>
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Live Average Pill */}
-                  <div className="flex items-center gap-4 bg-[#0D1117] border-2 border-purple-500/60 rounded-2xl p-4 shadow-inner shrink-0">
-                    <div className="flex flex-col items-center">
-                      <span className="text-[10px] font-mono uppercase text-purple-300 font-bold">
-                        Promedio en {discipline}
-                      </span>
-                      <span className="text-3xl font-black text-white tracking-tight flex items-baseline gap-1">
-                        <span>{liveAverage}</span>
-                        <span className="text-sm font-mono text-slate-500">/ 10</span>
-                      </span>
-                    </div>
+                    ))}
                   </div>
                 </div>
+              )}
 
-                {/* Candidate Notes / Experience Preview */}
-                {currentAudition.experienceNotes && (
-                  <div className="bg-[#161B22] border border-[#30363D] rounded-xl p-3.5 text-xs text-slate-300 flex items-start gap-2">
-                    <span className="text-sm">📝</span>
-                    <div>
-                      <strong className="text-white">Experiencia previa declarada: </strong>
-                      <span>{currentAudition.experienceNotes}</span>
-                    </div>
-                  </div>
-                )}
+              {/* Rubric Criteria Sliders / Quick Buttons */}
+              <div className="flex flex-col gap-4">
+                <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider font-mono flex items-center gap-2">
+                  <span>📐</span> Rúbrica de {discipline} (Evaluar de 0 a 10 cada rubro):
+                </h3>
 
-                {/* ================= RUBRICS SCORING CARDS ================= */}
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center justify-between border-b border-[#30363D] pb-2">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                      <span>📊</span>
-                      <span>Rúbrica de Evaluación &bull; Mesa de {discipline} ({activeCriteria.length} Criterios)</span>
-                    </h3>
-                    <span className="text-[11px] text-slate-400 font-mono">
-                      Escala de 0 (Deficiente) a 10 (Sobresaliente)
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4">
-                    {activeCriteria.map((crit, idx) => {
-                      const currentVal = scores[crit.id] !== undefined ? scores[crit.id] : 8;
-
-                      return (
-                        <div
-                          key={crit.id}
-                          className="bg-[#161B22] border border-[#30363D] hover:border-purple-500/50 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 transition-all shadow-sm"
-                        >
-                          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono text-xs text-purple-400 font-bold">#{idx + 1}</span>
-                                <h4 className="text-sm font-bold text-white">{crit.name}</h4>
-                              </div>
-                              {crit.description && (
-                                <p className="text-[11px] text-slate-400 mt-0.5">{crit.description}</p>
-                              )}
-                            </div>
-
-                            {/* Score Display */}
-                            <div className="flex items-center gap-2 self-end sm:self-center">
-                              <span className="text-xs text-slate-400 font-mono">Puntaje:</span>
-                              <span
-                                className={`text-sm px-3 py-1 rounded-xl font-mono border ${getScoreColor(
-                                  currentVal
-                                )}`}
-                              >
-                                {currentVal} / 10
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Quick 0 - 10 Score Selector Buttons */}
-                          <div className="grid grid-cols-11 gap-1 sm:gap-1.5 mt-1">
-                            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
-                              const isSelected = currentVal === num;
-                              return (
-                                <button
-                                  key={num}
-                                  type="button"
-                                  onClick={() => setScores({ ...scores, [crit.id]: num })}
-                                  className={`py-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-center cursor-pointer ${
-                                    isSelected
-                                      ? num === 10
-                                        ? "bg-amber-400 text-black border-2 border-amber-300 font-black shadow-lg scale-105"
-                                        : num >= 8
-                                        ? "bg-emerald-500 text-white border-2 border-emerald-300 font-black shadow-lg scale-105"
-                                        : num >= 5
-                                        ? "bg-orange-500 text-white border-2 border-orange-300 scale-105"
-                                        : "bg-rose-600 text-white border-2 border-rose-300 scale-105"
-                                      : "bg-[#0D1117] border border-[#30363D] text-slate-300 hover:bg-[#21262D] hover:text-white"
-                                  }`}
-                                >
-                                  {num}
-                                </button>
-                              );
-                            })}
-                          </div>
+                <div className="flex flex-col gap-3.5">
+                  {activeCriteria.map((c) => {
+                    const currentScore = scores[c.id] !== undefined ? scores[c.id] : 8;
+                    return (
+                      <div
+                        key={c.id}
+                        className="p-4 bg-[#181824] border border-[#28283C] rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-bold text-sm text-white">{c.name}</span>
+                          {c.description && (
+                            <span className="text-[11px] text-zinc-400 mt-0.5">{c.description}</span>
+                          )}
                         </div>
-                      );
-                    })}
-                  </div>
+
+                        {/* Quick 0-10 Buttons */}
+                        <div className="flex items-center gap-1 overflow-x-auto py-1">
+                          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                            <button
+                              key={num}
+                              type="button"
+                              onClick={() => handleScoreChange(c.id, num)}
+                              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg font-mono font-bold text-xs flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                                currentScore === num
+                                  ? num >= 9
+                                    ? "bg-amber-400 text-black shadow-lg shadow-amber-400/40 font-black scale-110"
+                                    : num >= 7
+                                    ? "bg-emerald-500 text-white font-black scale-110"
+                                    : num >= 5
+                                    ? "bg-orange-500 text-white font-black"
+                                    : "bg-rose-600 text-white font-black"
+                                  : "bg-[#222232] text-zinc-400 hover:text-white hover:bg-[#303046]"
+                              }`}
+                            >
+                              {num}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-
-                {/* Judge Private Notes */}
-                <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-5 flex flex-col gap-2">
-                  <label className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <span>📝</span>
-                    <span>Observaciones Privadas del Jurado para este Aspirante:</span>
-                  </label>
-                  <textarea
-                    rows={3}
-                    placeholder="Ej. Gran afinación, excelente colocación en agudos. Sugiero para personaje de Benny..."
-                    value={judgeNotes}
-                    onChange={(e) => setJudgeNotes(e.target.value)}
-                    className="w-full bg-[#0D1117] border border-[#30363D] rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-purple-500 resize-none font-sans"
-                  />
-                </div>
-
-                {/* ACTION BAR: SAVE & NAVIGATION */}
-                <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-4 z-30 shadow-2xl">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handlePrevAudition}
-                      className="px-3 py-2 bg-[#0D1117] hover:bg-[#21262D] text-slate-300 border border-[#30363D] rounded-xl text-xs font-semibold transition-colors cursor-pointer"
-                    >
-                      ◀ Anterior
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleNextAudition}
-                      className="px-3 py-2 bg-[#0D1117] hover:bg-[#21262D] text-slate-300 border border-[#30363D] rounded-xl text-xs font-semibold transition-colors cursor-pointer"
-                    >
-                      Siguiente ▶
-                    </button>
-                  </div>
-
-                  <div className="flex items-center gap-3 w-full sm:w-auto">
-                    {savedSuccess && (
-                      <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-2 rounded-xl flex items-center gap-1.5 animate-bounce">
-                        <span>✓</span> Calificación registrada con éxito
-                      </span>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={handleSaveScore}
-                      disabled={savingScore}
-                      className="flex-1 sm:flex-initial px-6 py-3.5 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-purple-950/50 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                    >
-                      {savingScore ? (
-                        <>
-                          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          <span>Guardando...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>💾 Guardar Calificación ({liveAverage})</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="py-20 text-center text-slate-500 text-sm">
-                Selecciona un aspirante para comenzar a calificar.
               </div>
-            )}
-          </main>
+
+              {/* Private Judge Qualitative Notes */}
+              <div className="flex flex-col gap-1.5">
+                <label className="font-bold text-xs text-zinc-300 flex items-center gap-1.5">
+                  <span>📝</span> Observaciones Privadas del Juez ({judgeName}):
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Escribe comentarios cualitativos, fortalezas, tesitura, potencial para personajes específicos..."
+                  value={judgeNotes}
+                  onChange={(e) => setJudgeNotes(e.target.value)}
+                  className="bg-[#181824] border border-[#2E2E44] rounded-xl p-3 text-xs text-white focus:outline-none focus:border-purple-500 resize-none font-sans"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#242436]">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handlePrevAudition}
+                    className="px-4 py-2.5 bg-[#202030] hover:bg-[#2C2C40] text-zinc-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    ← Anterior
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNextAudition}
+                    className="px-4 py-2.5 bg-[#202030] hover:bg-[#2C2C40] text-zinc-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    Siguiente →
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {savedSuccess && (
+                    <span className="text-xs font-bold text-emerald-400 animate-bounce flex items-center gap-1">
+                      <span>✓</span> ¡Calificación Guardada!
+                    </span>
+                  )}
+
+                  <button
+                    type="button"
+                    disabled={savingScore}
+                    onClick={handleSaveScore}
+                    className="px-8 py-3 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-purple-950/60 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {savingScore ? "Guardando..." : "💾 Guardar Calificación"}
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          ) : (
+            <div className="bg-[#12121A] border-2 border-[#28283C] rounded-3xl p-12 text-center text-zinc-500 font-mono text-xs">
+              Selecciona un aspirante para comenzar a calificar.
+            </div>
+          )}
         </div>
-      )}
+
+      </div>
     </div>
   );
 }

@@ -122,31 +122,53 @@ export default function DashboardSummaryPage() {
       </div>
 
       {/* Quick Navigation Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
         <Link
           href="/dashboard/audiciones"
-          className="group bg-[#161B22] hover:bg-[#21262D] border border-[#30363D] hover:border-red-500/50 rounded-xl p-6 transition-all flex flex-col justify-between gap-4"
+          className="group bg-[#161B22] hover:bg-[#21262D] border border-[#30363D] hover:border-purple-500/50 rounded-xl p-5 transition-all flex flex-col justify-between gap-4"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-red-600/20 text-red-400 flex items-center justify-center font-bold text-lg">
-              📋
+            <div className="w-10 h-10 rounded-lg bg-purple-600/20 text-purple-400 flex items-center justify-center font-bold text-lg">
+              🏆
             </div>
             <div>
-              <h3 className="font-bold text-white group-hover:text-red-400 transition-colors">
-                Control de Audiciones
+              <h3 className="font-bold text-white group-hover:text-purple-400 transition-colors">
+                Ranking & Informes de Casting
               </h3>
-              <p className="text-xs text-slate-400">Gestionar folios, estados y reenvíos de WhatsApp.</p>
+              <p className="text-xs text-slate-400">Leaderboard de jurados, métricas y asignación de roles.</p>
             </div>
           </div>
-          <div className="text-xs font-semibold text-red-400 flex items-center gap-1">
-            <span>Acceder al listado</span>
+          <div className="text-xs font-semibold text-purple-400 flex items-center gap-1">
+            <span>Ver Ranking e Informes</span>
             <span>&rarr;</span>
           </div>
         </Link>
 
         <Link
+          href="/jueces"
+          target="_blank"
+          className="group bg-[#161B22] hover:bg-[#21262D] border border-[#30363D] hover:border-amber-500/50 rounded-xl p-5 transition-all flex flex-col justify-between gap-4"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-amber-600/20 text-amber-400 flex items-center justify-center font-bold text-lg">
+              ⚖️
+            </div>
+            <div>
+              <h3 className="font-bold text-white group-hover:text-amber-400 transition-colors">
+                Portal de Jueces en Vivo
+              </h3>
+              <p className="text-xs text-slate-400">Consola para docentes: Canto, Danza y Actuación.</p>
+            </div>
+          </div>
+          <div className="text-xs font-semibold text-amber-400 flex items-center gap-1">
+            <span>Abrir Mesa de Jueces</span>
+            <span>↗</span>
+          </div>
+        </Link>
+
+        <Link
           href="/dashboard/articulos"
-          className="group bg-[#161B22] hover:bg-[#21262D] border border-[#30363D] hover:border-blue-500/50 rounded-xl p-6 transition-all flex flex-col justify-between gap-4"
+          className="group bg-[#161B22] hover:bg-[#21262D] border border-[#30363D] hover:border-blue-500/50 rounded-xl p-5 transition-all flex flex-col justify-between gap-4"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-lg">
@@ -156,7 +178,7 @@ export default function DashboardSummaryPage() {
               <h3 className="font-bold text-white group-hover:text-blue-400 transition-colors">
                 CMS & Artículos de Revista
               </h3>
-              <p className="text-xs text-slate-400">Editor en bloques estilo Gutenberg con OpenGraph y SEO.</p>
+              <p className="text-xs text-slate-400">Editor de contenidos estilo Gutenberg con SEO.</p>
             </div>
           </div>
           <div className="text-xs font-semibold text-blue-400 flex items-center gap-1">
@@ -166,22 +188,22 @@ export default function DashboardSummaryPage() {
         </Link>
 
         <Link
-          href="/dashboard/paginas"
-          className="group bg-[#161B22] hover:bg-[#21262D] border border-[#30363D] hover:border-purple-500/50 rounded-xl p-6 transition-all flex flex-col justify-between gap-4"
+          href="/dashboard/producciones"
+          className="group bg-[#161B22] hover:bg-[#21262D] border border-[#30363D] hover:border-rose-500/50 rounded-xl p-5 transition-all flex flex-col justify-between gap-4"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-purple-600/20 text-purple-400 flex items-center justify-center font-bold text-lg">
-              🖼️
+            <div className="w-10 h-10 rounded-lg bg-rose-600/20 text-rose-400 flex items-center justify-center font-bold text-lg">
+              🎭
             </div>
             <div>
-              <h3 className="font-bold text-white group-hover:text-purple-400 transition-colors">
-                Editor de Contenido Web
+              <h3 className="font-bold text-white group-hover:text-rose-400 transition-colors">
+                Obras & Convocatorias
               </h3>
-              <p className="text-xs text-slate-400">Modificar textos, fotografías y cartelera de la landing.</p>
+              <p className="text-xs text-slate-400">Cartelera, recintos Google Maps y fechas de audición.</p>
             </div>
           </div>
-          <div className="text-xs font-semibold text-purple-400 flex items-center gap-1">
-            <span>Personalizar secciones</span>
+          <div className="text-xs font-semibold text-rose-400 flex items-center gap-1">
+            <span>Gestionar Cartelera</span>
             <span>&rarr;</span>
           </div>
         </Link>

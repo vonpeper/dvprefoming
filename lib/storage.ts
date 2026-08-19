@@ -739,3 +739,161 @@ export function assignRoleToApplicant(
   return auditions[idx];
 }
 
+export interface AuditionStats {
+  totalAuditions: number;
+  approvedCount: number;
+  rejectedCount: number;
+  pendingCount: number;
+  confirmedCount: number;
+  approvalRate: number;
+  assignedRolesCount: number;
+  averageScores: {
+    canto: number;
+    dance: number;
+    acting: number;
+    overall: number;
+  };
+  byProduction: {
+    productionId: string;
+    productionName: string;
+    total: number;
+    approved: number;
+    rejected: number;
+    pending: number;
+    averageScore: number;
+    isAuditionActive: boolean;
+  }[];
+  byJudge: {
+    judgeName: string;
+    judgeTitle: string;
+    evaluationsCount: number;
+    disciplines: EvaluationDiscipline[];
+    averageScoreGiven: number;
+  }[];
+  recentActivity: {
+    id: string;
+    auditionId: string;
+    candidateName: string;
+    folio: string;
+    productionName: string;
+    judgeName: string;
+    discipline: EvaluationDiscipline;
+    averageScore: number;
+    createdAt: Date | string;
+  }[];
+}
+
+export function getAuditionStats(productionFilter?: string): AuditionStats {
+  const allAuditions = getStoredAuditions();
+  const productions = getStoredProductions();
+
+  const filtered = productionFilter && productionFilter !== "ALL"
+    ? allAuditions.filter((a) => a.productionId === productionFilter || a.productionName === productionFilter)
+    : allAuditions;
+
+  const totalAuditions = filtered.length;
+  const approvedCount = filtered.filter((a) => a.status === "APPROVED").length;
+  const rejectedCount = filtered.filter((a) => a.status === "REJECTED").length;
+  const confirmedCount = filtered.filter((a) => a.status === "CONFIRMED").length;
+  const pendingCount = totalAuditions - approvedCount - rejectedCount;
+  const assignedRolesCount = filtered.filter((a) => Boolean(a.assignedRole && a.assignedRole.trim())).length;
+  const approvalRate = totalAuditions > 0 ? Number(((approvedCount / totalAuditions) * 100).toFixed(1)) : 0;
+
+  // Compute Averages
+  const cantoScores = filtered.filter((a) => a.cantoAverage !== undefined && a.cantoAverage > 0).map((a) => a.cantoAverage!);
+  const danceScores = filtered.filter((a) => a.danceAverage !== undefined && a.danceAverage > 0).map((a) => a.danceAverage!);
+  const actingScores = filtered.filter((a) => a.actingAverage !== undefined && a.actingAverage > 0).map((a) => a.actingAverage!);
+  const overallScores = filtered.filter((a) => a.overallScore !== undefined && a.overallScore > 0).map((a) => a.overallScore!);
+
+  const averageScores = {
+    canto: cantoScores.length > 0 ? Number((cantoScores.reduce((a, b) => a + b, 0) / cantoScores.length).toFixed(2)) : 0,
+    dance: danceScores.length > 0 ? Number((danceScores.reduce((a, b) => a + b, 0) / danceScores.length).toFixed(2)) : 0,
+    acting: actingScores.length > 0 ? Number((actingScores.reduce((a, b) => a + b, 0) / actingScores.length).toFixed(2)) : 0,
+    overall: overallScores.length > 0 ? Number((overallScores.reduce((a, b) => a + b, 0) / overallScores.length).toFixed(2)) : 0,
+  };
+
+  // By Production
+  const byProduction = productions.map((prod) => {
+    const prodAuditions = allAuditions.filter(
+      (a) => a.productionId === prod.id || a.productionName === prod.title
+    );
+    const pApproved = prodAuditions.filter((a) => a.status === "APPROVED").length;
+    const pRejected = prodAuditions.filter((a) => a.status === "REJECTED").length;
+    const pPending = prodAuditions.length - pApproved - pRejected;
+    const pScores = prodAuditions.filter((a) => a.overallScore !== undefined && a.overallScore > 0).map((a) => a.overallScore!);
+    const pAvg = pScores.length > 0 ? Number((pScores.reduce((a, b) => a + b, 0) / pScores.length).toFixed(2)) : 0;
+
+    return {
+      productionId: prod.id,
+      productionName: prod.title,
+      total: prodAuditions.length,
+      approved: pApproved,
+      rejected: pRejected,
+      pending: pPending,
+      averageScore: pAvg,
+      isAuditionActive: Boolean(prod.isAuditionActive),
+    };
+  });
+
+  // By Judge (Extracted from all scores)
+  const judgeMap: Record<
+    string,
+    { judgeName: string; judgeTitle: string; disciplines: Set<EvaluationDiscipline>; scores: number[] }
+  > = {};
+
+  const recentActivity: AuditionStats["recentActivity"] = [];
+
+  allAuditions.forEach((aud) => {
+    (aud.scores || []).forEach((sc) => {
+      const jKey = sc.judgeName.trim();
+      if (!judgeMap[jKey]) {
+        judgeMap[jKey] = {
+          judgeName: sc.judgeName,
+          judgeTitle: sc.judgeTitle || "Juez Evaluador",
+          disciplines: new Set<EvaluationDiscipline>(),
+          scores: [],
+        };
+      }
+      judgeMap[jKey].disciplines.add(sc.discipline);
+      judgeMap[jKey].scores.push(sc.averageScore);
+
+      recentActivity.push({
+        id: sc.id,
+        auditionId: aud.id,
+        candidateName: aud.fullName,
+        folio: aud.folio,
+        productionName: aud.productionName || "Si No Es Ahora",
+        judgeName: sc.judgeName,
+        discipline: sc.discipline,
+        averageScore: sc.averageScore,
+        createdAt: sc.createdAt,
+      });
+    });
+  });
+
+  const byJudge = Object.values(judgeMap).map((j) => ({
+    judgeName: j.judgeName,
+    judgeTitle: j.judgeTitle,
+    evaluationsCount: j.scores.length,
+    disciplines: Array.from(j.disciplines),
+    averageScoreGiven: Number((j.scores.reduce((a, b) => a + b, 0) / j.scores.length).toFixed(2)),
+  })).sort((a, b) => b.evaluationsCount - a.evaluationsCount);
+
+  // Sort recent activity descending
+  recentActivity.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  return {
+    totalAuditions,
+    approvedCount,
+    rejectedCount,
+    pendingCount,
+    confirmedCount,
+    approvalRate,
+    assignedRolesCount,
+    averageScores,
+    byProduction,
+    byJudge,
+    recentActivity: recentActivity.slice(0, 15),
+  };
+}
+

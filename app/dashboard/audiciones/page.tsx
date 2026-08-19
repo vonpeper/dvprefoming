@@ -2,23 +2,28 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { AuditionRegistration, Production, EvaluationCriteria, EvaluationDiscipline } from "@/types/mock";
+import {
+  AuditionRegistration,
+  Production,
+  EvaluationCriteria,
+  EvaluationDiscipline,
+} from "@/types/mock";
+import { AuditionStats } from "@/lib/storage";
 
 export default function AuditionsDashboardPage() {
-  const [activeTab, setActiveTab] = useState<"list" | "ranking" | "rubrics">("ranking");
+  const [activeTab, setActiveTab] = useState<"ranking" | "reports" | "list" | "rubrics">("reports");
   const [auditions, setAuditions] = useState<AuditionRegistration[]>([]);
   const [productions, setProductions] = useState<Production[]>([]);
   const [criteria, setCriteria] = useState<EvaluationCriteria[]>([]);
+  const [stats, setStats] = useState<AuditionStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Filters & Search
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const [programFilter, setProgramFilter] = useState("ALL");
   const [productionFilter, setProductionFilter] = useState("ALL");
 
   // Selection & Modals
-  const [selectedAudition, setSelectedAudition] = useState<AuditionRegistration | null>(null);
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [roleTargetAudition, setRoleTargetAudition] = useState<AuditionRegistration | null>(null);
   const [assignedRoleInput, setAssignedRoleInput] = useState("");
@@ -42,11 +47,13 @@ export default function AuditionsDashboardPage() {
       fetch("/api/auditions/list").then((res) => res.json()),
       fetch("/api/productions").then((res) => res.json()),
       fetch("/api/auditions/criteria").then((res) => res.json()),
+      fetch(`/api/auditions/stats${productionFilter !== "ALL" ? `?productionId=${productionFilter}` : ""}`).then((res) => res.json()),
     ])
-      .then(([audData, prodData, critData]) => {
+      .then(([audData, prodData, critData, statsData]) => {
         if (audData?.auditions) setAuditions(audData.auditions);
         if (prodData?.productions) setProductions(prodData.productions);
         if (critData?.criteria) setCriteria(critData.criteria);
+        if (statsData?.stats) setStats(statsData.stats);
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
@@ -54,7 +61,7 @@ export default function AuditionsDashboardPage() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [productionFilter]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -80,13 +87,10 @@ export default function AuditionsDashboardPage() {
           action === "SEND_REMINDER"
             ? "🔔 Recordatorio de audición enviado por WhatsApp."
             : action === "RESEND_CONFIRMATION"
-            ? "📱 Confirmación con folio reenviada por WhatsApp."
+            ? "📱 Notificación de consulta enviada por WhatsApp."
             : `Estatus actualizado a ${newStatus}.`
         );
         loadData();
-        if (selectedAudition && selectedAudition.id === id) {
-          setSelectedAudition(data.audition);
-        }
       }
     } catch (err) {
       console.error(err);
@@ -192,8 +196,8 @@ export default function AuditionsDashboardPage() {
   const exportCSV = () => {
     const headers = [
       "Folio",
-      "Nombre",
-      "Obra",
+      "Nombre Aspirante",
+      "Obra Postulada",
       "Telefono",
       "Email",
       "Canto Promedio",
@@ -202,6 +206,7 @@ export default function AuditionsDashboardPage() {
       "Puntaje Global",
       "Personaje Asignado",
       "Estatus",
+      "Jueces Evaluadores",
     ];
     const rows = auditions.map((a) => [
       a.folio,
@@ -215,13 +220,14 @@ export default function AuditionsDashboardPage() {
       a.overallScore || "N/A",
       `"${a.assignedRole || ""}"`,
       a.status,
+      `"${(a.scores || []).map((s) => `${s.judgeName} (${s.discipline})`).join("; ")}"`,
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `ranking_audiciones_dv_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute("download", `informe_casting_dv_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -235,13 +241,12 @@ export default function AuditionsDashboardPage() {
       a.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       a.phone.includes(searchTerm);
     const matchesStatus = statusFilter === "ALL" || a.status === statusFilter;
-    const matchesProgram = programFilter === "ALL" || a.programId === programFilter;
-    const matchesProduction = productionFilter === "ALL" || a.productionId === productionFilter;
+    const matchesProduction = productionFilter === "ALL" || a.productionId === productionFilter || a.productionName === productionFilter;
 
-    return matchesSearch && matchesStatus && matchesProgram && matchesProduction;
+    return matchesSearch && matchesStatus && matchesProduction;
   });
 
-  // Ranking: Sort by overallScore DESC (or canto/dance/acting)
+  // Ranking: Sort by overallScore DESC
   const rankedAuditions = [...filteredAuditions].sort((a, b) => {
     const scoreA = a.overallScore || 0;
     const scoreB = b.overallScore || 0;
@@ -258,17 +263,22 @@ export default function AuditionsDashboardPage() {
         </div>
       )}
 
-      {/* Header */}
+      {/* Main Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-[#30363D]">
         <div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-3">
-            <span>Audiciones, Jurado & Asignación de Casting</span>
-            <span className="text-xs font-mono bg-purple-600/20 text-purple-400 border border-purple-500/30 px-2.5 py-0.5 rounded-full font-bold">
-              {auditions.length} Aspirantes
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono bg-purple-600/20 text-purple-400 border border-purple-500/30 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+              Casting & Jurados
             </span>
+            <span className="text-xs text-slate-400 font-mono">
+              Folios: <strong className="text-white font-bold">DV-501..DV-585</strong>
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-1 flex items-center gap-3">
+            <span>Sistema Integral de Audiciones, Jurados & Casting</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Revisa las calificaciones de los jueces en Canto, Danza y Actuación, consulta el ranking en tiempo real y asigna personajes con notificación automática.
+            Gestión correlacionada de obras, mesas de jurados por disciplina, ranking en vivo y asignación de personajes con notificación automatizada.
           </p>
         </div>
 
@@ -278,7 +288,7 @@ export default function AuditionsDashboardPage() {
             target="_blank"
             className="px-4 py-2 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 shadow-lg shadow-purple-950/40"
           >
-            <span>⭐ Abrir Panel de Jueces</span>
+            <span>⚖️ Abrir Portal de Jueces</span>
             <span className="text-[10px] bg-white/20 px-1.5 py-0.2 rounded font-mono">/jueces ↗</span>
           </Link>
 
@@ -286,14 +296,67 @@ export default function AuditionsDashboardPage() {
             onClick={exportCSV}
             className="px-3.5 py-2 bg-[#21262D] hover:bg-[#30363D] text-slate-200 border border-[#30363D] rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
           >
-            <span>📥 Exportar Ranking CSV</span>
+            <span>📥 Exportar Informe CSV</span>
           </button>
         </div>
       </div>
 
-      {/* Navigation Tabs */}
+      {/* Production Filter Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#161B22] p-3 rounded-2xl border border-[#30363D]">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+            <span>🎭</span>
+            <span>Filtrar por Producción / Obra:</span>
+          </span>
+          <select
+            value={productionFilter}
+            onChange={(e) => setProductionFilter(e.target.value)}
+            className="bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-xl px-3 py-1.5 text-xs text-white font-bold focus:outline-none"
+          >
+            <option value="ALL">🌟 Todas las Producciones & Montajes</option>
+            {productions.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.title} {p.isAuditionActive ? " (Convocatoria Activa)" : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Global KPI Summary Pills */}
+        {stats && (
+          <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+            <span className="bg-[#0D1117] border border-[#30363D] px-2.5 py-1 rounded-lg text-slate-300">
+              Total: <strong className="text-white">{stats.totalAuditions}</strong>
+            </span>
+            <span className="bg-emerald-950/60 border border-emerald-500/40 px-2.5 py-1 rounded-lg text-emerald-300 font-bold">
+              Aprobados: {stats.approvedCount} ({stats.approvalRate}%)
+            </span>
+            <span className="bg-amber-950/60 border border-amber-500/40 px-2.5 py-1 rounded-lg text-amber-300 font-bold">
+              Pendientes: {stats.pendingCount}
+            </span>
+            <span className="bg-rose-950/60 border border-rose-500/40 px-2.5 py-1 rounded-lg text-rose-300 font-bold">
+              No Seleccionados: {stats.rejectedCount}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Main Navigation Tabs */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-[#161B22] p-2 rounded-2xl border border-[#30363D]">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          
+          <button
+            onClick={() => setActiveTab("reports")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+              activeTab === "reports"
+                ? "bg-purple-600 text-white shadow-lg shadow-purple-950/50"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <span>📊</span>
+            <span>Informes & Métricas de Casting</span>
+          </button>
+
           <button
             onClick={() => setActiveTab("ranking")}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
@@ -303,7 +366,7 @@ export default function AuditionsDashboardPage() {
             }`}
           >
             <span>🏆</span>
-            <span>Ranking & Leaderboard de Casting</span>
+            <span>Ranking de Jurados (Leaderboard)</span>
             <span className="text-[10px] font-mono bg-black/40 px-1.5 py-0.5 rounded font-bold">
               {auditions.filter((a) => a.overallScore !== undefined).length}
             </span>
@@ -318,7 +381,7 @@ export default function AuditionsDashboardPage() {
             }`}
           >
             <span>📋</span>
-            <span>Lista General de Aspirantes</span>
+            <span>Lista General de Aspirantes ({auditions.length})</span>
           </button>
 
           <button
@@ -338,7 +401,7 @@ export default function AuditionsDashboardPage() {
         <div className="flex-1 max-w-xs">
           <input
             type="text"
-            placeholder="Buscar por folio o nombre..."
+            placeholder="Buscar por folio, nombre o teléfono..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none font-sans"
@@ -346,7 +409,243 @@ export default function AuditionsDashboardPage() {
         </div>
       </div>
 
-      {/* ================= TAB 1: RANKING & LEADERBOARD ================= */}
+      {/* ================= TAB 1: INFORMES & METRICAS (REPORTS) ================= */}
+      {activeTab === "reports" && stats && (
+        <div className="flex flex-col gap-6">
+          
+          {/* Main KPI Cards Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            
+            <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-4 flex flex-col gap-1 shadow-sm">
+              <span className="text-[10px] font-mono uppercase text-slate-400 font-bold">Total Registrados</span>
+              <span className="text-2xl sm:text-3xl font-black text-white">{stats.totalAuditions}</span>
+              <span className="text-[10px] text-purple-400 font-mono mt-1">100% Convocatoria</span>
+            </div>
+
+            <div className="bg-[#161B22] border border-emerald-500/40 rounded-2xl p-4 flex flex-col gap-1 shadow-sm bg-emerald-950/20">
+              <span className="text-[10px] font-mono uppercase text-emerald-400 font-bold">Aprobados / Elenco</span>
+              <span className="text-2xl sm:text-3xl font-black text-emerald-400">{stats.approvedCount}</span>
+              <span className="text-[10px] text-emerald-300 font-mono mt-1">{stats.approvalRate}% Selección</span>
+            </div>
+
+            <div className="bg-[#161B22] border border-amber-500/40 rounded-2xl p-4 flex flex-col gap-1 shadow-sm bg-amber-950/20">
+              <span className="text-[10px] font-mono uppercase text-amber-400 font-bold">En Deliberación</span>
+              <span className="text-2xl sm:text-3xl font-black text-amber-400">{stats.pendingCount}</span>
+              <span className="text-[10px] text-amber-300 font-mono mt-1">Evaluación abierta</span>
+            </div>
+
+            <div className="bg-[#161B22] border border-rose-500/40 rounded-2xl p-4 flex flex-col gap-1 shadow-sm bg-rose-950/20">
+              <span className="text-[10px] font-mono uppercase text-rose-400 font-bold">No Seleccionados</span>
+              <span className="text-2xl sm:text-3xl font-black text-rose-400">{stats.rejectedCount}</span>
+              <span className="text-[10px] text-slate-400 font-mono mt-1">Agradecimiento formal</span>
+            </div>
+
+            <div className="bg-[#161B22] border border-purple-500/40 rounded-2xl p-4 flex flex-col gap-1 shadow-sm bg-purple-950/20">
+              <span className="text-[10px] font-mono uppercase text-purple-300 font-bold">Roles Asignados</span>
+              <span className="text-2xl sm:text-3xl font-black text-purple-300">{stats.assignedRolesCount}</span>
+              <span className="text-[10px] text-purple-400 font-mono mt-1">Con papel definido</span>
+            </div>
+
+            <div className="bg-[#161B22] border border-amber-400/40 rounded-2xl p-4 flex flex-col gap-1 shadow-sm bg-amber-950/30">
+              <span className="text-[10px] font-mono uppercase text-amber-300 font-bold">Promedio Global Jurado</span>
+              <span className="text-2xl sm:text-3xl font-black text-amber-300">
+                {stats.averageScores.overall > 0 ? `${stats.averageScores.overall} ⭐` : "N/A"}
+              </span>
+              <span className="text-[10px] text-amber-400 font-mono mt-1">Escala de 0 a 10</span>
+            </div>
+
+          </div>
+
+          {/* Discipline Average Scores Bar */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <div className="p-4 bg-[#161B22] border border-[#30363D] rounded-2xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🎤</span>
+                <div>
+                  <span className="text-xs font-bold text-white block">Promedio Mesa de Canto</span>
+                  <span className="text-[11px] text-slate-400">Afinación, tesitura y dicción</span>
+                </div>
+              </div>
+              <span className="text-xl font-black font-mono text-purple-400 bg-purple-950/60 border border-purple-500/40 px-3 py-1 rounded-xl">
+                {stats.averageScores.canto > 0 ? `${stats.averageScores.canto}/10` : "-"}
+              </span>
+            </div>
+
+            <div className="p-4 bg-[#161B22] border border-[#30363D] rounded-2xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">💃</span>
+                <div>
+                  <span className="text-xs font-bold text-white block">Promedio Mesa de Coreografía</span>
+                  <span className="text-[11px] text-slate-400">Ritmo, coordinación y técnica</span>
+                </div>
+              </div>
+              <span className="text-xl font-black font-mono text-rose-400 bg-rose-950/60 border border-rose-500/40 px-3 py-1 rounded-xl">
+                {stats.averageScores.dance > 0 ? `${stats.averageScores.dance}/10` : "-"}
+              </span>
+            </div>
+
+            <div className="p-4 bg-[#161B22] border border-[#30363D] rounded-2xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🎭</span>
+                <div>
+                  <span className="text-xs font-bold text-white block">Promedio Mesa de Actuación</span>
+                  <span className="text-[11px] text-slate-400">Interpretación y proyección</span>
+                </div>
+              </div>
+              <span className="text-xl font-black font-mono text-amber-400 bg-amber-950/60 border border-amber-500/40 px-3 py-1 rounded-xl">
+                {stats.averageScores.acting > 0 ? `${stats.averageScores.acting}/10` : "-"}
+              </span>
+            </div>
+
+          </div>
+
+          {/* Breakdown Tables Grid: By Production & By Judge */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Table: Breakdown by Production */}
+            <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-5 flex flex-col gap-3">
+              <div className="flex items-center justify-between border-b border-[#30363D] pb-3">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <span>🎭</span> Desglose de Casting por Producción / Obra
+                </h3>
+                <Link
+                  href="/dashboard/producciones"
+                  className="text-xs text-purple-400 hover:text-purple-300 font-mono"
+                >
+                  Gestionar Obras ↗
+                </Link>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-[#0D1117] text-slate-400 font-mono text-[10px] uppercase border-b border-[#30363D]">
+                      <th className="py-2.5 px-3">Obra / Montaje</th>
+                      <th className="py-2.5 px-3 text-center">Registrados</th>
+                      <th className="py-2.5 px-3 text-center text-emerald-400">Aprobados</th>
+                      <th className="py-2.5 px-3 text-center text-amber-400">Pendientes</th>
+                      <th className="py-2.5 px-3 text-center text-rose-400">No Selec.</th>
+                      <th className="py-2.5 px-3 text-center">Promedio</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#30363D]/60 text-slate-300 font-mono">
+                    {stats.byProduction.map((prod) => (
+                      <tr key={prod.productionId} className="hover:bg-[#21262D]/50">
+                        <td className="py-2.5 px-3 font-sans">
+                          <span className="font-bold text-white block">{prod.productionName}</span>
+                          {prod.isAuditionActive && (
+                            <span className="text-[10px] text-emerald-400 font-mono">● Convocatoria Activa</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 text-center font-bold text-white">{prod.total}</td>
+                        <td className="py-2.5 px-3 text-center font-bold text-emerald-400">{prod.approved}</td>
+                        <td className="py-2.5 px-3 text-center text-amber-400">{prod.pending}</td>
+                        <td className="py-2.5 px-3 text-center text-rose-400">{prod.rejected}</td>
+                        <td className="py-2.5 px-3 text-center font-bold text-amber-300">
+                          {prod.averageScore > 0 ? `${prod.averageScore}/10` : "-"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Table: Breakdown by Judge / Teacher Activity */}
+            <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-5 flex flex-col gap-3">
+              <div className="flex items-center justify-between border-b border-[#30363D] pb-3">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <span>⚖️</span> Actividad & Evaluaciones por Juez / Docente
+                </h3>
+                <Link
+                  href="/jueces"
+                  target="_blank"
+                  className="text-xs text-purple-400 hover:text-purple-300 font-mono"
+                >
+                  Portal Jueces ↗
+                </Link>
+              </div>
+
+              {stats.byJudge.length === 0 ? (
+                <div className="py-8 text-center text-slate-500 font-mono text-xs">
+                  Aún no hay calificaciones registradas por los jueces. Entra a <Link href="/jueces" className="text-purple-400 underline">/jueces</Link> para comenzar.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-[#0D1117] text-slate-400 font-mono text-[10px] uppercase border-b border-[#30363D]">
+                        <th className="py-2.5 px-3">Docente / Juez</th>
+                        <th className="py-2.5 px-3 text-center">Disciplinas</th>
+                        <th className="py-2.5 px-3 text-center">Evaluaciones</th>
+                        <th className="py-2.5 px-3 text-center">Promedio Otorgado</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#30363D]/60 text-slate-300 font-mono">
+                      {stats.byJudge.map((j) => (
+                        <tr key={j.judgeName} className="hover:bg-[#21262D]/50">
+                          <td className="py-2.5 px-3 font-sans">
+                            <span className="font-bold text-white block">{j.judgeName}</span>
+                            <span className="text-[10px] text-slate-400">{j.judgeTitle}</span>
+                          </td>
+                          <td className="py-2.5 px-3 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              {j.disciplines.map((d) => (
+                                <span key={d} className="px-1.5 py-0.5 bg-[#0D1117] border border-[#30363D] rounded text-[10px]">
+                                  {d === "CANTO" ? "🎤" : d === "COREOGRAFIA" ? "💃" : "🎭"}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-3 text-center font-bold text-purple-400">
+                            {j.evaluationsCount} alumnos
+                          </td>
+                          <td className="py-2.5 px-3 text-center font-bold text-amber-300">
+                            {j.averageScoreGiven} / 10 ⭐
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+          </div>
+
+          {/* Recent Evaluations Activity Feed */}
+          {stats.recentActivity.length > 0 && (
+            <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-5 flex flex-col gap-3">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2 border-b border-[#30363D] pb-3">
+                <span>⏱️</span> Registro Reciente de Evaluaciones en Vivo
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {stats.recentActivity.map((act) => (
+                  <div
+                    key={act.id}
+                    className="p-3 bg-[#0D1117] border border-[#30363D] rounded-xl flex items-center justify-between text-xs"
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-bold text-white">{act.candidateName}</span>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        Folio: {act.folio} &bull; Juez: {act.judgeName}
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-end font-mono">
+                      <span className="font-black text-amber-400">{act.averageScore} / 10</span>
+                      <span className="text-[10px] text-purple-400 uppercase font-bold">{act.discipline}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
+      )}
+
+      {/* ================= TAB 2: RANKING DE CASTING (LEADERBOARD) ================= */}
       {activeTab === "ranking" && (
         <div className="flex flex-col gap-4">
           <div className="bg-[#161B22] border border-[#30363D] rounded-2xl overflow-hidden shadow-sm">
@@ -382,7 +681,7 @@ export default function AuditionsDashboardPage() {
                 <thead>
                   <tr className="bg-[#161B22] text-slate-400 font-mono text-[11px] uppercase border-b border-[#30363D]">
                     <th className="py-3 px-4 text-center">Pos.</th>
-                    <th className="py-3 px-4">Aspirante & Folio</th>
+                    <th className="py-3 px-4">Folio & Aspirante</th>
                     <th className="py-3 px-4">Obra Postulada</th>
                     <th className="py-3 px-4 text-center">🎤 Canto</th>
                     <th className="py-3 px-4 text-center">💃 Coreo</th>
@@ -424,12 +723,14 @@ export default function AuditionsDashboardPage() {
                             )}
                           </td>
 
-                          {/* Candidate Name & Folio */}
+                          {/* Candidate Name & Short Folio */}
                           <td className="py-3 px-4">
                             <div className="flex flex-col">
                               <span className="font-bold text-white text-sm">{aud.fullName}</span>
                               <div className="flex items-center gap-2 mt-0.5 font-mono text-[10px] text-slate-400">
-                                <span className="text-purple-400 font-bold">{aud.folio}</span>
+                                <span className="text-purple-400 font-bold bg-purple-950/80 px-1.5 py-0.2 rounded border border-purple-500/30">
+                                  {aud.folio}
+                                </span>
                                 <span>&bull;</span>
                                 <span>{aud.phone}</span>
                               </div>
@@ -524,7 +825,7 @@ export default function AuditionsDashboardPage() {
         </div>
       )}
 
-      {/* ================= TAB 2: GENERAL APPLICANTS LIST ================= */}
+      {/* ================= TAB 3: GENERAL APPLICANTS LIST ================= */}
       {activeTab === "list" && (
         <div className="bg-[#161B22] border border-[#30363D] rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
@@ -599,7 +900,7 @@ export default function AuditionsDashboardPage() {
         </div>
       )}
 
-      {/* ================= TAB 3: RUBRICS & CRITERIA MANAGER ================= */}
+      {/* ================= TAB 4: RUBRICS & CRITERIA MANAGER ================= */}
       {activeTab === "rubrics" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
