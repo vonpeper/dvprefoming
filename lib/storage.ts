@@ -518,13 +518,24 @@ export function saveStoredTeachers(teachers: Teacher[]) {
 }
 
 export function inferTeacherDiscipline(teacher: Teacher): EvaluationDiscipline {
-  const text = `${teacher.fullName} ${(teacher.specialties || []).join(" ")} ${teacher.bio || ""}`.toLowerCase();
+  const specs = (teacher.specialties || []).join(" ").toLowerCase();
+  const text = `${teacher.fullName} ${specs} ${teacher.bio || ""}`.toLowerCase();
+
+  // 1. Vocal / Singing takes precedence if in specialties or specific keywords
+  if (specs.includes("vocal") || specs.includes("canto") || specs.includes("ópera") || specs.includes("lírico") || specs.includes("música")) {
+    return "CANTO";
+  }
+
+  // 2. Dance / Choreography
   if (text.includes("danza") || text.includes("baile") || text.includes("coreograf") || text.includes("hip hop") || text.includes("jazz") || text.includes("urbano")) {
     return "COREOGRAFIA";
   }
+
+  // 3. Acting / Stage Direction
   if (text.includes("actua") || text.includes("teatro") || text.includes("escén") || text.includes("interpret") || text.includes("dirección") || text.includes("texto")) {
     return "ACTUACION";
   }
+
   return "CANTO";
 }
 
