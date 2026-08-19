@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { MediaItem } from "@/lib/media-storage";
 
 interface ImageUploaderProps {
@@ -8,7 +8,7 @@ interface ImageUploaderProps {
   onChange: (url: string) => void;
   label?: string;
   aspectRatio?: "3:4" | "16:9" | "1:1" | "4:3" | "3:2" | "auto";
-  recommendedSize?: string; // e.g. "800 x 1067 px"
+  recommendedSize?: string; // e.g. "800 × 1067 px (3:4 Vertical)"
   previewClassName?: string;
   description?: string;
 }
@@ -27,6 +27,7 @@ export default function ImageUploader({
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [loadingGallery, setLoadingGallery] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [currentDimensions, setCurrentDimensions] = useState<{ width: number; height: number } | null>(null);
 
   // Auto derive recommended size if not explicitly provided
   const derivedSize =
@@ -42,6 +43,22 @@ export default function ImageUploader({
       : aspectRatio === "4:3"
       ? "800 × 600 px (4:3)"
       : "1200 × 800 px");
+
+  // Load natural dimensions of current image
+  useEffect(() => {
+    if (value && typeof window !== "undefined") {
+      const img = new Image();
+      img.onload = () => {
+        setCurrentDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+      };
+      img.onerror = () => {
+        setCurrentDimensions(null);
+      };
+      img.src = value;
+    } else {
+      setCurrentDimensions(null);
+    }
+  }, [value]);
 
   const handleFileUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -95,15 +112,23 @@ export default function ImageUploader({
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      {/* Label and Recommended Dimensions Badge */}
+    <div className="flex flex-col gap-2.5">
+      {/* Label and High-Visibility Dimension Badge Header */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        {label && <label className="text-xs font-bold text-slate-200">{label}</label>}
+        {label && (
+          <label className="text-xs font-black uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
+            <span>📷</span>
+            <span>{label}</span>
+          </label>
+        )}
         
         {derivedSize && (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-mono font-bold bg-purple-950/60 text-purple-300 border border-purple-500/40 shadow-sm">
-            <span>📐 Tamaño recomendado:</span>
-            <span className="text-white font-black">{derivedSize}</span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-black bg-gradient-to-r from-purple-900/90 to-rose-900/90 text-white border-2 border-purple-400 shadow-md shadow-purple-950/50">
+            <span className="text-amber-300 animate-pulse">📐</span>
+            <span className="text-zinc-300 font-normal">Tamaño requerido:</span>
+            <span className="text-white font-black underline decoration-purple-400 decoration-2 underline-offset-2">
+              {derivedSize}
+            </span>
           </span>
         )}
       </div>
@@ -116,8 +141,10 @@ export default function ImageUploader({
         }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
-        className={`relative bg-[#0D1117] border-2 rounded-xl p-4 flex flex-col sm:flex-row gap-5 items-center transition-all ${
-          dragOver ? "border-purple-500 bg-purple-950/20 shadow-lg shadow-purple-950/50" : "border-[#30363D] hover:border-slate-500"
+        className={`relative bg-[#0D1117] border-2 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row gap-5 items-center transition-all ${
+          dragOver
+            ? "border-purple-400 bg-purple-950/30 shadow-xl shadow-purple-950/60"
+            : "border-[#30363D] hover:border-purple-500/70"
         }`}
       >
         {/* Hidden native input */}
@@ -129,73 +156,88 @@ export default function ImageUploader({
           onChange={(e) => handleFileUpload(e.target.files)}
         />
 
-        {/* Thumbnail Preview Area with Aspect Ratio Sizing */}
+        {/* Thumbnail Preview Area with Aspect Ratio Sizing & Dimensions Overlay */}
         <div
-          className={`relative bg-black rounded-lg overflow-hidden border border-[#30363D] shrink-0 flex items-center justify-center ${
+          className={`relative bg-black rounded-xl overflow-hidden border-2 border-[#30363D] shrink-0 flex items-center justify-center shadow-inner ${
             aspectRatio === "3:4"
-              ? "w-24 h-32"
+              ? "w-28 h-36"
               : aspectRatio === "1:1"
-              ? "w-28 h-28"
+              ? "w-32 h-32"
               : aspectRatio === "16:9"
-              ? "w-40 h-24"
+              ? "w-44 h-28"
               : aspectRatio === "3:2"
-              ? "w-36 h-24"
+              ? "w-40 h-28"
               : aspectRatio === "4:3"
-              ? "w-32 h-24"
-              : "w-28 h-28"
+              ? "w-36 h-28"
+              : "w-32 h-32"
           }`}
         >
           {value ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={value} alt="Preview" className="w-full h-full object-cover" />
           ) : (
-            <div className="flex flex-col items-center justify-center p-2 text-center text-slate-500">
-              <span className="text-lg">🖼️</span>
-              <span className="text-[10px] font-mono mt-1">Sin imagen</span>
+            <div className="flex flex-col items-center justify-center p-2 text-center text-slate-500 gap-1">
+              <span className="text-2xl">🖼️</span>
+              <span className="text-[10px] font-mono text-zinc-400">Sin imagen</span>
+            </div>
+          )}
+
+          {/* Current resolution badge over image thumbnail */}
+          {currentDimensions && (
+            <div className="absolute bottom-0 inset-x-0 bg-black/80 backdrop-blur-xs py-0.5 px-1 text-center font-mono text-[9px] text-emerald-400 font-bold border-t border-emerald-500/30">
+              {currentDimensions.width} × {currentDimensions.height} px
             </div>
           )}
 
           {uploading && (
-            <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-1.5 p-2 text-center">
-              <span className="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
-              <span className="text-[9px] font-mono text-purple-300">Procesando WebP...</span>
+            <div className="absolute inset-0 bg-black/85 backdrop-blur-xs flex flex-col items-center justify-center gap-1.5 p-2 text-center">
+              <span className="w-6 h-6 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+              <span className="text-[10px] font-mono text-purple-300 font-bold">Procesando WebP...</span>
             </div>
           )}
         </div>
 
         {/* Controls & Path Input */}
-        <div className="flex-1 flex flex-col justify-between gap-3 w-full">
-          <div className="flex flex-col gap-1">
-            <div className="flex flex-wrap items-center gap-2">
+        <div className="flex-1 flex flex-col justify-between gap-3.5 w-full">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex flex-wrap items-center gap-2.5">
               <button
                 type="button"
                 disabled={uploading}
                 onClick={() => fileInputRef.current?.click()}
-                className="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-purple-950/40 cursor-pointer disabled:opacity-50"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
-                <span>Subir / Reemplazar Imagen</span>
+                <span>Subir / Reemplazar Foto</span>
               </button>
 
               <button
                 type="button"
                 onClick={openGalleryModal}
-                className="px-3.5 py-2 bg-[#21262D] hover:bg-[#30363D] text-slate-200 border border-[#30363D] rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 bg-[#21262D] hover:bg-[#30363D] text-slate-200 border border-[#30363D] rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow"
               >
                 <span>📁 Galería de Medios</span>
               </button>
             </div>
             
-            <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5">
-              <span>ℹ️</span>
-              <span>{description}</span>
-            </p>
+            {/* Dimension guidance callout inside box */}
+            <div className="p-2.5 bg-[#161B22] border border-purple-500/30 rounded-xl flex items-center justify-between gap-2 mt-1 text-[11px]">
+              <div className="flex items-center gap-1.5 text-zinc-300">
+                <span className="text-purple-400 font-bold">📐 Dimensión requerida:</span>
+                <span className="font-mono font-bold text-white bg-purple-950/80 px-2 py-0.5 rounded border border-purple-500/40">
+                  {derivedSize}
+                </span>
+              </div>
+              <span className="text-[10px] text-zinc-400 font-mono hidden sm:inline">WebP &bull; JPG &bull; PNG</span>
+            </div>
+
+            <p className="text-[11px] text-slate-400 mt-0.5">{description}</p>
           </div>
 
           {/* Direct URL text field */}
-          <div className="flex items-center bg-[#161B22] border border-[#30363D] rounded-lg px-2.5 py-1.5 text-xs">
+          <div className="flex items-center bg-[#161B22] border border-[#30363D] focus-within:border-purple-500 rounded-xl px-3 py-2 text-xs">
             <span className="text-slate-500 font-mono text-[10px] mr-2 shrink-0">Ruta / URL:</span>
             <input
               type="text"

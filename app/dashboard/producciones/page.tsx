@@ -179,10 +179,13 @@ export default function ProductionsDashboardPage() {
               <p className="text-xs text-slate-300 line-clamp-2 max-w-xl">
                 {activeAudition.synopsis || "Los alumnos postulados en la página web están aplicando actualmente para esta producción."}
               </p>
-              <div className="text-[11px] text-red-400 font-mono font-semibold flex items-center gap-2 mt-1">
+              <div className="flex flex-wrap items-center gap-3 text-[11px] text-red-400 font-mono font-semibold mt-1">
                 <span>📍 Dirección: {activeAudition.director}</span>
                 <span>&bull;</span>
                 <span>📅 Fechas: {activeAudition.auditionDates || "Convocatoria Abierta"}</span>
+                <span className="bg-red-900/60 border border-red-500/50 text-white px-2 py-0.5 rounded text-[10px] font-bold">
+                  📐 Medida de Imagen: 800 × 1067 px (3:4) o 1200 × 675 px (16:9)
+                </span>
               </div>
             </div>
           </div>
@@ -190,9 +193,9 @@ export default function ProductionsDashboardPage() {
           <div className="shrink-0 flex flex-col gap-2">
             <button
               onClick={() => openEditModal(activeAudition)}
-              className="px-4 py-2 bg-[#21262D] hover:bg-[#30363D] text-slate-200 border border-[#30363D] rounded-lg text-xs font-semibold transition-colors"
+              className="px-4 py-2 bg-[#21262D] hover:bg-[#30363D] text-slate-200 border border-[#30363D] rounded-lg text-xs font-semibold transition-colors cursor-pointer"
             >
-              Editar Convocatoria
+              Editar Convocatoria & Foto
             </button>
           </div>
         </div>
