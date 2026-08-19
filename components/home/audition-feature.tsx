@@ -195,60 +195,60 @@ export default function AuditionFeature() {
         </div>
 
         {/* ================= SMARTPHONE CHAT & REGISTRATION SIMULATION ================= */}
-        <div className="w-full max-w-[490px] bg-[#0E0E14] border-4 border-[#2C2C3E] rounded-[3.2rem] shadow-[0_30px_90px_rgba(0,0,0,0.9)] p-4 sm:p-6 relative overflow-hidden ring-1 ring-white/10">
+        <div className="w-full max-w-[490px] bg-[#111118] border-4 border-[#28283C] rounded-[3.2rem] shadow-[0_30px_90px_rgba(0,0,0,0.9)] p-3 sm:p-4 relative overflow-hidden ring-1 ring-white/10">
           
           {/* Speaker / Dynamic Island Top Bar */}
-          <div className="w-28 h-4 bg-black/90 rounded-full mx-auto mb-4 border border-white/10 flex items-center justify-center">
+          <div className="w-28 h-4 bg-black rounded-full mx-auto mb-3 border border-white/10 flex items-center justify-center">
             <span className="w-2.5 h-2.5 rounded-full bg-[#20202A]" />
           </div>
 
-          {/* Phone Top Header */}
-          <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#252532] px-2">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-purple-600/30 border border-purple-500/50 flex items-center justify-center text-purple-300 text-lg font-bold shadow-inner">
-                🎭
-              </div>
-              <div className="flex flex-col text-left">
-                <span className="text-sm font-bold text-white font-display">DV Performing Arts</span>
-                <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  En línea &bull; Registro Oficial
-                </span>
-              </div>
-            </div>
-            <span className="text-xs text-zinc-500 font-mono">León, GTO</span>
-          </div>
-
-          {/* Content Inside Smartphone */}
-          <div className="flex flex-col gap-3.5 min-h-[420px]">
+          {/* Clean White Phone Screen Body */}
+          <div className="bg-[#F2F4F7] rounded-[2.5rem] p-4 sm:p-5 flex flex-col gap-3.5 border border-slate-300 shadow-inner">
             
+            {/* Phone Top Header (Clean Light Theme) */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-300/80 px-1">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white text-lg font-bold shadow-md">
+                  🎭
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-sm font-black text-slate-900 font-display">DV Performing Arts</span>
+                  <span className="text-[11px] text-emerald-700 font-bold flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    En línea &bull; Registro Oficial
+                  </span>
+                </div>
+              </div>
+              <span className="text-xs text-slate-500 font-mono font-semibold">León, GTO</span>
+            </div>
+
             {/* Incoming Message 1 (Dynamic Greeting synced with selected production) */}
-            <div className="bg-[#181822] border border-[#2B2B3E] rounded-2xl rounded-tl-sm p-4 text-xs text-zinc-200 leading-relaxed shadow-sm text-left">
-              <p className="text-zinc-300">
-                ¡Hola! 🎭 Queremos conocer tu talento. Completa tu registro para asignarte tu folio oficial y cita de audición:
+            <div className="bg-white border border-slate-200/90 rounded-2xl rounded-tl-sm p-4 text-xs text-slate-700 leading-relaxed shadow-sm text-left">
+              <p className="font-medium text-slate-800">
+                ¡Hola! 🎭 Queremos conocer tu talento. Completa tu ficha de registro para asignarte tu folio oficial y cita de audición:
               </p>
               
               {/* Dynamic Active Production Banner that reacts to dropdown selection */}
               {activeProduction ? (
-                <div className="mt-3 p-3 bg-[#0E0E16] rounded-xl border border-purple-500/40 flex flex-col gap-1.5 shadow-inner">
+                <div className="mt-3 p-3 bg-gradient-to-r from-purple-50 to-fuchsia-50 rounded-xl border border-purple-200 flex flex-col gap-1 shadow-sm">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-purple-300 font-bold flex items-center gap-1.5 text-[11px]">
+                    <span className="text-purple-800 font-bold flex items-center gap-1.5 text-[11px]">
                       <span>🎬 Convocatoria Activa:</span>
                     </span>
-                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/50 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold">
+                    <span className="text-[10px] font-mono text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full font-bold">
                       ● Abierta
                     </span>
                   </div>
-                  <span className="text-white font-bold text-sm tracking-tight">{activeProduction.title}</span>
-                  <div className="flex items-center justify-between text-[10px] text-zinc-400 font-mono pt-1 border-t border-[#252535]">
+                  <span className="text-purple-950 font-extrabold text-sm tracking-tight">{activeProduction.title}</span>
+                  <div className="flex items-center justify-between text-[10px] text-slate-600 font-mono pt-1 border-t border-purple-200/80">
                     <span>{activeProduction.auditionDates || activeProduction.season || "Temporada 2026"}</span>
                     {activeProduction.auditionDeadline && (
-                      <span className="text-purple-300 font-semibold">Cierre: {activeProduction.auditionDeadline}</span>
+                      <span className="text-purple-700 font-bold">Cierre: {activeProduction.auditionDeadline}</span>
                     )}
                   </div>
                 </div>
               ) : (
-                <div className="mt-3 p-3 bg-[#0E0E16] rounded-xl border border-amber-500/40 text-amber-300 text-xs">
+                <div className="mt-3 p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs font-semibold">
                   ★ Convocatoria General para Próximos Montajes
                 </div>
               )}
@@ -258,29 +258,29 @@ export default function AuditionFeature() {
               /* Success / WhatsApp-style Confirmation Screen (Clean White Card) */
               <div className="flex flex-col gap-3 animate-fade-in my-auto py-2">
                 {/* Outgoing Message from User */}
-                <div className="bg-purple-950/70 border border-purple-500/40 rounded-2xl rounded-tr-sm p-3.5 text-xs text-purple-200 self-end max-w-[85%] text-left shadow-sm">
+                <div className="bg-purple-600 text-white rounded-2xl rounded-tr-sm p-3.5 text-xs self-end max-w-[85%] text-left shadow-md font-medium">
                   ✓ Envié mi registro de audición para <strong>{submittedData.productionName}</strong>.
                 </div>
 
                 {/* Incoming Message: Official Ticket & WhatsApp Dispatch (Crisp White Form Container) */}
-                <div className="bg-white border-2 border-emerald-200 rounded-3xl rounded-tl-sm p-6 text-xs text-slate-800 text-left flex flex-col gap-4 shadow-2xl">
-                  <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm">
+                <div className="bg-white border-2 border-emerald-300 rounded-3xl rounded-tl-sm p-5 sm:p-6 text-xs text-slate-800 text-left flex flex-col gap-4 shadow-xl">
+                  <div className="flex items-center gap-2 text-emerald-700 font-black text-sm">
                     <span className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-sm">✓</span>
                     <span>¡Tu registro ha sido exitoso!</span>
                   </div>
 
-                  <p className="text-slate-600 leading-relaxed">
-                    ¡Felicidades, <strong className="text-slate-900">{submittedData.fullName}</strong>! Tu postulación ha quedado registrada en la base de datos oficial de DV Performing Arts.
+                  <p className="text-slate-700 leading-relaxed">
+                    ¡Felicidades, <strong className="text-slate-900 font-bold">{submittedData.fullName}</strong>! Tu postulación ha quedado registrada en la base de datos oficial de DV Performing Arts.
                   </p>
 
                   {/* Folio Highlight Box in Light Theme */}
-                  <div className="bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-50 border-2 border-purple-300 rounded-2xl p-5 text-center flex flex-col gap-1.5 shadow-md">
-                    <span className="text-[11px] text-purple-800 font-mono uppercase font-bold tracking-wider">Tu Folio Único Oficial:</span>
+                  <div className="bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-50 border-2 border-purple-300 rounded-2xl p-4 sm:p-5 text-center flex flex-col gap-1.5 shadow-md">
+                    <span className="text-[11px] text-purple-900 font-mono uppercase font-bold tracking-wider">Tu Folio Único Oficial:</span>
                     <span className="font-mono text-3xl font-black text-purple-700 tracking-widest">{submittedData.folio}</span>
-                    <span className="text-[10px] text-slate-500 mt-0.5">Presenta este código al llegar a recepción</span>
+                    <span className="text-[10px] text-slate-600 mt-0.5">Presenta este código al llegar a recepción</span>
                   </div>
 
-                  <div className="text-[11px] text-slate-600 leading-relaxed border-t border-slate-200 pt-3 flex items-center gap-2">
+                  <div className="text-[11px] text-slate-700 leading-relaxed border-t border-slate-200 pt-3 flex items-center gap-2">
                     <span className="text-lg">📱</span>
                     <span>Hemos enviado los detalles, hora y recomendaciones a tu WhatsApp <strong className="text-slate-900">{submittedData.phone}</strong>.</span>
                   </div>
@@ -288,7 +288,7 @@ export default function AuditionFeature() {
                   <button
                     type="button"
                     onClick={() => setSubmittedData(null)}
-                    className="w-full mt-2 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-md"
+                    className="w-full mt-2 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-md"
                   >
                     Registrar a otro aspirante &rarr;
                   </button>
@@ -296,9 +296,9 @@ export default function AuditionFeature() {
               </div>
             ) : (
               /* Full Audition Registration Form (Crisp Clean White Container) */
-              <form onSubmit={handleSubmit} className="bg-white border-2 border-slate-200 rounded-3xl p-5 sm:p-6 flex flex-col gap-4 text-left shadow-[0_15px_40px_rgba(0,0,0,0.25)]">
+              <form onSubmit={handleSubmit} className="bg-white border-2 border-slate-200/90 rounded-3xl p-5 sm:p-6 flex flex-col gap-4 text-left shadow-[0_10px_30px_rgba(0,0,0,0.06)]">
                 {errorMessage && (
-                  <div className="p-3 bg-rose-50 border border-rose-300 rounded-xl text-rose-700 text-xs font-medium">
+                  <div className="p-3 bg-rose-50 border border-rose-300 rounded-xl text-rose-700 text-xs font-semibold">
                     ⚠️ {errorMessage}
                   </div>
                 )}
@@ -320,7 +320,7 @@ export default function AuditionFeature() {
                         productionName: selected ? selected.title : "Convocatoria General",
                       }));
                     }}
-                    className="w-full bg-[#F8F9FA] border-2 border-purple-200 focus:border-purple-600 focus:bg-white rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-bold focus:outline-none cursor-pointer shadow-sm"
+                    className="w-full bg-[#F8F9FA] border-2 border-purple-200 focus:border-purple-600 focus:bg-white rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-bold focus:outline-none cursor-pointer shadow-sm transition-all"
                   >
                     {productions.map((prod) => (
                       <option key={prod.id} value={prod.id} className="bg-white text-slate-900">
@@ -351,7 +351,7 @@ export default function AuditionFeature() {
                     Teléfono / WhatsApp (10 dígitos) *
                   </label>
                   <div className="flex items-center gap-2">
-                    <span className="bg-[#EEF2F6] border border-slate-300 px-3 py-2.5 rounded-xl text-slate-600 font-mono text-xs font-bold">
+                    <span className="bg-[#EEF2F6] border border-slate-300 px-3 py-2.5 rounded-xl text-slate-700 font-mono text-xs font-bold">
                       🇲🇽 +52
                     </span>
                     <input
@@ -395,7 +395,7 @@ export default function AuditionFeature() {
                         programName: selectedProg ? selectedProg.name : "Teatro Musical Integral",
                       });
                     }}
-                    className="w-full bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-medium focus:outline-none cursor-pointer"
+                    className="w-full bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-medium focus:outline-none cursor-pointer transition-all"
                   >
                     {programOptions.map((prog) => (
                       <option key={prog.id} value={prog.id} className="bg-white text-slate-900">
@@ -413,7 +413,7 @@ export default function AuditionFeature() {
                   <select
                     value={formData.preferredSchedule}
                     onChange={(e) => setFormData({ ...formData, preferredSchedule: e.target.value })}
-                    className="w-full bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-medium focus:outline-none cursor-pointer"
+                    className="w-full bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-medium focus:outline-none cursor-pointer transition-all"
                   >
                     {scheduleOptions.map((sch, sIdx) => (
                       <option key={sIdx} value={sch} className="bg-white text-slate-900">
@@ -458,7 +458,7 @@ export default function AuditionFeature() {
           </div>
 
           {/* Phone Bottom Home Bar */}
-          <div className="w-32 h-1 bg-white/20 rounded-full mx-auto mt-4" />
+          <div className="w-32 h-1 bg-white/20 rounded-full mx-auto mt-3" />
 
         </div>
 

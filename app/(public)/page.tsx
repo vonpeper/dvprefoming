@@ -19,6 +19,9 @@ import NewsSection from "@/components/home/news-section";
 import FinalCta from "@/components/home/final-cta";
 import { getLatestArticles } from "@/features/editorial/services/manifiesto";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Inicio | DV Performing Arts",
   description: "Plataforma de alta fidelidad para la academia de artes escénicas DV Performing Arts en León, Guanajuato.",
