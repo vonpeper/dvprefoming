@@ -30,7 +30,7 @@ export interface AuditionNotificationData {
 export interface EvolutionInstanceStatus {
   connected: boolean;
   instanceName: string;
-  state: "open" | "close" | "connecting" | "unconfigured";
+  state: "open" | "close" | "connecting" | "qrcode" | "unconfigured";
   profileName?: string;
   profilePictureUrl?: string;
 }

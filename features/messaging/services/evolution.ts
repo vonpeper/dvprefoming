@@ -175,7 +175,7 @@ export async function checkEvolutionInstance(): Promise<EvolutionInstanceStatus>
       return {
         connected: state === "open",
         instanceName: instance,
-        state: state === "open" ? "open" : "close",
+        state: state === "open" ? "open" : state === "connecting" ? "connecting" : "close",
         profileName: "DV Performing Arts",
       };
     }
@@ -188,4 +188,61 @@ export async function checkEvolutionInstance(): Promise<EvolutionInstanceStatus>
     instanceName: instance,
     state: "close",
   };
+}
+
+/**
+ * Fetches or generates the WhatsApp Connection QR code from Evolution API
+ */
+export async function getEvolutionQRCode(instanceName?: string): Promise<{
+  success: boolean;
+  pairingCode?: string;
+  code?: string;
+  base64?: string;
+  error?: string;
+}> {
+  const apiUrl = process.env.EVOLUTION_API_URL?.trim();
+  const apiKey = process.env.EVOLUTION_API_KEY?.trim();
+  const instance = instanceName || process.env.EVOLUTION_INSTANCE?.trim() || "dv_instance";
+
+  if (!apiUrl || apiUrl.includes("example.com") || !apiKey || apiKey.includes("apikey_")) {
+    // Return a mock base64 QR SVG for development preview
+    return {
+      success: true,
+      pairingCode: "DVPA-2026",
+      code: "2@demo_evolution_whatsapp_qr_code_dv_performing_arts",
+      base64: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'><rect width='240' height='240' fill='%23101017'/><rect x='20' y='20' width='60' height='60' fill='%2322C55E'/><rect x='30' y='30' width='40' height='40' fill='%23101017'/><rect x='40' y='40' width='20' height='20' fill='%2322C55E'/><rect x='160' y='20' width='60' height='60' fill='%2322C55E'/><rect x='170' y='30' width='40' height='40' fill='%23101017'/><rect x='180' y='40' width='20' height='20' fill='%2322C55E'/><rect x='20' y='160' width='60' height='60' fill='%2322C55E'/><rect x='30' y='170' width='40' height='40' fill='%23101017'/><rect x='40' y='180' width='20' height='20' fill='%2322C55E'/><circle cx='120' cy='120' r='18' fill='%23A855F7'/><text x='120' y='225' font-family='monospace' font-size='11' fill='%23FFFFFF' text-anchor='middle'>ESCANEAR CON WHATSAPP</text></svg>",
+    };
+  }
+
+  try {
+    const cleanUrl = apiUrl.replace(/\/$/, "");
+    const res = await fetch(`${cleanUrl}/instance/connect/${instance}`, {
+      method: "GET",
+      headers: {
+        "apikey": apiKey,
+      },
+      cache: "no-store",
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        success: true,
+        pairingCode: data?.pairingCode,
+        code: data?.code,
+        base64: data?.base64,
+      };
+    } else {
+      const errorText = await res.text();
+      return {
+        success: false,
+        error: `HTTP ${res.status}: ${errorText}`,
+      };
+    }
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err?.message || "Error al conectar con Evolution API para generar QR.",
+    };
+  }
 }
