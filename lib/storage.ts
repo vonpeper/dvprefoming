@@ -141,6 +141,16 @@ export function saveArticle(article: Partial<Article> & { title: string }): Arti
   return newArticle;
 }
 
+export function getArticleBySlug(slug: string): Article | null {
+  const articles = getStoredArticles();
+  return articles.find((a) => a.slug === slug || a.id === slug) || null;
+}
+
+export function getRelatedArticles(currentId: string, limit = 4): Article[] {
+  const articles = getStoredArticles();
+  return articles.filter((a) => a.id !== currentId && (a.status || "PUBLISHED") === "PUBLISHED").slice(0, limit);
+}
+
 export function deleteArticle(id: string): boolean {
   const articles = getStoredArticles();
   const filtered = articles.filter((a) => a.id !== id);
