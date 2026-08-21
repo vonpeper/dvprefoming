@@ -286,6 +286,31 @@ export default function JudgesPortalPage() {
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-rose-600/15 rounded-full blur-3xl pointer-events-none" />
 
+        {/* Top Header Return to Admin Bar */}
+        <div className="max-w-2xl w-full flex items-center justify-between pb-3 z-10">
+          <Link
+            href="/dashboard"
+            className="px-4 py-2.5 bg-gradient-to-r from-red-600 via-rose-600 to-purple-600 hover:from-red-500 hover:to-purple-500 text-white rounded-2xl text-xs font-black shadow-xl shadow-red-950/60 transition-all flex items-center gap-2 border border-red-400/40"
+          >
+            <span>← 🏠</span>
+            <span>Volver al Dashboard de Admin</span>
+          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/dashboard/audiciones"
+              className="text-xs text-purple-300 hover:text-white font-mono font-bold bg-[#141420] border border-purple-500/30 px-3 py-1.5 rounded-xl transition-colors"
+            >
+              📊 Ranking
+            </Link>
+            <Link
+              href="/dashboard/usuarios"
+              className="text-xs text-slate-300 hover:text-white font-mono bg-[#141420] border border-slate-700 px-3 py-1.5 rounded-xl transition-colors"
+            >
+              👥 Usuarios
+            </Link>
+          </div>
+        </div>
+
         <div className="max-w-2xl w-full bg-[#12121A]/95 backdrop-blur-2xl border-2 border-[#28283C] rounded-3xl p-6 sm:p-10 shadow-2xl relative z-10 flex flex-col gap-6">
           
           <div className="text-center flex flex-col items-center gap-2">
@@ -474,10 +499,10 @@ export default function JudgesPortalPage() {
             {currentUser?.role !== "DOCENTE_JUEZ" && (
               <Link
                 href="/dashboard"
-                className="px-3.5 py-1.5 bg-[#1F242C] hover:bg-[#2A313C] text-slate-200 hover:text-white border border-[#3A4350] rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+                className="px-4 py-2 bg-gradient-to-r from-red-600 via-rose-600 to-purple-600 hover:from-red-500 hover:to-purple-500 text-white border border-red-400/50 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-red-950/60 cursor-pointer"
               >
-                <span>🏠</span>
-                <span>Dashboard Principal</span>
+                <span>← 🏠</span>
+                <span>Dashboard Admin</span>
               </Link>
             )}
 
@@ -639,6 +664,17 @@ export default function JudgesPortalPage() {
         
         {/* Judge & Active Production Badge */}
         <div className="flex items-center gap-3">
+          {/* Main Dashboard Link (only for admins/editors) */}
+          {currentUser?.role !== "DOCENTE_JUEZ" && (
+            <Link
+              href="/dashboard"
+              className="px-3.5 py-1.5 bg-gradient-to-r from-red-600 via-rose-600 to-purple-600 hover:from-red-500 hover:to-purple-500 text-white border border-red-400/50 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-lg shadow-red-950/60 shrink-0 cursor-pointer"
+            >
+              <span>← 🏠</span>
+              <span>Dashboard Admin</span>
+            </Link>
+          )}
+
           <span className="text-2xl">⚖️</span>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
@@ -661,17 +697,6 @@ export default function JudgesPortalPage() {
         {/* Action Controls */}
         <div className="flex flex-wrap items-center gap-2.5">
           
-          {/* Main Dashboard Link (only for admins/editors) */}
-          {currentUser?.role !== "DOCENTE_JUEZ" && (
-            <Link
-              href="/dashboard"
-              className="px-3.5 py-1.5 bg-[#1F242C] hover:bg-[#2A313C] text-slate-200 hover:text-white border border-[#3A4350] rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
-            >
-              <span>🏠</span>
-              <span>Dashboard</span>
-            </Link>
-          )}
-
           {/* Switch Production Card Button */}
           <button
             onClick={() => setSelectedProduction(null)}
