@@ -70,7 +70,7 @@ export function resetLoginAttempts(ip: string) {
 }
 
 /**
- * Verify credentials
+ * Verify credentials against master admin (Edge-compatible)
  */
 export function verifyCredentials(user: string, pass: string): boolean {
   const inputUser = user.trim().toLowerCase();
@@ -100,10 +100,17 @@ function simpleSign(payloadStr: string): string {
 /**
  * Create a session token (Edge-compatible)
  */
-export function createSessionToken(username: string): string {
+export function createSessionToken(
+  userData: { username: string; role?: string; fullName?: string; id?: string } | string
+): string {
+  const username = typeof userData === "string" ? userData : userData.username;
+  const role = typeof userData === "string" ? "ADMIN" : userData.role || "ADMIN";
+  const fullName = typeof userData === "string" ? "Administrador" : userData.fullName || username;
+
   const payload = JSON.stringify({
     user: username,
-    role: "admin",
+    role,
+    fullName,
     iat: Date.now(),
     exp: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
   });
@@ -117,7 +124,7 @@ export function createSessionToken(username: string): string {
 /**
  * Validate a session token (Edge-compatible)
  */
-export function verifySessionToken(token: string): { valid: boolean; user?: string } {
+export function verifySessionToken(token: string): { valid: boolean; user?: string; role?: string; fullName?: string } {
   if (!token || !token.includes(".")) return { valid: false };
 
   const [base64Payload, signature] = token.split(".");
@@ -134,7 +141,12 @@ export function verifySessionToken(token: string): { valid: boolean; user?: stri
     if (payload.exp && payload.exp < Date.now()) {
       return { valid: false }; // Expired
     }
-    return { valid: true, user: payload.user };
+    return {
+      valid: true,
+      user: payload.user,
+      role: payload.role,
+      fullName: payload.fullName,
+    };
   } catch {
     return { valid: false };
   }

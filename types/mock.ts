@@ -137,3 +137,19 @@ export interface Article {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type UserRole = "ADMIN" | "DOCENTE_JUEZ" | "EDITOR";
+
+export interface UserAccount {
+  id: string;
+  username: string; // Email o nombre de usuario para inicio de sesión
+  fullName: string;
+  role: UserRole;
+  password?: string;
+  title?: string; // e.g. "Director General", "Docente de Danza"
+  status: "ACTIVE" | "INACTIVE";
+  lastLogin?: string;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+}
+

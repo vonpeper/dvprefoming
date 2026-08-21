@@ -1,6 +1,17 @@
 import fs from "fs";
 import path from "path";
-import { AuditionRegistration, Article, Program, Teacher, Production, EvaluationCriteria, AuditionScore, EvaluationDiscipline } from "@/types/mock";
+import {
+  AuditionRegistration,
+  Article,
+  Program,
+  Teacher,
+  Production,
+  EvaluationCriteria,
+  AuditionScore,
+  EvaluationDiscipline,
+  UserAccount,
+  UserRole,
+} from "@/types/mock";
 import { mockAuditions, mockArticles, mockPrograms, mockTeachers, mockProductions } from "@/data/mock";
 
 const DATA_DIR = path.join(process.cwd(), ".data");
@@ -1023,4 +1034,211 @@ export function getAuditionStats(productionFilter?: string): AuditionStats {
     recentActivity: recentActivity.slice(0, 15),
   };
 }
+
+// ---------------------------------------------------------------------------
+// User Accounts & Authentication Storage
+// ---------------------------------------------------------------------------
+const USERS_FILE = path.join(DATA_DIR, "users.json");
+
+export const DEFAULT_USERS: UserAccount[] = [
+  {
+    id: "usr_admin_master",
+    username: "admin@dvperformingarts.com",
+    fullName: "Diego Vieyra",
+    role: "ADMIN",
+    password: process.env.ADMIN_PASSWORD || "DVPerforming@2026!Admin",
+    title: "Director General & Fundador",
+    status: "ACTIVE",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "usr_fanny_monroy",
+    username: "fanny@dvperformingarts.com",
+    fullName: "Fanny Monroy",
+    role: "DOCENTE_JUEZ",
+    password: "DV@Docente2026",
+    title: "Directora Vocal & Maestra de Canto",
+    status: "ACTIVE",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "usr_andres_rodriguez",
+    username: "andres@dvperformingarts.com",
+    fullName: "Andrés Rodríguez",
+    role: "DOCENTE_JUEZ",
+    password: "DV@Docente2026",
+    title: "Coreógrafo & Director de Danza",
+    status: "ACTIVE",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "usr_angel_piedra",
+    username: "angel@dvperformingarts.com",
+    fullName: "Angel Piedra",
+    role: "DOCENTE_JUEZ",
+    password: "DV@Docente2026",
+    title: "Docente de Actuación & Texto Teatral",
+    status: "ACTIVE",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "usr_editor_prensa",
+    username: "prensa@dvperformingarts.com",
+    fullName: "Equipo Editorial DV",
+    role: "EDITOR",
+    password: "DV@Editor2026",
+    title: "Editor de Noticias & Revista",
+    status: "ACTIVE",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
+export function getStoredUsers(): UserAccount[] {
+  ensureDirectoryExists();
+  if (!fs.existsSync(USERS_FILE)) {
+    saveStoredUsers(DEFAULT_USERS);
+    return DEFAULT_USERS;
+  }
+  try {
+    const raw = fs.readFileSync(USERS_FILE, "utf-8");
+    const parsed: UserAccount[] = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      saveStoredUsers(DEFAULT_USERS);
+      return DEFAULT_USERS;
+    }
+    return parsed;
+  } catch {
+    return DEFAULT_USERS;
+  }
+}
+
+export function saveStoredUsers(users: UserAccount[]) {
+  ensureDirectoryExists();
+  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), "utf-8");
+}
+
+export function createUser(data: Omit<UserAccount, "id" | "createdAt" | "updatedAt">): UserAccount {
+  const users = getStoredUsers();
+  const cleanUsername = data.username.trim().toLowerCase();
+
+  // Check if username already exists
+  const existing = users.find((u) => u.username.toLowerCase() === cleanUsername);
+  if (existing) {
+    throw new Error(`El usuario o correo "${data.username}" ya está registrado.`);
+  }
+
+  const now = new Date().toISOString();
+  const newUser: UserAccount = {
+    id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    username: cleanUsername,
+    fullName: data.fullName.trim(),
+    role: data.role || "DOCENTE_JUEZ",
+    password: data.password || "DV@User2026",
+    title: data.title?.trim() || "Docente / Evaluador",
+    status: data.status || "ACTIVE",
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  users.push(newUser);
+  saveStoredUsers(users);
+  return newUser;
+}
+
+export function updateUser(id: string, updates: Partial<UserAccount>): UserAccount | null {
+  const users = getStoredUsers();
+  const index = users.findIndex((u) => u.id === id);
+  if (index === -1) return null;
+
+  const current = users[index];
+
+  // If changing username, check uniqueness
+  if (updates.username && updates.username.trim().toLowerCase() !== current.username.toLowerCase()) {
+    const cleanUsername = updates.username.trim().toLowerCase();
+    const clash = users.find((u) => u.id !== id && u.username.toLowerCase() === cleanUsername);
+    if (clash) {
+      throw new Error(`El usuario o correo "${updates.username}" ya pertenece a otra cuenta.`);
+    }
+    updates.username = cleanUsername;
+  }
+
+  const updated: UserAccount = {
+    ...current,
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
+
+  users[index] = updated;
+  saveStoredUsers(users);
+  return updated;
+}
+
+export function deleteUser(id: string): boolean {
+  const users = getStoredUsers();
+  const target = users.find((u) => u.id === id);
+  if (!target) return false;
+
+  // Prevent deleting the primary admin account
+  if (target.role === "ADMIN" && users.filter((u) => u.role === "ADMIN" && u.status === "ACTIVE").length <= 1) {
+    throw new Error("No es posible eliminar al único Administrador General activo.");
+  }
+
+  const filtered = users.filter((u) => u.id !== id);
+  saveStoredUsers(filtered);
+  return true;
+}
+
+export function authenticateStoredUser(
+  usernameInput: string,
+  passInput: string
+): { success: boolean; user?: UserAccount } {
+  const cleanInput = usernameInput.trim().toLowerCase();
+  const masterUser = (process.env.ADMIN_USER || "admin@dvperformingarts.com").toLowerCase();
+  const masterPass = process.env.ADMIN_PASSWORD || "DVPerforming@2026!Admin";
+
+  // 1. Check default master admin
+  if ((cleanInput === masterUser || cleanInput === "admin") && passInput === masterPass) {
+    return {
+      success: true,
+      user: {
+        id: "usr_admin_master",
+        username: masterUser,
+        fullName: "Diego Vieyra",
+        role: "ADMIN",
+        status: "ACTIVE",
+        title: "Director General & Fundador",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    };
+  }
+
+  // 2. Check stored users
+  try {
+    const users = getStoredUsers();
+    const found = users.find(
+      (u) =>
+        (u.username.toLowerCase() === cleanInput ||
+          (!cleanInput.includes("@") && u.username.toLowerCase().startsWith(cleanInput))) &&
+        u.status === "ACTIVE"
+    );
+
+    if (found && found.password && found.password === passInput) {
+      found.lastLogin = new Date().toISOString();
+      saveStoredUsers(users);
+      return { success: true, user: found };
+    }
+  } catch (err) {
+    console.error("[STORAGE AUTH ERROR]", err);
+  }
+
+  return { success: false };
+}
+
+
 

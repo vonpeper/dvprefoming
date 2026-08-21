@@ -380,22 +380,32 @@ export default function JudgesPortalPage() {
             >
               🚀 Continuar a Selección de Obra
             </button>
-          </form>
 
-          <div className="text-center pt-2 border-t border-[#202030] flex items-center justify-between">
-            <Link
-              href="/dashboard/audiciones"
-              className="text-xs text-zinc-500 hover:text-white transition-colors font-mono"
-            >
-              ← Ir a Control de Audiciones
-            </Link>
-            <Link
-              href="/dashboard/paginas"
-              className="text-xs text-purple-400 hover:underline font-mono"
-            >
-              Editar Planta Docente en CMS ↗
-            </Link>
-          </div>
+            <div className="text-center pt-3 border-t border-[#202030] flex flex-wrap items-center justify-between gap-2">
+              <Link
+                href="/dashboard"
+                className="px-3.5 py-2 bg-[#1F242C] hover:bg-[#2A313C] text-slate-200 hover:text-white border border-[#3A4350] rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+              >
+                <span>🏠</span>
+                <span>Regresar al Dashboard Principal</span>
+              </Link>
+
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/dashboard/audiciones"
+                  className="text-xs text-zinc-400 hover:text-white transition-colors font-mono"
+                >
+                  ← Ir a Control de Audiciones
+                </Link>
+                <Link
+                  href="/dashboard/usuarios"
+                  className="text-xs text-purple-400 hover:underline font-mono"
+                >
+                  Ajustes Usuarios ↗
+                </Link>
+              </div>
+            </div>
+          </form>
         </div>
       </div>
     );
@@ -419,6 +429,14 @@ export default function JudgesPortalPage() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <Link
+              href="/dashboard"
+              className="px-3.5 py-1.5 bg-[#1F242C] hover:bg-[#2A313C] text-slate-200 hover:text-white border border-[#3A4350] rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+            >
+              <span>🏠</span>
+              <span>Dashboard Principal</span>
+            </Link>
+
             <button
               onClick={handleLogout}
               className="px-3 py-1.5 bg-[#202030] hover:bg-[#2C2C40] text-zinc-300 border border-[#303046] rounded-xl text-xs font-semibold transition-colors cursor-pointer"
@@ -599,6 +617,15 @@ export default function JudgesPortalPage() {
         {/* Action Controls */}
         <div className="flex flex-wrap items-center gap-2.5">
           
+          {/* Main Dashboard Link */}
+          <Link
+            href="/dashboard"
+            className="px-3.5 py-1.5 bg-[#1F242C] hover:bg-[#2A313C] text-slate-200 hover:text-white border border-[#3A4350] rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+          >
+            <span>🏠</span>
+            <span>Dashboard</span>
+          </Link>
+
           {/* Switch Production Card Button */}
           <button
             onClick={() => setSelectedProduction(null)}

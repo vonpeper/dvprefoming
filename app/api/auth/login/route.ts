@@ -52,9 +52,10 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Verify credentials
-    const isValid = verifyCredentials(username, password);
+    const { authenticateStoredUser } = await import("@/lib/storage");
+    const authResult = authenticateStoredUser(username, password);
 
-    if (!isValid) {
+    if (!authResult.success || !authResult.user) {
       const record = recordFailedAttempt(ip);
       if (record.isLocked) {
         return NextResponse.json(
@@ -69,25 +70,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: `Credenciales incorrectas. Te quedan ${record.remainingAttempts} intento(s) antes del bloqueo de seguridad.`,
+          error: `Credenciales incorrectas o usuario inactivo. Te quedan ${record.remainingAttempts} intento(s) antes del bloqueo de seguridad.`,
           remainingAttempts: record.remainingAttempts,
         },
         { status: 401 }
       );
     }
 
-    // 3. Reset rate limiter on success
+    // 4. Reset rate limiter on success
     resetLoginAttempts(ip);
 
-    // 4. Generate signed session token
-    const token = createSessionToken(username);
+    // 5. Generate signed session token with user payload
+    const token = createSessionToken(authResult.user);
 
     const response = NextResponse.json({
       success: true,
       message: "Inicio de sesión exitoso.",
       user: {
-        username,
-        role: "admin",
+        id: authResult.user.id,
+        username: authResult.user.username,
+        fullName: authResult.user.fullName,
+        role: authResult.user.role,
+        title: authResult.user.title,
       },
     });
 
