@@ -7,6 +7,11 @@ import { usePathname, useRouter } from "next/navigation";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<{
+    username: string;
+    role: string;
+    fullName: string;
+  } | null>(null);
   const [evolutionStatus, setEvolutionStatus] = useState<{
     connected: boolean;
     state: string;
@@ -20,6 +25,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.authenticated && data.user) {
+          setCurrentUser(data.user);
+        }
+      })
+      .catch(() => {});
+
     fetch("/api/messaging/evolution/status")
       .then((res) => res.json())
       .then((data) => {
@@ -42,7 +56,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   };
 
-  const navItems = [
+  const isTeacher = currentUser?.role === "DOCENTE_JUEZ";
+
+  const allNavItems = [
     {
       label: "Resumen General",
       href: "/dashboard",
@@ -129,6 +145,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     },
   ];
 
+  const navItems = isTeacher
+    ? [
+        {
+          label: "⭐ Panel de Jueces (Mesa en Vivo)",
+          href: "/jueces",
+          badge: "En Vivo",
+          icon: (
+            <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+            </svg>
+          ),
+        },
+        {
+          label: "Ranking de Audiciones & Casting",
+          href: "/dashboard/audiciones",
+          badge: "Ranking",
+          icon: (
+            <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          ),
+        },
+      ]
+    : allNavItems;
+
   return (
     <div className="min-h-screen bg-[#0D1117] text-slate-100 flex flex-col font-sans selection:bg-red-500 selection:text-white">
       {/* Top Navbar */}
@@ -145,17 +186,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </svg>
           </button>
 
-          <Link href="/dashboard" className="flex items-center gap-3">
+          <Link href={isTeacher ? "/jueces" : "/dashboard"} className="flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/images/brand/logo-badge.png" alt="DV Logo" className="h-8 w-auto object-contain" />
             <div className="flex flex-col">
               <span className="font-bold text-sm tracking-wide text-white flex items-center gap-2">
                 DV PERFORMING ARTS
-                <span className="text-[10px] bg-red-600/30 text-red-400 border border-red-500/40 px-1.5 py-0.5 rounded font-mono font-semibold">
-                  ADMIN
+                <span className={`text-[10px] border px-1.5 py-0.5 rounded font-mono font-semibold ${
+                  isTeacher
+                    ? "bg-amber-600/30 text-amber-300 border-amber-500/40"
+                    : "bg-red-600/30 text-red-400 border-red-500/40"
+                }`}>
+                  {isTeacher ? "JURADO / DOCENTE" : "ADMIN"}
                 </span>
               </span>
-              <span className="text-[11px] text-slate-400">Panel de Control & CMS</span>
+              <span className="text-[11px] text-slate-400">
+                {isTeacher ? "Mesa de Calificación & Casting" : "Panel de Control & CMS"}
+              </span>
             </div>
           </Link>
         </div>
@@ -163,10 +210,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Right Actions & Status */}
         <div className="flex items-center gap-3 sm:gap-4">
           {/* Evolution API Pill */}
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-[#21262D] border border-[#30363D] rounded-full text-xs font-mono">
-            <span className={`w-2 h-2 rounded-full ${evolutionStatus.connected ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
-            <span className="text-slate-300">WhatsApp: {evolutionStatus.connected ? "Conectado" : "Simulado"}</span>
-          </div>
+          {!isTeacher && (
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-[#21262D] border border-[#30363D] rounded-full text-xs font-mono">
+              <span className={`w-2 h-2 rounded-full ${evolutionStatus.connected ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+              <span className="text-slate-300">WhatsApp: {evolutionStatus.connected ? "Conectado" : "Simulado"}</span>
+            </div>
+          )}
 
           <Link
             href="/"
@@ -182,12 +231,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* User Profile & Logout */}
           <div className="flex items-center gap-3 pl-2 border-l border-[#30363D]">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center font-bold text-white text-xs shadow">
-                DV
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs shadow ${
+                isTeacher ? "bg-amber-600" : "bg-red-600"
+              }`}>
+                {currentUser?.fullName ? currentUser.fullName.charAt(0).toUpperCase() : "DV"}
               </div>
               <div className="hidden md:flex flex-col text-left">
-                <span className="text-xs font-semibold text-white">admin@dvperformingarts.com</span>
-                <span className="text-[10px] text-emerald-400 font-mono">Sesión Segura</span>
+                <span className="text-xs font-semibold text-white">
+                  {currentUser?.fullName || currentUser?.username || "admin@dvperformingarts.com"}
+                </span>
+                <span className="text-[10px] text-emerald-400 font-mono">
+                  {isTeacher ? "Docente Activo" : "Sesión Segura"}
+                </span>
               </div>
             </div>
 

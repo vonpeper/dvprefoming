@@ -36,7 +36,11 @@ export default function DashboardLoginPage() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        router.push("/dashboard");
+        if (data.user?.role === "DOCENTE_JUEZ") {
+          router.push("/jueces");
+        } else {
+          router.push("/dashboard");
+        }
         router.refresh();
       } else {
         setErrorMsg(data.error || "Credenciales incorrectas.");

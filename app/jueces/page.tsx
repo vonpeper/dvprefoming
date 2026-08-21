@@ -17,6 +17,13 @@ export default function JudgesPortalPage() {
   const [discipline, setDiscipline] = useState<EvaluationDiscipline>("CANTO");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  // Current User Session & Role
+  const [currentUser, setCurrentUser] = useState<{
+    username: string;
+    role: string;
+    fullName: string;
+  } | null>(null);
+
   // Selected Production (null means show production selection cards gallery)
   const [selectedProduction, setSelectedProduction] = useState<Production | "ALL" | null>(null);
 
@@ -39,21 +46,40 @@ export default function JudgesPortalPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [critRes, audRes, prodRes, teachRes] = await Promise.all([
+      const [critRes, audRes, prodRes, teachRes, meRes] = await Promise.all([
         fetch("/api/auditions/criteria"),
         fetch("/api/auditions/list"),
         fetch("/api/productions"),
         fetch("/api/teachers"),
+        fetch("/api/auth/me").catch(() => null),
       ]);
 
       const critData = await critRes.json();
       const audData = await audRes.json();
       const prodData = await prodRes.json();
       const teachData = await teachRes.json();
+      const meData = meRes ? await meRes.json() : null;
 
       if (critData?.criteria) setCriteria(critData.criteria);
       if (prodData?.productions) setProductions(prodData.productions);
       if (teachData?.teachers) setTeachers(teachData.teachers);
+
+      if (meData?.authenticated && meData.user) {
+        setCurrentUser(meData.user);
+        if (meData.user.role === "DOCENTE_JUEZ" && meData.user.fullName) {
+          setJudgeName(meData.user.fullName);
+          const teacherObj = (teachData?.teachers || []).find(
+            (t: any) => t.fullName.toLowerCase() === meData.user.fullName.toLowerCase()
+          );
+          if (teacherObj) {
+            setJudgeTitle(teacherObj.title || "Docente Titular");
+            if (teacherObj.defaultDiscipline) {
+              setDiscipline(teacherObj.defaultDiscipline);
+            }
+          }
+          setIsLoggedIn(true);
+        }
+      }
 
       const audList: AuditionRegistration[] = audData?.auditions || audData?.registrations || [];
       setAuditions(audList);
@@ -99,10 +125,14 @@ export default function JudgesPortalPage() {
     setIsLoggedIn(true);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     localStorage.removeItem("dv_judge_session");
     setIsLoggedIn(false);
     setSelectedProduction(null);
+    if (currentUser?.role === "DOCENTE_JUEZ") {
+      await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+      window.location.href = "/admin";
+    }
   };
 
   const selectTeacherPreset = (teacher: Teacher & { defaultDiscipline?: EvaluationDiscipline }) => {
@@ -382,27 +412,39 @@ export default function JudgesPortalPage() {
             </button>
 
             <div className="text-center pt-3 border-t border-[#202030] flex flex-wrap items-center justify-between gap-2">
-              <Link
-                href="/dashboard"
-                className="px-3.5 py-2 bg-[#1F242C] hover:bg-[#2A313C] text-slate-200 hover:text-white border border-[#3A4350] rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
-              >
-                <span>🏠</span>
-                <span>Regresar al Dashboard Principal</span>
-              </Link>
+              {currentUser?.role !== "DOCENTE_JUEZ" ? (
+                <Link
+                  href="/dashboard"
+                  className="px-3.5 py-2 bg-[#1F242C] hover:bg-[#2A313C] text-slate-200 hover:text-white border border-[#3A4350] rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  <span>🏠</span>
+                  <span>Regresar al Dashboard Principal</span>
+                </Link>
+              ) : (
+                <Link
+                  href="/dashboard/audiciones"
+                  className="px-3.5 py-2 bg-purple-950/80 hover:bg-purple-900 text-purple-200 hover:text-white border border-purple-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  <span>📊</span>
+                  <span>Ver Ranking de Casting</span>
+                </Link>
+              )}
 
               <div className="flex items-center gap-3">
                 <Link
                   href="/dashboard/audiciones"
                   className="text-xs text-zinc-400 hover:text-white transition-colors font-mono"
                 >
-                  ← Ir a Control de Audiciones
+                  Ranking de Casting ↗
                 </Link>
-                <Link
-                  href="/dashboard/usuarios"
-                  className="text-xs text-purple-400 hover:underline font-mono"
-                >
-                  Ajustes Usuarios ↗
-                </Link>
+                {currentUser?.role === "ADMIN" && (
+                  <Link
+                    href="/dashboard/usuarios"
+                    className="text-xs text-purple-400 hover:underline font-mono"
+                  >
+                    Ajustes Usuarios ↗
+                  </Link>
+                )}
               </div>
             </div>
           </form>
@@ -429,19 +471,21 @@ export default function JudgesPortalPage() {
           </div>
 
           <div className="flex items-center gap-2.5">
-            <Link
-              href="/dashboard"
-              className="px-3.5 py-1.5 bg-[#1F242C] hover:bg-[#2A313C] text-slate-200 hover:text-white border border-[#3A4350] rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
-            >
-              <span>🏠</span>
-              <span>Dashboard Principal</span>
-            </Link>
+            {currentUser?.role !== "DOCENTE_JUEZ" && (
+              <Link
+                href="/dashboard"
+                className="px-3.5 py-1.5 bg-[#1F242C] hover:bg-[#2A313C] text-slate-200 hover:text-white border border-[#3A4350] rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+              >
+                <span>🏠</span>
+                <span>Dashboard Principal</span>
+              </Link>
+            )}
 
             <button
               onClick={handleLogout}
               className="px-3 py-1.5 bg-[#202030] hover:bg-[#2C2C40] text-zinc-300 border border-[#303046] rounded-xl text-xs font-semibold transition-colors cursor-pointer"
             >
-              🔄 Cambiar Juez
+              🔄 {currentUser?.role === "DOCENTE_JUEZ" ? "Cerrar Sesión" : "Cambiar Juez"}
             </button>
             <Link
               href="/dashboard/audiciones"
@@ -617,14 +661,16 @@ export default function JudgesPortalPage() {
         {/* Action Controls */}
         <div className="flex flex-wrap items-center gap-2.5">
           
-          {/* Main Dashboard Link */}
-          <Link
-            href="/dashboard"
-            className="px-3.5 py-1.5 bg-[#1F242C] hover:bg-[#2A313C] text-slate-200 hover:text-white border border-[#3A4350] rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
-          >
-            <span>🏠</span>
-            <span>Dashboard</span>
-          </Link>
+          {/* Main Dashboard Link (only for admins/editors) */}
+          {currentUser?.role !== "DOCENTE_JUEZ" && (
+            <Link
+              href="/dashboard"
+              className="px-3.5 py-1.5 bg-[#1F242C] hover:bg-[#2A313C] text-slate-200 hover:text-white border border-[#3A4350] rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+            >
+              <span>🏠</span>
+              <span>Dashboard</span>
+            </Link>
+          )}
 
           {/* Switch Production Card Button */}
           <button
@@ -654,7 +700,7 @@ export default function JudgesPortalPage() {
             onClick={handleLogout}
             className="px-3 py-1.5 bg-[#202030] hover:bg-[#2C2C40] text-zinc-300 border border-[#303046] rounded-xl text-xs font-semibold transition-colors cursor-pointer"
           >
-            🔄 Cambiar Juez
+            🔄 {currentUser?.role === "DOCENTE_JUEZ" ? "Cerrar Sesión" : "Cambiar Juez"}
           </button>
 
           <Link

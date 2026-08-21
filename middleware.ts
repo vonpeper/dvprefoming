@@ -13,8 +13,11 @@ export function middleware(req: NextRequest) {
   // 2. Admin Login routes (/admin and /dashboard/login)
   if (pathname === "/admin" || pathname === "/dashboard/login") {
     if (sessionCookie) {
-      const { valid } = verifySessionToken(sessionCookie);
+      const { valid, role } = verifySessionToken(sessionCookie);
       if (valid) {
+        if (role === "DOCENTE_JUEZ") {
+          return NextResponse.redirect(new URL("/jueces", req.url));
+        }
         return NextResponse.redirect(new URL("/dashboard", req.url));
       }
     }
@@ -31,13 +34,22 @@ export function middleware(req: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    const { valid } = verifySessionToken(sessionCookie);
+    const { valid, role } = verifySessionToken(sessionCookie);
     if (!valid) {
       const loginUrl = new URL("/admin", req.url);
       loginUrl.searchParams.set("redirect", pathname);
       const res = NextResponse.redirect(loginUrl);
       res.cookies.delete("dv_admin_session");
       return res;
+    }
+
+    // Role-based restrictions:
+    // Teachers (DOCENTE_JUEZ) only have access to /jueces and casting leaderboard /dashboard/audiciones.
+    // If they attempt to access other admin dashboard pages, redirect them to /jueces.
+    if (role === "DOCENTE_JUEZ") {
+      if (pathname !== "/dashboard/audiciones") {
+        return NextResponse.redirect(new URL("/jueces", req.url));
+      }
     }
   }
 
