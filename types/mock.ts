@@ -84,6 +84,17 @@ export interface AuditionScore {
   createdAt: Date | string;
 }
 
+export type AuditionStatus =
+  | "PENDING_REVIEW"
+  | "ATTENDED"
+  | "APPROVED"
+  | "NO_SHOW"
+  | "SECOND_CHANCE"
+  | "REJECTED"
+  | "BLACKLIST"
+  | "CONFIRMED"
+  | "DRAFT";
+
 export interface AuditionRegistration {
   id: string;
   folio: string; // Structured sequence string (e.g. AUD-2026-DV-0042)
@@ -98,7 +109,7 @@ export interface AuditionRegistration {
   programName?: string; // e.g. "Teatro Musical Integral"
   preferredSchedule?: string; // e.g. "Turno Vespertino 16:00 - 20:00"
   experienceNotes: string;
-  status: "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "CONFIRMED" | "DRAFT";
+  status: AuditionStatus;
   whatsappNotified?: boolean;
   emailNotified?: boolean;
   auditionNumber?: number | string;
@@ -112,6 +123,13 @@ export interface AuditionRegistration {
   danceAverage?: number;
   actingAverage?: number;
   overallScore?: number;
+
+  // Pipeline & Lifecycle Fields
+  secondChanceDate?: string;
+  secondChanceTime?: string;
+  secondChanceNotifiedAt?: Date | string;
+  blacklistReason?: string;
+  blacklistDate?: Date | string;
 
   createdAt: Date;
   updatedAt: Date;

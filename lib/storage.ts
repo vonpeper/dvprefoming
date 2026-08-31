@@ -847,11 +847,87 @@ export function saveAuditionScore(data: {
     );
   }
 
+  // Auto-mark candidate as ATTENDED if they were in PENDING_REVIEW, NO_SHOW or SECOND_CHANCE and have no assigned role yet
+  if (!audition.assignedRole && (audition.status === "PENDING_REVIEW" || audition.status === "NO_SHOW" || audition.status === "SECOND_CHANCE" || !audition.status)) {
+    audition.status = "ATTENDED";
+  }
+
   audition.updatedAt = new Date();
   auditions[idx] = audition;
   saveStoredAuditions(auditions);
 
   return scoreEntry;
+}
+
+export function markNoShowsForProduction(productionId?: string): { markedCount: number; updated: AuditionRegistration[] } {
+  const auditions = getStoredAuditions();
+  let markedCount = 0;
+
+  const updated = auditions.map((a) => {
+    const matchesProd = !productionId || productionId === "ALL" || a.productionId === productionId || a.productionName === productionId;
+    const hasScores = a.scores && a.scores.length > 0;
+    
+    // Only candidates who match production, have 0 scores, and are in PENDING_REVIEW or not yet evaluated
+    if (matchesProd && !hasScores && (a.status === "PENDING_REVIEW" || !a.status)) {
+      markedCount++;
+      return {
+        ...a,
+        status: "NO_SHOW" as const,
+        updatedAt: new Date(),
+      };
+    }
+    return a;
+  });
+
+  if (markedCount > 0) {
+    saveStoredAuditions(updated);
+  }
+
+  return { markedCount, updated };
+}
+
+export function bulkUpdateAuditionStatus(
+  ids: string[],
+  newStatus: any,
+  metadata?: {
+    reason?: string;
+    secondChanceDate?: string;
+    secondChanceTime?: string;
+  }
+): { successCount: number } {
+  const auditions = getStoredAuditions();
+  const idSet = new Set(ids);
+  let successCount = 0;
+  const now = new Date();
+
+  const updated = auditions.map((a) => {
+    if (idSet.has(a.id) || idSet.has(a.folio)) {
+      successCount++;
+      const item: AuditionRegistration = {
+        ...a,
+        status: newStatus,
+        updatedAt: now,
+      };
+
+      if (newStatus === "BLACKLIST") {
+        item.blacklistReason = metadata?.reason || "Inasistencia reiterada / vetado de audición";
+        item.blacklistDate = now;
+      } else if (newStatus === "SECOND_CHANCE") {
+        if (metadata?.secondChanceDate) item.secondChanceDate = metadata.secondChanceDate;
+        if (metadata?.secondChanceTime) item.secondChanceTime = metadata.secondChanceTime;
+        item.secondChanceNotifiedAt = now;
+      }
+
+      return item;
+    }
+    return a;
+  });
+
+  if (successCount > 0) {
+    saveStoredAuditions(updated);
+  }
+
+  return { successCount };
 }
 
 export function assignRoleToApplicant(
@@ -880,8 +956,12 @@ export function assignRoleToApplicant(
 export interface AuditionStats {
   totalAuditions: number;
   approvedCount: number;
-  rejectedCount: number;
+  attendedCount: number;
   pendingCount: number;
+  noShowCount: number;
+  secondChanceCount: number;
+  rejectedCount: number;
+  blacklistCount: number;
   confirmedCount: number;
   approvalRate: number;
   assignedRolesCount: number;
@@ -896,6 +976,9 @@ export interface AuditionStats {
     productionName: string;
     total: number;
     approved: number;
+    attended: number;
+    noShow: number;
+    secondChance: number;
     rejected: number;
     pending: number;
     averageScore: number;
@@ -931,9 +1014,13 @@ export function getAuditionStats(productionFilter?: string): AuditionStats {
 
   const totalAuditions = filtered.length;
   const approvedCount = filtered.filter((a) => a.status === "APPROVED").length;
+  const attendedCount = filtered.filter((a) => a.status === "ATTENDED" || (a.scores && a.scores.length > 0 && a.status !== "APPROVED" && a.status !== "BLACKLIST")).length;
+  const noShowCount = filtered.filter((a) => a.status === "NO_SHOW").length;
+  const secondChanceCount = filtered.filter((a) => a.status === "SECOND_CHANCE").length;
   const rejectedCount = filtered.filter((a) => a.status === "REJECTED").length;
+  const blacklistCount = filtered.filter((a) => a.status === "BLACKLIST").length;
   const confirmedCount = filtered.filter((a) => a.status === "CONFIRMED").length;
-  const pendingCount = totalAuditions - approvedCount - rejectedCount;
+  const pendingCount = filtered.filter((a) => a.status === "PENDING_REVIEW" || !a.status).length;
   const assignedRolesCount = filtered.filter((a) => Boolean(a.assignedRole && a.assignedRole.trim())).length;
   const approvalRate = totalAuditions > 0 ? Number(((approvedCount / totalAuditions) * 100).toFixed(1)) : 0;
 
@@ -955,9 +1042,13 @@ export function getAuditionStats(productionFilter?: string): AuditionStats {
     const prodAuditions = allAuditions.filter(
       (a) => a.productionId === prod.id || a.productionName === prod.title
     );
-    const pApproved = prodAuditions.filter((a) => a.status === "APPROVED").length;
+    const pApproved = prodAuditions.filter((a) => a.status === "APPROVED" || Boolean(a.assignedRole)).length;
+    const pAttended = prodAuditions.filter((a) => a.status === "ATTENDED" || (a.scores && a.scores.length > 0)).length;
+    const pNoShow = prodAuditions.filter((a) => a.status === "NO_SHOW").length;
+    const pSecondChance = prodAuditions.filter((a) => a.status === "SECOND_CHANCE").length;
     const pRejected = prodAuditions.filter((a) => a.status === "REJECTED").length;
-    const pPending = prodAuditions.length - pApproved - pRejected;
+    const pBlacklist = prodAuditions.filter((a) => a.status === "BLACKLIST").length;
+    const pPending = prodAuditions.filter((a) => a.status === "PENDING_REVIEW" || !a.status).length;
     const pScores = prodAuditions.filter((a) => a.overallScore !== undefined && a.overallScore > 0).map((a) => a.overallScore!);
     const pAvg = pScores.length > 0 ? Number((pScores.reduce((a, b) => a + b, 0) / pScores.length).toFixed(2)) : 0;
 
@@ -966,7 +1057,11 @@ export function getAuditionStats(productionFilter?: string): AuditionStats {
       productionName: prod.title,
       total: prodAuditions.length,
       approved: pApproved,
+      attended: pAttended,
+      noShow: pNoShow,
+      secondChance: pSecondChance,
       rejected: pRejected,
+      blacklist: pBlacklist,
       pending: pPending,
       averageScore: pAvg,
       isAuditionActive: Boolean(prod.isAuditionActive),
@@ -1023,7 +1118,11 @@ export function getAuditionStats(productionFilter?: string): AuditionStats {
   return {
     totalAuditions,
     approvedCount,
+    attendedCount,
+    noShowCount,
+    secondChanceCount,
     rejectedCount,
+    blacklistCount,
     pendingCount,
     confirmedCount,
     approvalRate,

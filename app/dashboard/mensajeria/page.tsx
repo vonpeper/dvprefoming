@@ -548,7 +548,7 @@ export default function MessagingDashboardPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-300">Usuario / Correo Emisor</label>
+              <label className="text-xs font-semibold text-slate-300">Usuario / Correo Emisor Workspace</label>
               <input
                 type="email"
                 value={settings.smtpUser || "contacto@dvperformingarts.com"}
@@ -565,6 +565,19 @@ export default function MessagingDashboardPage() {
                 onChange={(e) => setSettings({ ...settings, smtpFrom: e.target.value })}
                 className="bg-[#0D1117] border border-[#30363D] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-mono"
               />
+            </div>
+
+            {/* Quick Tutorial Callout */}
+            <div className="p-4 bg-[#0D1117] border border-purple-500/30 rounded-xl flex flex-col gap-2">
+              <span className="text-xs font-bold text-purple-300 flex items-center gap-1.5">
+                <span>💡</span> ¿Cómo conectar tu cuenta de Google Workspace?
+              </span>
+              <ol className="text-[11px] text-slate-300 list-decimal list-inside flex flex-col gap-1">
+                <li>Ve a <strong>myaccount.google.com/security</strong> con tu cuenta institucional.</li>
+                <li>Activa la <strong>Verificación en dos pasos (2FA)</strong>.</li>
+                <li>Busca <strong>"Contraseñas de aplicaciones"</strong> y crea una llamada <code className="text-purple-300">DV Platform</code>.</li>
+                <li>Copia la clave de 16 caracteres y asígnala en la variable de entorno <code className="text-purple-300">SMTP_PASS</code> en el servidor.</li>
+              </ol>
             </div>
           </div>
 
@@ -636,7 +649,7 @@ export default function MessagingDashboardPage() {
                 <h2 className="text-base font-bold text-white flex items-center gap-2">
                   <span>📱</span> Estado de Instancia de WhatsApp
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">Conexión con Evolution API</p>
+                <p className="text-xs text-slate-400 mt-1">Conexión en vivo con Evolution API</p>
               </div>
 
               <button
@@ -658,7 +671,7 @@ export default function MessagingDashboardPage() {
                 />
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-white">
-                    {status?.connected ? "Conectado / En Línea" : "Desconectado"}
+                    {status?.connected ? "✓ Conectado / En Línea (Listo para disparar mensajes)" : "✕ Desconectado / Sin vincular"}
                   </span>
                   <span className="text-[10px] text-slate-400 font-mono">
                     Instancia: {status?.instanceName || "dv_instance"} &bull; Estado: {status?.state || "close"}
@@ -675,7 +688,7 @@ export default function MessagingDashboardPage() {
 
             <button
               onClick={handleRequestQR}
-              className="py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-2"
+              className="py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/40"
             >
               <span>📲</span>
               <span>Vincular Nuevo Teléfono / Ver Código QR</span>
@@ -747,41 +760,64 @@ export default function MessagingDashboardPage() {
       {/* QR Modal */}
       {qrModalOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => setQrModalOpen(false)}
         >
           <div
-            className="bg-[#161B22] border-2 border-emerald-500/50 rounded-3xl max-w-sm w-full p-6 text-center flex flex-col items-center gap-4 shadow-2xl"
+            className="bg-[#161B22] border-2 border-emerald-500/70 rounded-3xl max-w-sm w-full p-6 text-center flex flex-col items-center gap-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-white">Escanea el Código QR</h3>
-            <p className="text-xs text-slate-400">
-              Abre WhatsApp en tu teléfono ➔ Dispositivos Vinculados ➔ Vincular Dispositivo.
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">📱</span>
+              <h3 className="text-base font-black text-white uppercase tracking-tight">Escanea el Código QR</h3>
+            </div>
+            
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Abre WhatsApp en tu teléfono ➔ <strong>Dispositivos Vinculados</strong> ➔ <strong>Vincular Dispositivo</strong> y apunta la cámara a la pantalla.
             </p>
 
             {qrLoading ? (
-              <div className="py-12 text-slate-400 font-mono text-xs animate-pulse">
-                Generando código QR...
+              <div className="py-16 flex flex-col items-center gap-3 text-slate-400 font-mono text-xs animate-pulse">
+                <span className="text-2xl animate-spin">⏳</span>
+                <span>Generando código QR con Evolution API...</span>
               </div>
             ) : qrBase64 ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={qrBase64.startsWith("data:") ? qrBase64 : `data:image/png;base64,${qrBase64}`}
-                alt="QR Code"
-                className="w-56 h-56 bg-white p-2 rounded-2xl shadow"
-              />
+              <div className="flex flex-col items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={qrBase64.startsWith("data:") ? qrBase64 : `data:image/png;base64,${qrBase64}`}
+                  alt="QR Code de WhatsApp"
+                  className="w-60 h-60 bg-white p-3 rounded-2xl shadow-xl border-4 border-emerald-500/50"
+                />
+                <span className="text-[10px] text-emerald-400 font-mono font-bold animate-pulse">
+                  ● Esperando escaneo desde WhatsApp...
+                </span>
+              </div>
             ) : (
-              <div className="p-4 bg-rose-950/40 text-rose-300 text-xs rounded-xl">
+              <div className="p-4 bg-rose-950/40 text-rose-300 text-xs rounded-xl border border-rose-500/40">
                 {qrError || "No disponible."}
               </div>
             )}
 
-            <button
-              onClick={() => setQrModalOpen(false)}
-              className="mt-2 w-full py-2.5 bg-[#21262D] hover:bg-[#30363D] text-white text-xs font-bold rounded-xl"
-            >
-              Cerrar
-            </button>
+            <div className="flex items-center gap-2 w-full mt-2">
+              <button
+                type="button"
+                onClick={handleRequestQR}
+                className="flex-1 py-2.5 bg-[#21262D] hover:bg-[#30363D] text-slate-200 text-xs font-bold rounded-xl border border-[#30363D] transition-colors"
+              >
+                🔄 Recargar QR
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setQrModalOpen(false);
+                  checkStatus();
+                }}
+                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-colors"
+              >
+                Listo / Cerrar
+              </button>
+            </div>
           </div>
         </div>
       )}
