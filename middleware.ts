@@ -18,8 +18,11 @@ export function middleware(req: NextRequest) {
     if (sessionCookie) {
       const { valid, role } = verifySessionToken(sessionCookie);
       if (valid) {
-        if (role === "DOCENTE_JUEZ") {
+        if (role === "MAESTRO" || role === "DOCENTE_JUEZ") {
           return NextResponse.redirect(new URL("/jueces", req.url));
+        }
+        if (role === "ALUMNO") {
+          return NextResponse.redirect(new URL("/", req.url));
         }
         const redirectParam = req.nextUrl.searchParams.get("redirect");
         const destination = redirectParam && redirectParam.startsWith("/") ? redirectParam : "/dashboard";
@@ -49,12 +52,17 @@ export function middleware(req: NextRequest) {
     }
 
     // Role-based restrictions:
-    // Teachers (DOCENTE_JUEZ) only have access to /jueces and casting leaderboard /dashboard/audiciones.
+    // Teachers (MAESTRO / DOCENTE_JUEZ) only have access to /jueces and casting leaderboard /dashboard/audiciones.
     // If they attempt to access other admin dashboard pages, redirect them to /jueces.
-    if (role === "DOCENTE_JUEZ") {
+    if (role === "MAESTRO" || role === "DOCENTE_JUEZ") {
       if (pathname !== "/dashboard/audiciones") {
         return NextResponse.redirect(new URL("/jueces", req.url));
       }
+    }
+
+    // Students (ALUMNO) do not have access to admin dashboard
+    if (role === "ALUMNO") {
+      return NextResponse.redirect(new URL("/", req.url));
     }
   }
 

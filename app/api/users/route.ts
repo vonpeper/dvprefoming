@@ -19,6 +19,7 @@ export async function GET(req: NextRequest) {
       username: u.username,
       fullName: u.fullName,
       role: u.role,
+      isJuror: Boolean(u.isJuror),
       title: u.title || "",
       phone: u.phone || "",
       assignedDiscipline: u.assignedDiscipline || "ALL",
@@ -44,7 +45,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { username, fullName, role, password, title, status, phone, assignedDiscipline } = body;
+    const { username, fullName, role, isJuror, password, title, status, phone, assignedDiscipline } = body;
 
     if (!username || !fullName || !password) {
       return NextResponse.json(
@@ -63,7 +64,8 @@ export async function POST(req: NextRequest) {
     const newUser = createUser({
       username,
       fullName,
-      role: role || "DOCENTE_JUEZ",
+      role: role || "MAESTRO",
+      isJuror: role === "ALUMNO" ? false : Boolean(isJuror),
       password,
       title: title || "",
       status: status || "ACTIVE",
@@ -79,6 +81,7 @@ export async function POST(req: NextRequest) {
         username: newUser.username,
         fullName: newUser.fullName,
         role: newUser.role,
+        isJuror: newUser.isJuror,
         title: newUser.title,
         phone: newUser.phone,
         assignedDiscipline: newUser.assignedDiscipline,
@@ -99,7 +102,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, username, fullName, role, password, title, status, phone, assignedDiscipline } = body;
+    const { id, username, fullName, role, isJuror, password, title, status, phone, assignedDiscipline } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -112,6 +115,7 @@ export async function PUT(req: NextRequest) {
     if (username !== undefined) updates.username = username;
     if (fullName !== undefined) updates.fullName = fullName;
     if (role !== undefined) updates.role = role;
+    if (isJuror !== undefined) updates.isJuror = isJuror;
     if (title !== undefined) updates.title = title;
     if (status !== undefined) updates.status = status;
     if (phone !== undefined) updates.phone = phone;
@@ -142,6 +146,7 @@ export async function PUT(req: NextRequest) {
         username: updated.username,
         fullName: updated.fullName,
         role: updated.role,
+        isJuror: updated.isJuror,
         title: updated.title,
         phone: updated.phone,
         assignedDiscipline: updated.assignedDiscipline,

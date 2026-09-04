@@ -9,6 +9,7 @@ interface UserItem {
   username: string;
   fullName: string;
   role: UserRole;
+  isJuror?: boolean;
   title?: string;
   phone?: string;
   assignedDiscipline?: "CANTO" | "COREOGRAFIA" | "ACTUACION" | "ALL";
@@ -39,10 +40,11 @@ export default function UsersSettingsPage() {
   const [formData, setFormData] = useState({
     username: "",
     fullName: "",
-    role: "DOCENTE_JUEZ" as UserRole,
+    role: "MAESTRO" as UserRole,
+    isJuror: false,
     title: "",
     phone: "",
-    assignedDiscipline: "ALL" as "CANTO" | "COREOGRAFIA" | "ACTUACION" | "ALL",
+    assignedDiscipline: "CANTO" as "CANTO" | "COREOGRAFIA" | "ACTUACION" | "ALL",
     password: "",
     status: "ACTIVE" as "ACTIVE" | "INACTIVE",
   });
@@ -87,10 +89,11 @@ export default function UsersSettingsPage() {
     setFormData({
       username: "",
       fullName: "",
-      role: "DOCENTE_JUEZ",
+      role: "MAESTRO",
+      isJuror: true,
       title: "",
       phone: "",
-      assignedDiscipline: "ALL",
+      assignedDiscipline: "CANTO",
       password: "",
       status: "ACTIVE",
     });
@@ -99,13 +102,15 @@ export default function UsersSettingsPage() {
 
   const openEditModal = (user: UserItem) => {
     setEditingUser(user);
+    const normalizedRole = (user.role === "DOCENTE_JUEZ" ? "MAESTRO" : user.role === "EDITOR" ? "ADMIN" : user.role) as UserRole;
     setFormData({
       username: user.username,
       fullName: user.fullName,
-      role: user.role,
+      role: normalizedRole,
+      isJuror: Boolean(user.isJuror),
       title: user.title || "",
       phone: user.phone || "",
-      assignedDiscipline: user.assignedDiscipline || "ALL",
+      assignedDiscipline: user.assignedDiscipline || "CANTO",
       password: "", // Leave blank unless changing
       status: user.status,
     });
@@ -119,9 +124,18 @@ export default function UsersSettingsPage() {
     setIsPasswordModalOpen(true);
   };
 
+  const handleRoleChange = (newRole: UserRole) => {
+    setFormData((prev) => ({
+      ...prev,
+      role: newRole,
+      // If switched to ALUMNO, automatically disable juror
+      isJuror: newRole === "ALUMNO" ? false : prev.isJuror,
+    }));
+  };
+
   const handleSendJurorInvite = async (user: UserItem) => {
     if (!user.phone && !user.username.includes("@")) {
-      showToast("error", "El docente requiere tener teléfono de WhatsApp o correo electrónico para recibir invitación.");
+      showToast("error", "El jurado requiere tener teléfono de WhatsApp o correo electrónico para recibir invitación.");
       return;
     }
 
@@ -131,7 +145,7 @@ export default function UsersSettingsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          jurorId: user.id,
+          userId: user.id,
           notifyWhatsApp: Boolean(user.phone),
           notifyEmail: user.username.includes("@"),
         }),
@@ -166,18 +180,19 @@ export default function UsersSettingsPage() {
 
     try {
       setSubmitting(true);
+      const payload: any = {
+        username: formData.username.trim(),
+        fullName: formData.fullName.trim(),
+        role: formData.role,
+        isJuror: formData.role === "ALUMNO" ? false : Boolean(formData.isJuror),
+        title: formData.title.trim(),
+        phone: formData.phone.trim(),
+        assignedDiscipline: formData.role === "ALUMNO" ? undefined : (formData.isJuror ? formData.assignedDiscipline : undefined),
+        status: formData.status,
+      };
+
       if (editingUser) {
-        // Update user
-        const payload: any = {
-          id: editingUser.id,
-          username: formData.username,
-          fullName: formData.fullName,
-          role: formData.role,
-          title: formData.title,
-          phone: formData.phone,
-          assignedDiscipline: formData.assignedDiscipline,
-          status: formData.status,
-        };
+        payload.id = editingUser.id;
         if (formData.password && formData.password.trim().length >= 6) {
           payload.password = formData.password.trim();
         }
@@ -196,11 +211,11 @@ export default function UsersSettingsPage() {
           showToast("error", data?.error || "Error al actualizar usuario.");
         }
       } else {
-        // Create user
+        payload.password = formData.password.trim();
         const res = await fetch("/api/users", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         });
         const data = await res.json();
         if (data?.success) {
@@ -305,6 +320,13 @@ export default function UsersSettingsPage() {
     }
   };
 
+  // Normalized Role helper
+  const getNormalizedRole = (role: UserRole): "ALUMNO" | "ADMIN" | "MAESTRO" => {
+    if (role === "DOCENTE_JUEZ") return "MAESTRO";
+    if (role === "EDITOR") return "ADMIN";
+    return role as "ALUMNO" | "ADMIN" | "MAESTRO";
+  };
+
   // Filtered Users
   const filteredUsers = users.filter((u) => {
     const term = searchTerm.toLowerCase().trim();
@@ -314,7 +336,14 @@ export default function UsersSettingsPage() {
       u.username.toLowerCase().includes(term) ||
       (u.title && u.title.toLowerCase().includes(term));
 
-    const matchesRole = roleFilter === "ALL" || u.role === roleFilter;
+    const normRole = getNormalizedRole(u.role);
+    let matchesRole = true;
+    if (roleFilter === "JUROR_ONLY") {
+      matchesRole = Boolean(u.isJuror);
+    } else if (roleFilter !== "ALL") {
+      matchesRole = normRole === roleFilter;
+    }
+
     const matchesStatus = statusFilter === "ALL" || u.status === statusFilter;
 
     return matchesSearch && matchesRole && matchesStatus;
@@ -322,9 +351,10 @@ export default function UsersSettingsPage() {
 
   // KPI Metrics
   const totalUsers = users.length;
-  const adminCount = users.filter((u) => u.role === "ADMIN").length;
-  const judgeCount = users.filter((u) => u.role === "DOCENTE_JUEZ").length;
-  const editorCount = users.filter((u) => u.role === "EDITOR").length;
+  const adminCount = users.filter((u) => getNormalizedRole(u.role) === "ADMIN").length;
+  const maestroCount = users.filter((u) => getNormalizedRole(u.role) === "MAESTRO").length;
+  const jurorCount = users.filter((u) => Boolean(u.isJuror)).length;
+  const alumnoCount = users.filter((u) => getNormalizedRole(u.role) === "ALUMNO").length;
   const activeCount = users.filter((u) => u.status === "ACTIVE").length;
 
   return (
@@ -347,17 +377,17 @@ export default function UsersSettingsPage() {
       {/* Top Header & Actions */}
       <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#30363D]">
         <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <span className="text-2xl">👥</span>
             <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight font-display">
-              Ajustes de Usuarios & Control de Acceso
+              Usuarios
             </h1>
-            <span className="bg-purple-950/80 text-purple-300 border border-purple-500/40 text-[10px] font-mono px-2 py-0.5 rounded-full font-bold">
+            <span className="bg-purple-950/80 text-purple-300 border border-purple-500/40 text-[11px] font-mono px-2.5 py-0.5 rounded-full font-bold">
               {users.length} Registrados
             </span>
           </div>
           <p className="text-xs text-slate-400">
-            Administra los accesos al CMS, credenciales de Jurados y Maestros para la Mesa de Jueces, y Editores de Contenido.
+            Administración de cuentas con roles estrictos (<strong>Alumno</strong>, <strong>Admin</strong>, <strong>Maestro</strong>) y asignación de Jurados Calificadores.
           </p>
         </div>
 
@@ -367,7 +397,7 @@ export default function UsersSettingsPage() {
             className="px-3.5 py-2 bg-[#21262D] hover:bg-[#30363D] text-slate-300 border border-[#30363D] rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5"
           >
             <span>🏠</span>
-            <span>Dashboard Principal</span>
+            <span>Dashboard</span>
           </Link>
 
           <Link
@@ -389,24 +419,24 @@ export default function UsersSettingsPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
         
         {/* Total Users */}
         <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-4 flex flex-col gap-1 shadow-sm">
           <div className="flex items-center justify-between text-slate-400 text-xs font-mono">
-            <span>Total Usuarios</span>
+            <span>Total Cuentas</span>
             <span>👥</span>
           </div>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-2xl sm:text-3xl font-black text-white font-mono">{totalUsers}</span>
-            <span className="text-[10px] text-emerald-400 font-bold font-mono">({activeCount} Activos)</span>
+            <span className="text-[10px] text-emerald-400 font-bold font-mono">({activeCount} Activas)</span>
           </div>
         </div>
 
         {/* Administrators */}
         <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-4 flex flex-col gap-1 shadow-sm">
           <div className="flex items-center justify-between text-purple-400 text-xs font-mono">
-            <span>Administradores</span>
+            <span>Admin</span>
             <span>👑</span>
           </div>
           <div className="flex items-baseline gap-2 mt-1">
@@ -415,27 +445,39 @@ export default function UsersSettingsPage() {
           </div>
         </div>
 
-        {/* Docentes / Jueces */}
+        {/* Maestros */}
         <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-4 flex flex-col gap-1 shadow-sm">
           <div className="flex items-center justify-between text-amber-400 text-xs font-mono">
-            <span>Docentes / Jurado</span>
-            <span>⚖️</span>
+            <span>Maestros</span>
+            <span>👨‍🏫</span>
           </div>
           <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-2xl sm:text-3xl font-black text-amber-300 font-mono">{judgeCount}</span>
-            <span className="text-[10px] text-slate-400 font-mono">Evaluación en Vivo</span>
+            <span className="text-2xl sm:text-3xl font-black text-amber-300 font-mono">{maestroCount}</span>
+            <span className="text-[10px] text-slate-400 font-mono">Docentes DV</span>
           </div>
         </div>
 
-        {/* Editores */}
-        <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-4 flex flex-col gap-1 shadow-sm">
-          <div className="flex items-center justify-between text-cyan-400 text-xs font-mono">
-            <span>Editores</span>
-            <span>✍️</span>
+        {/* Jurados Activos */}
+        <div className="bg-[#161B22] border border-amber-500/30 bg-amber-950/20 rounded-2xl p-4 flex flex-col gap-1 shadow-sm">
+          <div className="flex items-center justify-between text-amber-300 text-xs font-mono">
+            <span>Jurado Asignado</span>
+            <span>⚖️</span>
           </div>
           <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-2xl sm:text-3xl font-black text-cyan-300 font-mono">{editorCount}</span>
-            <span className="text-[10px] text-slate-400 font-mono">CMS & Noticias</span>
+            <span className="text-2xl sm:text-3xl font-black text-amber-300 font-mono">{jurorCount}</span>
+            <span className="text-[10px] text-amber-400 font-mono">Mesa Calificadora</span>
+          </div>
+        </div>
+
+        {/* Alumnos */}
+        <div className="bg-[#161B22] border border-[#30363D] rounded-2xl p-4 flex flex-col gap-1 shadow-sm">
+          <div className="flex items-center justify-between text-cyan-400 text-xs font-mono">
+            <span>Alumnos</span>
+            <span>🎓</span>
+          </div>
+          <div className="flex items-baseline gap-2 mt-1">
+            <span className="text-2xl sm:text-3xl font-black text-cyan-300 font-mono">{alumnoCount}</span>
+            <span className="text-[10px] text-slate-400 font-mono">Estudiantes</span>
           </div>
         </div>
 
@@ -466,9 +508,10 @@ export default function UsersSettingsPage() {
             className="bg-[#0D1117] border border-[#30363D] rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none cursor-pointer"
           >
             <option value="ALL">Todos los Roles</option>
-            <option value="ADMIN">👑 Administrador</option>
-            <option value="DOCENTE_JUEZ">⚖️ Docente / Jurado</option>
-            <option value="EDITOR">✍️ Editor de Prensa</option>
+            <option value="ADMIN">👑 Admin</option>
+            <option value="MAESTRO">👨‍🏫 Maestro</option>
+            <option value="ALUMNO">🎓 Alumno</option>
+            <option value="JUROR_ONLY">⚖️ Solo Jurados Asignados</option>
           </select>
 
           {/* Status Filter */}
@@ -499,9 +542,10 @@ export default function UsersSettingsPage() {
             <thead>
               <tr className="bg-[#0D1117] text-slate-400 font-mono text-[11px] uppercase border-b border-[#30363D]">
                 <th className="py-3.5 px-4">Usuario & Nombre</th>
+                <th className="py-3.5 px-4 text-center">Rol</th>
                 <th className="py-3.5 px-4">WhatsApp / Login</th>
-                <th className="py-3.5 px-4 text-center">Disciplina Jurado</th>
-                <th className="py-3.5 px-4 text-center">Confirmación Jurado</th>
+                <th className="py-3.5 px-4 text-center">Jurado Calificador</th>
+                <th className="py-3.5 px-4 text-center">Confirmación</th>
                 <th className="py-3.5 px-4 text-center">Estatus</th>
                 <th className="py-3.5 px-4 text-right">Acciones</th>
               </tr>
@@ -509,7 +553,7 @@ export default function UsersSettingsPage() {
             <tbody className="divide-y divide-[#30363D]/60 text-slate-300">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-500 font-mono">
+                  <td colSpan={7} className="py-12 text-center text-slate-500 font-mono">
                     <div className="flex items-center justify-center gap-2">
                       <span className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
                       <span>Cargando usuarios del sistema...</span>
@@ -518,23 +562,25 @@ export default function UsersSettingsPage() {
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-500 font-mono">
+                  <td colSpan={7} className="py-12 text-center text-slate-500 font-mono">
                     No se encontraron usuarios con los filtros seleccionados.
                   </td>
                 </tr>
               ) : (
                 filteredUsers.map((user) => {
-                  const roleBadges: Record<UserRole, { label: string; style: string }> = {
+                  const normRole = getNormalizedRole(user.role);
+
+                  const roleBadges: Record<string, { label: string; style: string }> = {
                     ADMIN: {
-                      label: "👑 Administrador",
+                      label: "👑 Admin",
                       style: "bg-purple-950/80 text-purple-300 border-purple-500/40",
                     },
-                    DOCENTE_JUEZ: {
-                      label: "⚖️ Docente / Jurado",
+                    MAESTRO: {
+                      label: "👨‍🏫 Maestro",
                       style: "bg-amber-950/80 text-amber-300 border-amber-500/40",
                     },
-                    EDITOR: {
-                      label: "✍️ Editor Prensa",
+                    ALUMNO: {
+                      label: "🎓 Alumno",
                       style: "bg-cyan-950/80 text-cyan-300 border-cyan-500/40",
                     },
                   };
@@ -543,11 +589,11 @@ export default function UsersSettingsPage() {
                     CANTO: { label: "🎵 Canto & Voz", style: "bg-pink-950/70 text-pink-300 border-pink-500/40" },
                     COREOGRAFIA: { label: "💃 Coreografía", style: "bg-indigo-950/70 text-indigo-300 border-indigo-500/40" },
                     ACTUACION: { label: "🎭 Actuación", style: "bg-orange-950/70 text-orange-300 border-orange-500/40" },
-                    ALL: { label: "👑 Dirección General", style: "bg-purple-950/70 text-purple-300 border-purple-500/40" },
+                    ALL: { label: "👑 Todas las Áreas", style: "bg-purple-950/70 text-purple-300 border-purple-500/40" },
                   };
 
-                  const badge = roleBadges[user.role] || roleBadges.DOCENTE_JUEZ;
-                  const discBadge = disciplineBadges[user.assignedDiscipline || "ALL"] || disciplineBadges.ALL;
+                  const badge = roleBadges[normRole] || roleBadges.MAESTRO;
+                  const discBadge = disciplineBadges[user.assignedDiscipline || "CANTO"] || disciplineBadges.CANTO;
 
                   return (
                     <tr key={user.id} className="hover:bg-[#21262D]/50 transition-colors">
@@ -555,14 +601,27 @@ export default function UsersSettingsPage() {
                       {/* Name & Title */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[#21262D] border border-slate-700 flex items-center justify-center font-bold text-white text-xs shrink-0">
+                          <div className={`w-8 h-8 rounded-full border flex items-center justify-center font-bold text-xs shrink-0 ${
+                            normRole === "ADMIN"
+                              ? "bg-purple-950 border-purple-500/50 text-purple-300"
+                              : normRole === "MAESTRO"
+                              ? "bg-amber-950 border-amber-500/50 text-amber-300"
+                              : "bg-cyan-950 border-cyan-500/50 text-cyan-300"
+                          }`}>
                             {user.fullName.charAt(0).toUpperCase()}
                           </div>
                           <div className="flex flex-col">
                             <span className="font-bold text-white text-sm">{user.fullName}</span>
-                            <span className="text-[11px] text-slate-400">{user.title || "Usuario del Sistema"}</span>
+                            <span className="text-[11px] text-slate-400">{user.title || "Usuario DV"}</span>
                           </div>
                         </div>
+                      </td>
+
+                      {/* Role Badge */}
+                      <td className="py-3.5 px-4 text-center">
+                        <span className={`inline-block text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg border ${badge.style}`}>
+                          {badge.label}
+                        </span>
                       </td>
 
                       {/* Login / WhatsApp */}
@@ -576,39 +635,52 @@ export default function UsersSettingsPage() {
                               <span>📱</span> {user.phone}
                             </span>
                           ) : (
-                            <span className="text-slate-500 text-[10px] italic">Sin WhatsApp registrado</span>
+                            <span className="text-slate-500 text-[10px] italic">Sin WhatsApp</span>
                           )}
                         </div>
                       </td>
 
-                      {/* Discipline Badge */}
+                      {/* Jurado Calificador Badge */}
                       <td className="py-3.5 px-4 text-center">
-                        <span className={`inline-block text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg border ${discBadge.style}`}>
-                          {discBadge.label}
-                        </span>
+                        {user.isJuror ? (
+                          <div className="flex flex-col items-center gap-1">
+                            <span className={`inline-block text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-md border ${discBadge.style}`}>
+                              {discBadge.label}
+                            </span>
+                            <span className="text-[9px] font-mono text-amber-400 font-bold bg-amber-950/60 px-1.5 py-0.2 rounded border border-amber-500/30">
+                              ⚖️ Jurado Activo
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-600 font-mono text-xs">—</span>
+                        )}
                       </td>
 
-                      {/* Attendance Confirmation Badge */}
+                      {/* Attendance Confirmation Badge (Jurors only) */}
                       <td className="py-3.5 px-4 text-center">
-                        {user.attendanceStatus === "CONFIRMED" ? (
-                          <div className="flex flex-col items-center gap-0.5">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/40">
-                              <span>✅</span> Confirmado
-                            </span>
-                            {user.attendanceConfirmedAt && (
-                              <span className="text-[9px] text-slate-500 font-mono">
-                                {new Date(user.attendanceConfirmedAt).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
+                        {user.isJuror ? (
+                          user.attendanceStatus === "CONFIRMED" ? (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/40">
+                                <span>✅</span> Confirmado
                               </span>
-                            )}
-                          </div>
-                        ) : user.attendanceStatus === "DECLINED" ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-950/80 text-rose-300 border border-rose-500/40">
-                            <span>❌</span> Declinó
-                          </span>
+                              {user.attendanceConfirmedAt && (
+                                <span className="text-[9px] text-slate-500 font-mono">
+                                  {new Date(user.attendanceConfirmedAt).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
+                                </span>
+                              )}
+                            </div>
+                          ) : user.attendanceStatus === "DECLINED" ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-950/80 text-rose-300 border border-rose-500/40">
+                              <span>❌</span> Declinó
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-800 text-zinc-400 border border-zinc-700">
+                              <span>⏳</span> Pendiente
+                            </span>
+                          )
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-800 text-zinc-400 border border-zinc-700">
-                            <span>⏳</span> Pendiente
-                          </span>
+                          <span className="text-slate-600 font-mono text-xs">—</span>
                         )}
                       </td>
 
@@ -633,17 +705,19 @@ export default function UsersSettingsPage() {
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           
-                          {/* Send Juror Invitation */}
-                          <button
-                            type="button"
-                            onClick={() => handleSendJurorInvite(user)}
-                            disabled={invitingJurorId === user.id}
-                            className="px-2.5 py-1.5 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50"
-                            title="Enviar convocatoria de jurado por WhatsApp y Email con enlace de confirmación"
-                          >
-                            <span>📲</span>
-                            <span className="hidden xl:inline">{invitingJurorId === user.id ? "Enviando..." : "Convocar"}</span>
-                          </button>
+                          {/* Send Juror Invitation (Only if assigned as Juror) */}
+                          {user.isJuror && (
+                            <button
+                              type="button"
+                              onClick={() => handleSendJurorInvite(user)}
+                              disabled={invitingJurorId === user.id}
+                              className="px-2.5 py-1.5 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50"
+                              title="Enviar convocatoria de jurado por WhatsApp y Email con enlace de confirmación"
+                            >
+                              <span>📲</span>
+                              <span className="hidden xl:inline">{invitingJurorId === user.id ? "Enviando..." : "Convocar"}</span>
+                            </button>
+                          )}
 
                           {/* Change Password */}
                           <button
@@ -689,13 +763,13 @@ export default function UsersSettingsPage() {
       {/* ================= MODAL: CREATE / EDIT USER ================= */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#161B22] border-2 border-[#30363D] rounded-3xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-5 animate-fade-in">
+          <div className="bg-[#161B22] border-2 border-[#30363D] rounded-3xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-5 animate-fade-in max-h-[90vh] overflow-y-auto">
             
             <div className="flex items-center justify-between pb-3 border-b border-[#30363D]">
               <div className="flex items-center gap-2">
                 <span className="text-xl">{editingUser ? "✏️" : "➕"}</span>
                 <h3 className="text-base font-bold text-white">
-                  {editingUser ? `Editar Usuario: ${editingUser.fullName}` : "Dar de Alta Nuevo Usuario"}
+                  {editingUser ? `Editar Usuario: ${editingUser.fullName}` : "Dar de Alta Usuario"}
                 </h3>
               </div>
               <button
@@ -724,7 +798,7 @@ export default function UsersSettingsPage() {
               {/* Username / Email */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
-                  <label className="font-semibold text-slate-300">Correo o Usuario de Inicio *</label>
+                  <label className="font-semibold text-slate-300">Correo o Usuario *</label>
                   <input
                     type="text"
                     placeholder="Ej. fanny@dvperformingarts.com"
@@ -750,7 +824,7 @@ export default function UsersSettingsPage() {
 
               {/* Title / Position */}
               <div className="flex flex-col gap-1.5">
-                <label className="font-semibold text-slate-300">Título / Especialidad Teatral</label>
+                <label className="font-semibold text-slate-300">Título / Cargo / Especialidad</label>
                 <input
                   type="text"
                   placeholder="Ej. Maestra de Canto & Técnica Vocal"
@@ -760,51 +834,84 @@ export default function UsersSettingsPage() {
                 />
               </div>
 
-              {/* Assigned Discipline Selection */}
+              {/* Role Selection (Alumno, Admin, Maestro) */}
               <div className="flex flex-col gap-1.5">
-                <label className="font-semibold text-slate-300">Disciplina Asignada para Calificación *</label>
-                <select
-                  value={formData.assignedDiscipline}
-                  onChange={(e) => setFormData({ ...formData, assignedDiscipline: e.target.value as any })}
-                  className="bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-white font-mono focus:outline-none cursor-pointer"
-                >
-                  <option value="CANTO">🎵 Canto & Técnica Vocal (Solo evalúa Canto)</option>
-                  <option value="COREOGRAFIA">💃 Danza & Coreografía (Solo evalúa Danza)</option>
-                  <option value="ACTUACION">🎭 Actuación & Expresión Escénica (Solo evalúa Actuación)</option>
-                  <option value="ALL">👑 Dirección General (Acceso a todas las áreas y desglose)</option>
-                </select>
-              </div>
-
-              {/* Role Selection */}
-              <div className="flex flex-col gap-1.5">
-                <label className="font-semibold text-slate-300">Rol de Acceso en la Plataforma *</label>
+                <label className="font-semibold text-slate-300">Rol del Usuario *</label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
+                    { id: "ALUMNO", label: "🎓 Alumno", desc: "Aspirante / Alumno" },
                     { id: "ADMIN", label: "👑 Admin", desc: "Control Total" },
-                    { id: "DOCENTE_JUEZ", label: "⚖️ Jurado", desc: "Mesa de Jueces" },
-                    { id: "EDITOR", label: "✍️ Editor", desc: "CMS & Noticias" },
+                    { id: "MAESTRO", label: "👨‍🏫 Maestro", desc: "Docente de Academia" },
                   ].map((r) => (
                     <button
                       key={r.id}
                       type="button"
-                      onClick={() => setFormData({ ...formData, role: r.id as UserRole })}
-                      className={`p-2.5 rounded-xl border text-center font-bold transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
+                      onClick={() => handleRoleChange(r.id as UserRole)}
+                      className={`p-3 rounded-xl border text-center font-bold transition-all cursor-pointer flex flex-col items-center gap-1 ${
                         formData.role === r.id
-                          ? "bg-purple-950/80 border-purple-500 text-white shadow-md shadow-purple-950/50"
+                          ? r.id === "ADMIN"
+                            ? "bg-purple-950/80 border-purple-500 text-white shadow-md shadow-purple-950/50"
+                            : r.id === "MAESTRO"
+                            ? "bg-amber-950/80 border-amber-500 text-white shadow-md shadow-amber-950/50"
+                            : "bg-cyan-950/80 border-cyan-500 text-white shadow-md shadow-cyan-950/50"
                           : "bg-[#0D1117] border-[#30363D] text-slate-400 hover:border-slate-500"
                       }`}
                     >
-                      <span>{r.label}</span>
+                      <span className="text-sm">{r.label}</span>
                       <span className="text-[9px] font-mono text-slate-400">{r.desc}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Password (Required for new, optional for edit) */}
+              {/* Juror Assignment Section (Only for Maestro or Admin) */}
+              {formData.role !== "ALUMNO" ? (
+                <div className="p-3.5 bg-[#0D1117] border border-amber-500/40 rounded-2xl flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={formData.isJuror}
+                        onChange={(e) => setFormData({ ...formData, isJuror: e.target.checked })}
+                        className="w-4 h-4 rounded text-amber-500 focus:ring-amber-500 accent-amber-500 cursor-pointer"
+                      />
+                      <span className="font-bold text-amber-300 text-xs">
+                        ⚖️ Asignar como Jurado Calificador
+                      </span>
+                    </label>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {formData.isJuror ? "Habilitado en /jueces" : "Solo Docente"}
+                    </span>
+                  </div>
+
+                  {formData.isJuror && (
+                    <div className="flex flex-col gap-1.5 pt-2 border-t border-[#30363D]">
+                      <label className="font-semibold text-slate-300">
+                        Disciplina de Calificación Asignada:
+                      </label>
+                      <select
+                        value={formData.assignedDiscipline}
+                        onChange={(e) => setFormData({ ...formData, assignedDiscipline: e.target.value as any })}
+                        className="bg-[#161B22] border border-[#30363D] focus:border-amber-500 rounded-xl px-3 py-2 text-white font-mono focus:outline-none cursor-pointer"
+                      >
+                        <option value="CANTO">🎵 Canto & Técnica Vocal (Solo evalúa Canto)</option>
+                        <option value="COREOGRAFIA">💃 Danza & Coreografía (Solo evalúa Danza)</option>
+                        <option value="ACTUACION">🎭 Actuación & Expresión Escénica (Solo evalúa Actuación)</option>
+                        <option value="ALL">👑 Dirección General (Todas las Áreas & Totales)</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-2.5 bg-[#0D1117] border border-[#30363D] rounded-xl text-[11px] text-slate-500 italic">
+                  ℹ️ Los usuarios con rol Alumno no pueden ser designados como Jurado Calificador.
+                </div>
+              )}
+
+              {/* Password */}
               <div className="flex flex-col gap-1.5">
                 <label className="font-semibold text-slate-300">
-                  {editingUser ? "Nueva Contraseña (dejar en blanco para no cambiar)" : "Contraseña Inicial *"}
+                  {editingUser ? "Nueva Contraseña (dejar en blanco para conservar actual)" : "Contraseña Inicial *"}
                 </label>
                 <input
                   type="password"

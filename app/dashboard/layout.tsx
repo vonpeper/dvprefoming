@@ -56,7 +56,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   };
 
-  const isTeacher = currentUser?.role === "DOCENTE_JUEZ";
+  const isTeacher = currentUser?.role === "MAESTRO" || currentUser?.role === "DOCENTE_JUEZ";
 
   const allNavItems = [
     {
@@ -134,7 +134,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       ),
     },
     {
-      label: "Ajustes de Usuarios",
+      label: "Usuarios",
       href: "/dashboard/usuarios",
       badge: "Acceso",
       icon: (
@@ -197,7 +197,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     ? "bg-amber-600/30 text-amber-300 border-amber-500/40"
                     : "bg-red-600/30 text-red-400 border-red-500/40"
                 }`}>
-                  {isTeacher ? "JURADO / DOCENTE" : "ADMIN"}
+                  {isTeacher ? "MAESTRO / JURADO" : "ADMIN"}
                 </span>
               </span>
               <span className="text-[11px] text-slate-400">

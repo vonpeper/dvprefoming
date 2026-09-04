@@ -77,7 +77,7 @@ export default function JudgesPortalPage() {
         setJudgeName(meData.user.fullName || "Juez");
         setJudgeTitle(meData.user.title || "Docente Titular");
 
-        if (meData.user.role === "DOCENTE_JUEZ") {
+        if (meData.user.role === "MAESTRO" || meData.user.role === "DOCENTE_JUEZ") {
           const userDiscipline = meData.user.assignedDiscipline || (teachData?.teachers || []).find(
             (t: any) => t.fullName.toLowerCase() === meData.user.fullName.toLowerCase()
           )?.defaultDiscipline || "CANTO";
@@ -662,8 +662,8 @@ export default function JudgesPortalPage() {
         
         {/* Judge & Active Production Badge */}
         <div className="flex items-center gap-3">
-          {/* Main Dashboard Link (only for admins/editors) */}
-          {currentUser?.role !== "DOCENTE_JUEZ" && (
+          {/* Main Dashboard Link (only for admins) */}
+          {currentUser?.role === "ADMIN" && (
             <Link
               href="/dashboard"
               className="px-3.5 py-1.5 bg-gradient-to-r from-red-600 via-rose-600 to-purple-600 hover:from-red-500 hover:to-purple-500 text-white border border-red-400/50 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-lg shadow-red-950/60 shrink-0 cursor-pointer"
@@ -721,14 +721,14 @@ export default function JudgesPortalPage() {
 
           <button
             onClick={handleLogout}
-            className="px-3 py-1.5 bg-[#202030] hover:bg-[#2C2C40] text-zinc-300 border border-[#303046] rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+            className="px-3.5 py-1.5 bg-[#202030] hover:bg-[#2C2C40] text-zinc-300 border border-[#303046] rounded-xl text-xs font-semibold transition-colors cursor-pointer"
           >
-            🔄 {currentUser?.role === "DOCENTE_JUEZ" ? "Cerrar Sesión" : "Cambiar Juez"}
+            🔄 {currentUser?.role === "MAESTRO" || currentUser?.role === "DOCENTE_JUEZ" ? "Cerrar Sesión" : "Cambiar Juez"}
           </button>
 
           <Link
             href="/dashboard/audiciones"
-            className="px-3 py-1.5 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-bold transition-colors"
+            className="px-3.5 py-1.5 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-bold transition-colors"
           >
             📊 Ranking
           </Link>

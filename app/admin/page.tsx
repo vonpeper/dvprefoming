@@ -39,8 +39,10 @@ function AdminLoginForm() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        if (data.user?.role === "DOCENTE_JUEZ") {
+        if (data.user?.role === "MAESTRO" || data.user?.role === "DOCENTE_JUEZ") {
           router.push("/jueces");
+        } else if (data.user?.role === "ALUMNO") {
+          router.push("/");
         } else if (redirectParam && redirectParam.startsWith("/")) {
           router.push(redirectParam);
         } else {

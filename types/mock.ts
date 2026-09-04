@@ -161,7 +161,7 @@ export interface Article {
   updatedAt: Date;
 }
 
-export type UserRole = "ADMIN" | "DOCENTE_JUEZ" | "EDITOR";
+export type UserRole = "ALUMNO" | "ADMIN" | "MAESTRO" | "DOCENTE_JUEZ" | "EDITOR";
 
 export interface UserAccount {
   id: string;
@@ -169,9 +169,10 @@ export interface UserAccount {
   phone?: string; // Teléfono / WhatsApp para inicio de sesión y notificaciones del jurado
   fullName: string;
   role: UserRole;
+  isJuror?: boolean; // Asignado exclusivamente por el Admin (Solo aplica a Maestro o Admin)
   password?: string;
-  title?: string; // e.g. "Director General", "Docente de Danza"
-  assignedDiscipline?: EvaluationDiscipline | "ALL"; // Disciplina que califica el docente
+  title?: string; // e.g. "Director General", "Maestro de Danza", "Alumno"
+  assignedDiscipline?: EvaluationDiscipline | "ALL"; // Disciplina que califica el docente si es jurado
   attendanceStatus?: "CONFIRMED" | "PENDING" | "DECLINED"; // Confirmación de asistencia como jurado
   attendanceConfirmedAt?: string | Date;
   status: "ACTIVE" | "INACTIVE";

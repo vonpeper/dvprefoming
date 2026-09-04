@@ -1154,6 +1154,7 @@ export const DEFAULT_USERS: UserAccount[] = [
     phone: "4776558156",
     fullName: "Diego Vieyra",
     role: "ADMIN",
+    isJuror: true,
     password: process.env.ADMIN_PASSWORD || "DVPerforming@2026!Admin",
     title: "Director General & Fundador",
     assignedDiscipline: "ALL",
@@ -1167,7 +1168,8 @@ export const DEFAULT_USERS: UserAccount[] = [
     username: "fanny@dvperformingarts.com",
     phone: "4771000001",
     fullName: "Fanny Monroy",
-    role: "DOCENTE_JUEZ",
+    role: "MAESTRO",
+    isJuror: true,
     password: "DV@Docente2026",
     title: "Directora Vocal & Maestra de Canto",
     assignedDiscipline: "CANTO",
@@ -1181,7 +1183,8 @@ export const DEFAULT_USERS: UserAccount[] = [
     username: "andres@dvperformingarts.com",
     phone: "4771000002",
     fullName: "Andrés Rodríguez",
-    role: "DOCENTE_JUEZ",
+    role: "MAESTRO",
+    isJuror: true,
     password: "DV@Docente2026",
     title: "Coreógrafo & Director de Danza",
     assignedDiscipline: "COREOGRAFIA",
@@ -1195,23 +1198,12 @@ export const DEFAULT_USERS: UserAccount[] = [
     username: "angel@dvperformingarts.com",
     phone: "4771000003",
     fullName: "Angel Piedra",
-    role: "DOCENTE_JUEZ",
+    role: "MAESTRO",
+    isJuror: true,
     password: "DV@Docente2026",
     title: "Docente de Actuación & Texto Teatral",
     assignedDiscipline: "ACTUACION",
     attendanceStatus: "CONFIRMED",
-    status: "ACTIVE",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "usr_editor_prensa",
-    username: "prensa@dvperformingarts.com",
-    phone: "4771000004",
-    fullName: "Equipo Editorial DV",
-    role: "EDITOR",
-    password: "DV@Editor2026",
-    title: "Editor de Noticias & Revista",
     status: "ACTIVE",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -1226,12 +1218,47 @@ export function getStoredUsers(): UserAccount[] {
   }
   try {
     const raw = fs.readFileSync(USERS_FILE, "utf-8");
-    const parsed: UserAccount[] = JSON.parse(raw);
+    const parsed: any[] = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length === 0) {
       saveStoredUsers(DEFAULT_USERS);
       return DEFAULT_USERS;
     }
-    return parsed;
+
+    // Auto-migrate legacy roles if present
+    let needsSave = false;
+    const normalized: UserAccount[] = parsed.map((u) => {
+      let role: UserRole = u.role;
+      let isJuror = u.isJuror;
+
+      if (u.role === "DOCENTE_JUEZ") {
+        role = "MAESTRO";
+        if (isJuror === undefined) isJuror = true;
+        needsSave = true;
+      } else if (u.role === "EDITOR") {
+        role = "ADMIN";
+        needsSave = true;
+      } else if (u.role === "MAESTRO" && isJuror === undefined) {
+        isJuror = Boolean(u.assignedDiscipline);
+        needsSave = true;
+      } else if (u.role === "ADMIN" && isJuror === undefined) {
+        isJuror = u.id === "usr_admin_master" || Boolean(u.assignedDiscipline);
+        needsSave = true;
+      } else if (u.role === "ALUMNO") {
+        isJuror = false;
+      }
+
+      return {
+        ...u,
+        role,
+        isJuror: Boolean(isJuror),
+      };
+    });
+
+    if (needsSave) {
+      saveStoredUsers(normalized);
+    }
+
+    return normalized;
   } catch {
     return DEFAULT_USERS;
   }
@@ -1252,17 +1279,21 @@ export function createUser(data: Omit<UserAccount, "id" | "createdAt" | "updated
     throw new Error(`El usuario o correo "${data.username}" ya está registrado.`);
   }
 
+  const role: UserRole = data.role || "MAESTRO";
+  const isJuror = role === "ALUMNO" ? false : Boolean(data.isJuror);
+
   const now = new Date().toISOString();
   const newUser: UserAccount = {
     id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
     username: cleanUsername,
     phone: data.phone?.trim() || "",
     fullName: data.fullName.trim(),
-    role: data.role || "DOCENTE_JUEZ",
+    role,
+    isJuror,
     password: data.password || "DV@User2026",
-    title: data.title?.trim() || "Docente / Evaluador",
-    assignedDiscipline: data.assignedDiscipline || (data.role === "ADMIN" ? "ALL" : "CANTO"),
-    attendanceStatus: data.attendanceStatus || "PENDING",
+    title: data.title?.trim() || (role === "ALUMNO" ? "Alumno DV" : role === "MAESTRO" ? "Docente / Maestro" : "Administrador"),
+    assignedDiscipline: isJuror ? (data.assignedDiscipline || (role === "ADMIN" ? "ALL" : "CANTO")) : undefined,
+    attendanceStatus: isJuror ? (data.attendanceStatus || "PENDING") : undefined,
     status: data.status || "ACTIVE",
     createdAt: now,
     updatedAt: now,
@@ -1290,9 +1321,18 @@ export function updateUser(id: string, updates: Partial<UserAccount>): UserAccou
     updates.username = cleanUsername;
   }
 
+  // Handle isJuror constraint for Alumno
+  const finalRole = updates.role !== undefined ? updates.role : current.role;
+  let finalIsJuror = updates.isJuror !== undefined ? updates.isJuror : current.isJuror;
+  if (finalRole === "ALUMNO") {
+    finalIsJuror = false;
+  }
+
   const updated: UserAccount = {
     ...current,
     ...updates,
+    role: finalRole,
+    isJuror: Boolean(finalIsJuror),
     updatedAt: new Date().toISOString(),
   };
 
