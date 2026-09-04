@@ -18,6 +18,7 @@ import TeachersSection from "@/components/home/teachers-section";
 import NewsSection from "@/components/home/news-section";
 import FinalCta from "@/components/home/final-cta";
 import { getLatestArticles } from "@/features/editorial/services/manifiesto";
+import { getStoredTeachers } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -29,6 +30,7 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const articles = await getLatestArticles();
+  const teachers = getStoredTeachers();
 
   return (
     <div className="flex flex-col min-h-screen bg-[#07070A] text-text-main font-sans selection:bg-accent-red selection:text-text-main relative overflow-x-hidden">
@@ -63,7 +65,7 @@ export default async function HomePage() {
         <ShowreelSection />
 
         {/* Staff / Teacher Roster Section */}
-        <TeachersSection />
+        <TeachersSection initialTeachers={teachers} />
 
         {/* Noticias & Novedades Section */}
         <NewsSection initialArticles={articles} />

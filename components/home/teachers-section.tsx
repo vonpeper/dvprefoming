@@ -5,8 +5,13 @@ import { mockTeachers } from "@/data/mock";
 import { Teacher } from "@/types/mock";
 import SectionHeading from "@/components/ui/section-heading";
 
-export default function TeachersSection() {
+interface TeachersSectionProps {
+  initialTeachers?: Teacher[];
+}
+
+export default function TeachersSection({ initialTeachers }: TeachersSectionProps = {}) {
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
+  const teachers = initialTeachers && initialTeachers.length > 0 ? initialTeachers : mockTeachers;
 
   // Close modal on Escape key
   useEffect(() => {
@@ -48,8 +53,8 @@ export default function TeachersSection() {
 
         {/* Teachers Grid - 2x2 Clean Spacious Layout on Desktop */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 max-w-5xl mx-auto">
-          {mockTeachers.map((teacher) => {
-            const punchline = shortHighlights[teacher.id] || "Formación actoral y dirección escénica de alto rendimiento.";
+          {teachers.map((teacher) => {
+            const punchline = shortHighlights[teacher.id] || teacher.bio?.slice(0, 130) || "Formación actoral y dirección escénica de alto rendimiento.";
 
             return (
               <div

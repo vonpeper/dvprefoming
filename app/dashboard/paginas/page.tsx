@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { WebsiteContent } from "@/lib/storage";
+import { Teacher } from "@/types/mock";
 import ImageUploader from "@/components/ui/image-uploader";
 
 export default function WebsiteContentEditorPage() {
@@ -41,6 +42,47 @@ export default function WebsiteContentEditorPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleAddTeacher = () => {
+    if (!content) return;
+    const newId = `teacher_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const newTeacher: Teacher = {
+      id: newId,
+      slug: `docente-${Date.now()}`,
+      fullName: "Nuevo Docente",
+      title: "Docente Titular",
+      bio: "Semblanza y trayectoria profesional en artes escénicas.",
+      specialties: ["Teatro Musical", "Formación Escénica"],
+      imageUrl: "",
+      status: "PUBLISHED",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    setContent({
+      ...content,
+      teachers: [newTeacher, ...content.teachers],
+    });
+  };
+
+  const handleDeleteTeacher = (idx: number) => {
+    if (!content) return;
+    const teacher = content.teachers[idx];
+    if (window.confirm(`¿Estás seguro de eliminar a "${teacher.fullName || "este docente"}" de la plantilla web?`)) {
+      const updated = content.teachers.filter((_, i) => i !== idx);
+      setContent({ ...content, teachers: updated });
+    }
+  };
+
+  const handleMoveTeacher = (idx: number, direction: "up" | "down") => {
+    if (!content) return;
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= content.teachers.length) return;
+    const updated = [...content.teachers];
+    const temp = updated[idx];
+    updated[idx] = updated[targetIdx];
+    updated[targetIdx] = temp;
+    setContent({ ...content, teachers: updated });
   };
 
   if (loading || !content) {
@@ -350,71 +392,202 @@ export default function WebsiteContentEditorPage() {
         {/* ================= TEACHERS TAB ================= */}
         {activeTab === "teachers" && (
           <div className="flex flex-col gap-6">
-            <h2 className="text-lg font-bold text-white border-b border-[#30363D] pb-3">
-              Planta Docente & Maestros ({content.teachers.length})
-            </h2>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {content.teachers.map((teacher, idx) => (
-                <div key={teacher.id} className="p-5 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col gap-4">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold text-slate-300">Nombre del Docente</label>
-                    <input
-                      type="text"
-                      value={teacher.fullName}
-                      onChange={(e) => {
-                        const updated = [...content.teachers];
-                        updated[idx].fullName = e.target.value;
-                        setContent({ ...content, teachers: updated });
-                      }}
-                      className="w-full bg-[#161B22] border border-[#30363D] rounded px-3 py-1.5 text-xs text-white font-bold"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold text-slate-300">Cargo / Disciplina</label>
-                    <input
-                      type="text"
-                      value={teacher.title || ""}
-                      onChange={(e) => {
-                        const updated = [...content.teachers];
-                        updated[idx].title = e.target.value;
-                        setContent({ ...content, teachers: updated });
-                      }}
-                      className="w-full bg-[#161B22] border border-[#30363D] rounded px-3 py-1.5 text-xs text-slate-300"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold text-slate-300">Biografía Resumida</label>
-                    <textarea
-                      rows={3}
-                      value={teacher.bio}
-                      onChange={(e) => {
-                        const updated = [...content.teachers];
-                        updated[idx].bio = e.target.value;
-                        setContent({ ...content, teachers: updated });
-                      }}
-                      className="bg-[#161B22] border border-[#30363D] rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none resize-none"
-                    />
-                  </div>
-
-                  {/* Reusable Image Uploader for Teacher */}
-                  <ImageUploader
-                    label="Retrato Oficial del Maestro"
-                    value={teacher.imageUrl || ""}
-                    aspectRatio="3:4"
-                    recommendedSize="600 × 800 px (3:4 Vertical)"
-                    description="Retrato profesional o headshot del maestro con fondo escénico o limpio."
-                    onChange={(newUrl) => {
-                      const updated = [...content.teachers];
-                      updated[idx].imageUrl = newUrl;
-                      setContent({ ...content, teachers: updated });
-                    }}
-                  />
+            {/* Tab Header & Add Button */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#30363D] pb-3">
+              <div className="flex flex-col gap-0.5">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-white">
+                    Planta Docente & Maestros
+                  </h2>
+                  <span className="bg-purple-950 text-purple-300 border border-purple-500/40 text-[11px] font-mono font-bold px-2 py-0.5 rounded-full">
+                    {content.teachers.length} Docentes
+                  </span>
                 </div>
-              ))}
+                <p className="text-xs text-slate-400">
+                  Administra la parrilla de maestros en la página web: nombres, cargos, especialidades, semblanza y fotografías oficiales.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleAddTeacher}
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-purple-950/50 transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>➕</span>
+                <span>Agregar Nuevo Docente</span>
+              </button>
             </div>
+
+            {/* Empty State */}
+            {content.teachers.length === 0 ? (
+              <div className="p-12 bg-[#0D1117] border-2 border-dashed border-[#30363D] rounded-2xl flex flex-col items-center justify-center gap-4 text-center">
+                <span className="text-4xl">👨‍🏫</span>
+                <div className="flex flex-col gap-1">
+                  <h3 className="font-bold text-white text-sm">No hay docentes registrados en la plantilla</h3>
+                  <p className="text-xs text-slate-400">Comienza agregando al primer maestro de la academia.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddTeacher}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>➕</span>
+                  <span>Agregar Primer Docente</span>
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {content.teachers.map((teacher, idx) => (
+                  <div key={teacher.id || idx} className="p-5 bg-[#0D1117] border border-[#30363D] hover:border-purple-500/40 rounded-2xl flex flex-col gap-4 shadow-sm transition-colors">
+                    
+                    {/* Card Top Action Bar */}
+                    <div className="flex items-center justify-between pb-3 border-b border-[#30363D]/60">
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-purple-950 text-purple-300 border border-purple-500/40 flex items-center justify-center font-mono font-bold text-[11px]">
+                          #{idx + 1}
+                        </span>
+                        <span className="font-bold text-white text-xs truncate max-w-[180px] sm:max-w-xs">
+                          {teacher.fullName || "Nuevo Maestro"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        {/* Move Up */}
+                        <button
+                          type="button"
+                          onClick={() => handleMoveTeacher(idx, "up")}
+                          disabled={idx === 0}
+                          title="Mover arriba en el orden de la web"
+                          className="p-1.5 bg-[#161B22] hover:bg-[#21262D] text-slate-400 hover:text-white border border-[#30363D] rounded-lg text-xs disabled:opacity-30 cursor-pointer"
+                        >
+                          ⬆️
+                        </button>
+                        {/* Move Down */}
+                        <button
+                          type="button"
+                          onClick={() => handleMoveTeacher(idx, "down")}
+                          disabled={idx === content.teachers.length - 1}
+                          title="Mover abajo en el orden de la web"
+                          className="p-1.5 bg-[#161B22] hover:bg-[#21262D] text-slate-400 hover:text-white border border-[#30363D] rounded-lg text-xs disabled:opacity-30 cursor-pointer"
+                        >
+                          ⬇️
+                        </button>
+                        {/* Delete Teacher */}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteTeacher(idx)}
+                          title="Eliminar docente de la plantilla web"
+                          className="p-1.5 bg-red-950/40 hover:bg-red-900 text-red-300 border border-red-500/30 rounded-lg text-xs transition-colors cursor-pointer"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Teacher Full Name */}
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold text-slate-300">Nombre Completo del Docente *</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. Fanny Monroy"
+                        value={teacher.fullName}
+                        onChange={(e) => {
+                          const updated = [...content.teachers];
+                          updated[idx].fullName = e.target.value;
+                          setContent({ ...content, teachers: updated });
+                        }}
+                        className="w-full bg-[#161B22] border border-[#30363D] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white font-bold focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Title / Cargo */}
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold text-slate-300">Cargo / Especialidad Principal</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. Directora Vocal & Maestra de Canto"
+                        value={teacher.title || ""}
+                        onChange={(e) => {
+                          const updated = [...content.teachers];
+                          updated[idx].title = e.target.value;
+                          setContent({ ...content, teachers: updated });
+                        }}
+                        className="w-full bg-[#161B22] border border-[#30363D] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Specialties (Tags) */}
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold text-slate-300">Especialidades (separadas por comas)</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. Canto, Técnica Vocal, Teatro Musical"
+                        value={Array.isArray(teacher.specialties) ? teacher.specialties.join(", ") : (teacher.specialties || "")}
+                        onChange={(e) => {
+                          const updated = [...content.teachers];
+                          const raw = e.target.value;
+                          updated[idx].specialties = raw.split(",").map((s) => s.trim()).filter(Boolean);
+                          setContent({ ...content, teachers: updated });
+                        }}
+                        className="w-full bg-[#161B22] border border-[#30363D] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-purple-300 font-mono focus:outline-none"
+                      />
+                      {Array.isArray(teacher.specialties) && teacher.specialties.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {teacher.specialties.map((spec, sIdx) => (
+                            <span key={sIdx} className="bg-purple-950/60 text-purple-300 border border-purple-500/30 text-[10px] font-mono px-2 py-0.2 rounded">
+                              {spec}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bio */}
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold text-slate-300">Semblanza & Trayectoria Escénica</label>
+                      <textarea
+                        rows={3}
+                        placeholder="Describe la formación, trayectoria, producciones y logros del docente..."
+                        value={teacher.bio}
+                        onChange={(e) => {
+                          const updated = [...content.teachers];
+                          updated[idx].bio = e.target.value;
+                          setContent({ ...content, teachers: updated });
+                        }}
+                        className="bg-[#161B22] border border-[#30363D] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none resize-none leading-relaxed"
+                      />
+                    </div>
+
+                    {/* Reusable Image Uploader for Teacher Portrait */}
+                    <ImageUploader
+                      label="Retrato Oficial del Maestro"
+                      value={teacher.imageUrl || ""}
+                      aspectRatio="3:4"
+                      recommendedSize="600 × 800 px (3:4 Vertical)"
+                      description="Retrato profesional o headshot del maestro con fondo escénico o limpio."
+                      onChange={(newUrl) => {
+                        const updated = [...content.teachers];
+                        updated[idx].imageUrl = newUrl;
+                        setContent({ ...content, teachers: updated });
+                      }}
+                    />
+                  </div>
+                ))}
+
+                {/* Bottom Add Teacher Card */}
+                <button
+                  type="button"
+                  onClick={handleAddTeacher}
+                  className="p-8 border-2 border-dashed border-[#30363D] hover:border-purple-500/60 rounded-2xl bg-[#0D1117]/50 hover:bg-purple-950/10 text-slate-400 hover:text-purple-300 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer group min-h-[220px]"
+                >
+                  <span className="text-3xl group-hover:scale-110 transition-transform">➕</span>
+                  <span className="font-bold text-xs text-white group-hover:text-purple-300">Agregar Otro Docente a la Parrilla</span>
+                  <span className="text-[11px] text-slate-500 text-center max-w-xs">
+                    Crea una nueva tarjeta de maestro con foto, cargo, especialidades y semblanza
+                  </span>
+                </button>
+              </div>
+            )}
           </div>
         )}
 
