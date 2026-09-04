@@ -12,8 +12,10 @@ export async function POST(req: NextRequest) {
       phone,
       birthDate,
       age,
+      headshotUrl,
       productionId,
       productionName,
+      googleDriveUrl,
       programId,
       programName,
       experienceNotes,
@@ -34,6 +36,8 @@ export async function POST(req: NextRequest) {
       phone: String(phone).trim(),
       birthDate: birthDate ? String(birthDate) : undefined,
       age: age || undefined,
+      headshotUrl: headshotUrl ? String(headshotUrl).trim() : "",
+      googleDriveUrl: googleDriveUrl ? String(googleDriveUrl).trim() : undefined,
       productionId: productionId || "prod_si_no_es_ahora",
       productionName: productionName || "Si No Es Ahora (El Musical)",
       programId: programId || "prog_teatro_musical",
@@ -51,8 +55,9 @@ export async function POST(req: NextRequest) {
       const whatsappResult = await sendAuditionConfirmation({
         fullName: audition.fullName,
         folio: audition.folio,
-        productionName: audition.productionName || "Si No Es Ahora (El Musical)",
+        productionName: audition.productionName || "DV Performing Arts",
         programName: audition.programName || "Teatro Musical",
+        googleDriveUrl: audition.googleDriveUrl,
         phone: audition.phone,
         auditionTime: audition.preferredSchedule,
       });
@@ -69,8 +74,9 @@ export async function POST(req: NextRequest) {
           email: audition.email,
           phone: audition.phone,
           folio: audition.folio,
-          productionName: audition.productionName || "Si No Es Ahora (El Musical)",
+          productionName: audition.productionName || "DV Performing Arts",
           programName: audition.programName,
+          googleDriveUrl: audition.googleDriveUrl,
           preferredSchedule: audition.preferredSchedule,
         });
         emailSent = Boolean(emailResult?.success);

@@ -17,11 +17,19 @@ export default function JudgesPortalPage() {
   const [discipline, setDiscipline] = useState<EvaluationDiscipline>("CANTO");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  // Authentication State
+  const [identifierInput, setIdentifierInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
+  const [authenticating, setAuthenticating] = useState(false);
+  const [loginError, setLoginError] = useState("");
+
   // Current User Session & Role
   const [currentUser, setCurrentUser] = useState<{
     username: string;
     role: string;
     fullName: string;
+    title?: string;
+    assignedDiscipline?: EvaluationDiscipline | "ALL";
   } | null>(null);
 
   // Selected Production (null means show production selection cards gallery)
@@ -66,19 +74,16 @@ export default function JudgesPortalPage() {
 
       if (meData?.authenticated && meData.user) {
         setCurrentUser(meData.user);
-        if (meData.user.role === "DOCENTE_JUEZ" && meData.user.fullName) {
-          setJudgeName(meData.user.fullName);
-          const teacherObj = (teachData?.teachers || []).find(
+        setJudgeName(meData.user.fullName || "Juez");
+        setJudgeTitle(meData.user.title || "Docente Titular");
+
+        if (meData.user.role === "DOCENTE_JUEZ") {
+          const userDiscipline = meData.user.assignedDiscipline || (teachData?.teachers || []).find(
             (t: any) => t.fullName.toLowerCase() === meData.user.fullName.toLowerCase()
-          );
-          if (teacherObj) {
-            setJudgeTitle(teacherObj.title || "Docente Titular");
-            if (teacherObj.defaultDiscipline) {
-              setDiscipline(teacherObj.defaultDiscipline);
-            }
-          }
-          setIsLoggedIn(true);
+          )?.defaultDiscipline || "CANTO";
+          setDiscipline(userDiscipline);
         }
+        setIsLoggedIn(true);
       }
 
       const audList: AuditionRegistration[] = audData?.auditions || audData?.registrations || [];
@@ -110,12 +115,60 @@ export default function JudgesPortalPage() {
     }
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError("");
+
+    // If identifier and password are provided, authenticate with API
+    if (identifierInput.trim() && passwordInput.trim()) {
+      setAuthenticating(true);
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: identifierInput.trim(),
+            password: passwordInput.trim(),
+          }),
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success && data.user) {
+          setCurrentUser(data.user);
+          setJudgeName(data.user.fullName || data.user.username);
+          setJudgeTitle(data.user.title || "Docente Titular");
+
+          const userDisc = data.user.assignedDiscipline || discipline;
+          setDiscipline(userDisc);
+
+          const session = {
+            name: data.user.fullName,
+            title: data.user.title || "Docente Titular",
+            discipline: userDisc,
+          };
+          localStorage.setItem("dv_judge_session", JSON.stringify(session));
+          setIsLoggedIn(true);
+          return;
+        } else {
+          setLoginError(data.error || "Credenciales incorrectas.");
+          setAuthenticating(false);
+          return;
+        }
+      } catch (err) {
+        console.error(err);
+        setLoginError("Error de conexión al autenticar.");
+        setAuthenticating(false);
+        return;
+      } finally {
+        setAuthenticating(false);
+      }
+    }
+
     if (!judgeName.trim()) {
-      alert("Por favor selecciona o escribe tu nombre de docente.");
+      setLoginError("Por favor ingresa tu número de WhatsApp y contraseña o selecciona tu perfil.");
       return;
     }
+
     const session = {
       name: judgeName.trim(),
       title: judgeTitle || "Juez Evaluador",
@@ -129,14 +182,14 @@ export default function JudgesPortalPage() {
     localStorage.removeItem("dv_judge_session");
     setIsLoggedIn(false);
     setSelectedProduction(null);
-    if (currentUser?.role === "DOCENTE_JUEZ") {
-      await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
-      window.location.href = "/admin";
-    }
+    setCurrentUser(null);
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
   };
 
   const selectTeacherPreset = (teacher: Teacher & { defaultDiscipline?: EvaluationDiscipline }) => {
     setJudgeName(teacher.fullName);
+    setIdentifierInput(teacher.fullName);
+    setPasswordInput("DV@Docente2026");
     setJudgeTitle(
       teacher.specialties && teacher.specialties.length > 0
         ? `Docente de ${teacher.specialties[0]}`
@@ -326,16 +379,61 @@ export default function JudgesPortalPage() {
             </p>
           </div>
 
+          {loginError && (
+            <div className="p-3 bg-rose-950/60 border border-rose-500/50 rounded-xl text-rose-200 text-xs font-semibold flex items-center gap-2">
+              <span>⚠️</span>
+              <span>{loginError}</span>
+            </div>
+          )}
+
           <form onSubmit={handleLogin} className="flex flex-col gap-5 text-xs">
-            
-            {/* Dynamic Teachers Chips from Database */}
-            <div className="flex flex-col gap-2">
+            {/* WhatsApp Phone & Password Login */}
+            <div className="p-4 bg-[#181826] border border-purple-500/30 rounded-2xl flex flex-col gap-3">
+              <span className="font-bold text-xs text-purple-300 flex items-center gap-2 font-mono uppercase">
+                <span>🔐</span> Iniciar Sesión con Número de WhatsApp
+              </span>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-zinc-300">WhatsApp (10 dígitos) o Correo</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. 4771234567 o fanny@..."
+                    value={identifierInput}
+                    onChange={(e) => setIdentifierInput(e.target.value)}
+                    className="bg-[#101018] border border-[#2E2E44] focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-white font-mono font-bold focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-zinc-300">Contraseña Asignada</label>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    className="bg-[#101018] border border-[#2E2E44] focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-white font-mono focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={authenticating}
+                className="w-full py-3 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50 mt-1"
+              >
+                {authenticating ? "Autenticando..." : "🔑 Entrar con Credenciales"}
+              </button>
+            </div>
+
+            {/* Alternative: Select Teacher from Active Database */}
+            <div className="flex flex-col gap-2 pt-2 border-t border-[#202030]">
               <label className="font-semibold text-zinc-300 flex items-center justify-between">
-                <span>👨‍🏫 Planta Docente Sincronizada:</span>
+                <span>👨‍🏫 O selecciona tu perfil directo de docente:</span>
                 <span className="text-[10px] font-mono text-purple-400">{teachers.length} Maestros Activos</span>
               </label>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-48 overflow-y-auto pr-1">
                 {teachers.map((t) => {
                   const isSelected = judgeName === t.fullName;
                   const discLabel = t.defaultDiscipline === "CANTO" ? "🎤 Canto" : t.defaultDiscipline === "COREOGRAFIA" ? "💃 Danza" : "🎭 Actuación";
@@ -351,7 +449,6 @@ export default function JudgesPortalPage() {
                           : "bg-[#1A1A26] border-[#2A2A3E] text-zinc-300 hover:border-zinc-500"
                       }`}
                     >
-                      {/* Teacher Avatar */}
                       <div className="w-10 h-10 rounded-xl overflow-hidden bg-black/60 shrink-0 border border-white/10">
                         {t.imageUrl ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
@@ -364,39 +461,10 @@ export default function JudgesPortalPage() {
                       <div className="flex flex-col truncate">
                         <span className="font-bold text-xs text-white truncate">{t.fullName}</span>
                         <span className="text-[10px] text-amber-400 font-mono font-semibold">{discLabel}</span>
-                        <span className="text-[9px] text-zinc-400 truncate">
-                          {(t.specialties || []).slice(0, 2).join(", ") || "Docente"}
-                        </span>
                       </div>
                     </button>
                   );
                 })}
-              </div>
-            </div>
-
-            {/* Custom Name & Title */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1">
-                <label className="font-semibold text-zinc-300">Nombre del Juez</label>
-                <input
-                  type="text"
-                  placeholder="Ej. Mtro. Juan Pérez"
-                  value={judgeName}
-                  onChange={(e) => setJudgeName(e.target.value)}
-                  className="bg-[#181824] border border-[#2E2E44] focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-white font-bold focus:outline-none"
-                  required
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="font-semibold text-zinc-300">Título / Cargo</label>
-                <input
-                  type="text"
-                  placeholder="Ej. Jurado Invitado de Canto"
-                  value={judgeTitle}
-                  onChange={(e) => setJudgeTitle(e.target.value)}
-                  className="bg-[#181824] border border-[#2E2E44] focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-zinc-200 focus:outline-none"
-                />
               </div>
             </div>
 
@@ -407,9 +475,9 @@ export default function JudgesPortalPage() {
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { id: "CANTO", label: "🎤 Canto", desc: "Tesitura & Afinación" },
-                  { id: "COREOGRAFIA", label: "💃 Danza", desc: "Técnica & Memoria" },
-                  { id: "ACTUACION", label: "🎭 Actuación", desc: "Interpretación & Escena" },
+                  { id: "CANTO", label: "🎤 Canto", desc: "Técnica Vocal" },
+                  { id: "COREOGRAFIA", label: "💃 Danza", desc: "Expresión Corporal" },
+                  { id: "ACTUACION", label: "🎭 Actuación", desc: "Texto & Escena" },
                 ].map((d) => (
                   <button
                     key={d.id}
@@ -431,46 +499,27 @@ export default function JudgesPortalPage() {
             {/* Enter Button */}
             <button
               type="submit"
-              className="w-full py-4 bg-gradient-to-r from-purple-600 via-rose-600 to-amber-500 hover:from-purple-500 hover:to-rose-500 text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-rose-950/60 transition-all cursor-pointer mt-2"
+              className="w-full py-4 bg-gradient-to-r from-purple-600 via-rose-600 to-amber-500 hover:from-purple-500 hover:to-rose-500 text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-rose-950/60 transition-all cursor-pointer mt-1"
             >
-              🚀 Continuar a Selección de Obra
+              🚀 Continuar al Panel de Evaluación
             </button>
 
             <div className="text-center pt-3 border-t border-[#202030] flex flex-wrap items-center justify-between gap-2">
-              {currentUser?.role !== "DOCENTE_JUEZ" ? (
-                <Link
-                  href="/dashboard"
-                  className="px-3.5 py-2 bg-[#1F242C] hover:bg-[#2A313C] text-slate-200 hover:text-white border border-[#3A4350] rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
-                >
-                  <span>🏠</span>
-                  <span>Regresar al Dashboard Principal</span>
-                </Link>
-              ) : (
-                <Link
-                  href="/dashboard/audiciones"
-                  className="px-3.5 py-2 bg-purple-950/80 hover:bg-purple-900 text-purple-200 hover:text-white border border-purple-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
-                >
-                  <span>📊</span>
-                  <span>Ver Ranking de Casting</span>
-                </Link>
-              )}
+              <Link
+                href="/dashboard"
+                className="px-3.5 py-2 bg-[#1F242C] hover:bg-[#2A313C] text-slate-200 hover:text-white border border-[#3A4350] rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+              >
+                <span>🏠</span>
+                <span>Dashboard Principal</span>
+              </Link>
 
-              <div className="flex items-center gap-3">
-                <Link
-                  href="/dashboard/audiciones"
-                  className="text-xs text-zinc-400 hover:text-white transition-colors font-mono"
-                >
-                  Ranking de Casting ↗
-                </Link>
-                {currentUser?.role === "ADMIN" && (
-                  <Link
-                    href="/dashboard/usuarios"
-                    className="text-xs text-purple-400 hover:underline font-mono"
-                  >
-                    Ajustes Usuarios ↗
-                  </Link>
-                )}
-              </div>
+              <Link
+                href="/dashboard/audiciones"
+                className="px-3.5 py-2 bg-purple-950/80 hover:bg-purple-900 text-purple-200 hover:text-white border border-purple-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+              >
+                <span>📊</span>
+                <span>Ranking General</span>
+              </Link>
             </div>
           </form>
         </div>
@@ -478,39 +527,32 @@ export default function JudgesPortalPage() {
     );
   }
 
-  // ================= 2. PRODUCTION SELECTION GALLERY (CARDS CON FOTO) =================
+  // ================= 2. PRODUCTION SELECTION CARDS =================
   if (!selectedProduction) {
     return (
-      <div className="min-h-screen bg-[#07070A] text-white flex flex-col font-sans relative">
-        
-        {/* Top Header */}
-        <header className="bg-[#12121A] border-b border-[#242436] px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+      <div className="min-h-screen bg-[#07070A] text-white flex flex-col font-sans">
+        <header className="bg-[#12121A] border-b border-[#242436] px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30 shadow-md">
           <div className="flex items-center gap-3">
             <span className="text-2xl">⚖️</span>
             <div className="flex flex-col">
-              <span className="font-black text-sm text-white">Mesa de {judgeName}</span>
-              <span className="text-xs text-amber-400 font-mono">
-                {discipline === "CANTO" ? "🎤 Mesa de Canto" : discipline === "COREOGRAFIA" ? "💃 Mesa de Coreografía" : "🎭 Mesa de Actuación"}
+              <div className="flex items-center gap-2">
+                <span className="font-black text-base text-white">{judgeName}</span>
+                <span className="text-xs font-mono bg-purple-900/60 text-purple-300 border border-purple-500/40 px-2.5 py-0.5 rounded-full font-bold">
+                  {judgeTitle || "Juez Evaluador"}
+                </span>
+              </div>
+              <span className="text-xs text-zinc-400 font-mono">
+                Mesa: <strong className="text-amber-400">{discipline === "CANTO" ? "🎤 Canto" : discipline === "COREOGRAFIA" ? "💃 Danza" : "🎭 Actuación"}</strong>
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2.5">
-            {currentUser?.role !== "DOCENTE_JUEZ" && (
-              <Link
-                href="/dashboard"
-                className="px-4 py-2 bg-gradient-to-r from-red-600 via-rose-600 to-purple-600 hover:from-red-500 hover:to-purple-500 text-white border border-red-400/50 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-red-950/60 cursor-pointer"
-              >
-                <span>← 🏠</span>
-                <span>Dashboard Admin</span>
-              </Link>
-            )}
-
             <button
               onClick={handleLogout}
               className="px-3 py-1.5 bg-[#202030] hover:bg-[#2C2C40] text-zinc-300 border border-[#303046] rounded-xl text-xs font-semibold transition-colors cursor-pointer"
             >
-              🔄 {currentUser?.role === "DOCENTE_JUEZ" ? "Cerrar Sesión" : "Cambiar Juez"}
+              🔄 Cerrar Sesión
             </button>
             <Link
               href="/dashboard/audiciones"
@@ -521,9 +563,7 @@ export default function JudgesPortalPage() {
           </div>
         </header>
 
-        {/* Gallery Content */}
         <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-10 flex flex-col gap-8">
-          
           <div className="text-center flex flex-col items-center gap-2">
             <span className="font-mono text-xs uppercase tracking-widest text-purple-400 font-bold bg-purple-950/60 border border-purple-500/30 px-3.5 py-1 rounded-full">
               Paso 1 &bull; Selección de Producción
@@ -532,23 +572,19 @@ export default function JudgesPortalPage() {
               ¿Qué Obra o Montaje vas a Calificar Hoy?
             </h1>
             <p className="text-sm text-zinc-400 max-w-2xl">
-              Haz clic en la card de la producción para desplegar de inmediato a todo el alumnado registrado para esa audición, sin tener que buscar manualmente.
+              Haz clic en la card de la producción para desplegar de inmediato a todo el alumnado registrado para esa audición.
             </p>
           </div>
 
-          {/* Productions Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            
             {productions.map((prod) => {
               const candidateCount = auditions.filter((a) => matchCandidateToProd(a, prod)).length;
-
               return (
                 <div
                   key={prod.id}
                   onClick={() => handleSelectProduction(prod)}
                   className="group bg-[#12121A] hover:bg-[#181824] border-2 border-[#262638] hover:border-purple-500 rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 hover:-translate-y-1.5 flex flex-col cursor-pointer"
                 >
-                  {/* Poster Image */}
                   <div className="relative aspect-[16/10] w-full overflow-hidden bg-black/60">
                     {prod.imageUrl ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
@@ -558,28 +594,16 @@ export default function JudgesPortalPage() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-4xl">
-                        🎭
-                      </div>
+                      <div className="w-full h-full flex items-center justify-center text-4xl">🎭</div>
                     )}
-                    
-                    {/* Gradient Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#12121A] via-transparent to-black/30" />
-
-                    {/* Status Badge */}
                     <div className="absolute top-3 left-3 flex items-center gap-1.5">
                       {prod.isAuditionActive ? (
-                        <span className="px-3 py-1 bg-emerald-600/90 backdrop-blur-md text-white font-mono text-[10px] font-black uppercase tracking-wider rounded-full shadow-lg">
-                          ● Convocatoria Activa
-                        </span>
+                        <span className="px-3 py-1 bg-emerald-600/90 backdrop-blur-md text-white font-mono text-[10px] font-black uppercase tracking-wider rounded-full shadow-lg">● Convocatoria Activa</span>
                       ) : (
-                        <span className="px-3 py-1 bg-black/70 backdrop-blur-md text-zinc-400 font-mono text-[10px] uppercase rounded-full">
-                          En Cartelera
-                        </span>
+                        <span className="px-3 py-1 bg-black/70 backdrop-blur-md text-zinc-400 font-mono text-[10px] uppercase rounded-full">En Cartelera</span>
                       )}
                     </div>
-
-                    {/* Candidates Count Pill */}
                     <div className="absolute bottom-3 right-3">
                       <span className="px-3 py-1 bg-purple-600 text-white font-mono text-xs font-black rounded-xl shadow-lg flex items-center gap-1.5">
                         <span>👥</span>
@@ -587,64 +611,38 @@ export default function JudgesPortalPage() {
                       </span>
                     </div>
                   </div>
-
-                  {/* Card Content */}
                   <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between gap-4">
                     <div>
-                      <h2 className="text-xl font-black text-white group-hover:text-purple-400 transition-colors">
-                        {prod.title}
-                      </h2>
-                      <p className="text-xs text-zinc-400 mt-1 line-clamp-2">
-                        {prod.synopsis || "Producción oficial de teatro musical y formación escénica de DV Performing Arts."}
-                      </p>
+                      <h2 className="text-xl font-black text-white group-hover:text-purple-400 transition-colors">{prod.title}</h2>
+                      <p className="text-xs text-zinc-400 mt-1 line-clamp-2">{prod.synopsis || "Producción oficial de teatro musical y formación escénica de DV Performing Arts."}</p>
                     </div>
-
                     <div className="pt-4 border-t border-[#202030] flex items-center justify-between">
                       <div className="flex flex-col">
                         <span className="text-[10px] text-zinc-500 uppercase font-mono">Dirección:</span>
                         <span className="text-xs font-bold text-zinc-300">{prod.director || "Diego Vieyra"}</span>
                       </div>
-
-                      <button
-                        type="button"
-                        className="px-4 py-2 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center gap-1.5"
-                      >
-                        <span>Calificar</span>
-                        <span>→</span>
-                      </button>
+                      <button type="button" className="px-4 py-2 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all">Calificar →</button>
                     </div>
                   </div>
                 </div>
               );
             })}
-
-            {/* Universal Card: All Productions */}
             <div
               onClick={() => handleSelectProduction("ALL")}
               className="group bg-[#12121A] hover:bg-[#181824] border-2 border-dashed border-[#303046] hover:border-purple-400 rounded-3xl p-6 flex flex-col justify-between items-center text-center cursor-pointer transition-all duration-300 hover:-translate-y-1 shadow-xl"
             >
               <div className="flex flex-col items-center gap-3 my-auto">
                 <span className="text-5xl group-hover:scale-110 transition-transform">🌟</span>
-                <h2 className="text-xl font-black text-white group-hover:text-purple-300 transition-colors">
-                  Ver Todas las Producciones
-                </h2>
-                <p className="text-xs text-zinc-400 max-w-xs">
-                  Despliega a todos los aspirantes de la academia ({auditions.length} registrados) sin filtro de obra.
-                </p>
+                <h2 className="text-xl font-black text-white group-hover:text-purple-300 transition-colors">Ver Todas las Producciones</h2>
+                <p className="text-xs text-zinc-400 max-w-xs">Despliega a todos los aspirantes de la academia ({auditions.length} registrados) sin filtro de obra.</p>
               </div>
-
               <div className="w-full pt-4 border-t border-[#202030]">
-                <button
-                  type="button"
-                  className="w-full py-2.5 bg-[#202030] group-hover:bg-purple-600 text-zinc-200 group-hover:text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all"
-                >
+                <button type="button" className="w-full py-2.5 bg-[#202030] group-hover:bg-purple-600 text-zinc-200 group-hover:text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all">
                   Abrir Lista Global ({auditions.length}) →
                 </button>
               </div>
             </div>
-
           </div>
-
         </main>
       </div>
     );
@@ -789,7 +787,7 @@ export default function JudgesPortalPage() {
                     key={aud.id}
                     type="button"
                     onClick={() => setSelectedAuditionId(aud.id)}
-                    className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col gap-1 cursor-pointer relative ${
+                    className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col gap-2 cursor-pointer relative ${
                       isSelected
                         ? "bg-purple-950/80 border-purple-500 text-white shadow-lg shadow-purple-950/60"
                         : "bg-[#14141E] border-[#222230] text-zinc-300 hover:border-zinc-500"
@@ -810,13 +808,29 @@ export default function JudgesPortalPage() {
                       )}
                     </div>
 
-                    <span className="font-bold text-sm text-white truncate">{aud.fullName}</span>
-                    <span className="text-[10px] text-zinc-400 truncate">
-                      {aud.programName || "Teatro Musical"} &bull; {aud.phone}
-                    </span>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full overflow-hidden bg-black/50 border border-[#303046] shrink-0 flex items-center justify-center">
+                        {aud.headshotUrl ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={aud.headshotUrl}
+                            alt={aud.fullName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xs">👤</span>
+                        )}
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-bold text-sm text-white truncate">{aud.fullName}</span>
+                        <span className="text-[10px] text-zinc-400 truncate">
+                          {aud.programName || "Teatro Musical"} &bull; {aud.phone}
+                        </span>
+                      </div>
+                    </div>
 
                     {aud.overallScore !== undefined && aud.overallScore > 0 && (
-                      <div className="mt-1 flex items-center gap-2 text-[10px] font-mono text-amber-400">
+                      <div className="mt-0.5 flex items-center gap-2 text-[10px] font-mono text-amber-400">
                         <span>Puntaje Global:</span>
                         <span className="font-black">⭐ {aud.overallScore}/10</span>
                       </div>
@@ -835,20 +849,36 @@ export default function JudgesPortalPage() {
               
               {/* Candidate Info Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-5 border-b border-[#242436]">
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2 font-mono text-xs">
-                    <span className="bg-purple-600 text-white px-2.5 py-0.5 rounded-lg font-black">
-                      {currentAudition.folio}
-                    </span>
-                    <span className="text-zinc-400">&bull;</span>
-                    <span className="text-zinc-300">{currentAudition.phone}</span>
+                <div className="flex items-center gap-4">
+                  {/* Candidate Headshot */}
+                  <div className="w-16 h-16 rounded-2xl overflow-hidden bg-zinc-900 border-2 border-purple-500/70 shrink-0 shadow-lg flex items-center justify-center">
+                    {currentAudition.headshotUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={currentAudition.headshotUrl}
+                        alt={currentAudition.fullName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-3xl">👤</span>
+                    )}
                   </div>
-                  <h2 className="text-2xl font-black text-white mt-1">
-                    {currentAudition.fullName}
-                  </h2>
-                  <p className="text-xs text-rose-400 font-bold">
-                    🎭 Obra: {currentAudition.productionName || "Si No Es Ahora (El Musical)"} &bull; {currentAudition.programName}
-                  </p>
+
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2 font-mono text-xs">
+                      <span className="bg-purple-600 text-white px-2.5 py-0.5 rounded-lg font-black">
+                        {currentAudition.folio}
+                      </span>
+                      <span className="text-zinc-400">&bull;</span>
+                      <span className="text-zinc-300">{currentAudition.phone}</span>
+                    </div>
+                    <h2 className="text-2xl font-black text-white mt-1">
+                      {currentAudition.fullName}
+                    </h2>
+                    <p className="text-xs text-rose-400 font-bold">
+                      🎭 Obra: {currentAudition.productionName || "Si No Es Ahora (El Musical)"} &bull; {currentAudition.programName}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Live Average Score Display */}

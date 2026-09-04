@@ -17,14 +17,18 @@ export default function AuditionFeature() {
     phone: "",
     age: "",
     birthDate: "",
+    headshotUrl: "",
     productionId: "prod_si_no_es_ahora",
     productionName: "Si No Es Ahora (El Musical)",
+    googleDriveUrl: "",
     programId: "prog_teatro_musical",
     programName: "Teatro Musical Integral (Canto, Danza & Actuación)",
     preferredSchedule: "Turno Vespertino (Lunes a Viernes 16:00 - 20:00)",
     experienceNotes: "",
   });
 
+  const photoInputRef = React.useRef<HTMLInputElement>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submittedData, setSubmittedData] = useState<{
     folio: string;
@@ -33,6 +37,7 @@ export default function AuditionFeature() {
     programName: string;
     phone: string;
     preferredSchedule: string;
+    headshotUrl?: string;
   } | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -69,12 +74,44 @@ export default function AuditionFeature() {
               ...prev,
               productionId: defaultActive.id,
               productionName: defaultActive.title,
+              googleDriveUrl: defaultActive.driveFolderUrl || "",
             }));
           }
         }
       })
       .catch((err) => console.error(err));
   }, []);
+
+  const handlePhotoUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    if (!file.type.startsWith("image/")) {
+      alert("Por favor selecciona un archivo de imagen válido.");
+      return;
+    }
+
+    setUploadingPhoto(true);
+    const fd = new FormData();
+    fd.append("file", file);
+
+    try {
+      const res = await fetch("/api/media/upload", {
+        method: "POST",
+        body: fd,
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.file?.url) {
+        setFormData((prev) => ({ ...prev, headshotUrl: data.file.url }));
+      } else {
+        alert(data.error || "No se pudo subir la foto.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error al subir la fotografía.");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
   const programOptions = [
     { id: "prog_teatro_musical", name: "Teatro Musical Integral (Canto, Danza & Actuación)" },
@@ -126,6 +163,7 @@ export default function AuditionFeature() {
         programName: data.audition.programName || formData.programName,
         phone: data.audition.phone,
         preferredSchedule: data.audition.preferredSchedule || formData.preferredSchedule,
+        headshotUrl: data.audition.headshotUrl || formData.headshotUrl,
       });
 
       // Reset form
@@ -135,8 +173,10 @@ export default function AuditionFeature() {
         phone: "",
         age: "",
         birthDate: "",
+        headshotUrl: "",
         productionId: activeProduction ? activeProduction.id : "prod_si_no_es_ahora",
         productionName: activeProduction ? activeProduction.title : "Si No Es Ahora (El Musical)",
+        googleDriveUrl: activeProduction ? activeProduction.driveFolderUrl || "" : "",
         programId: "prog_teatro_musical",
         programName: "Teatro Musical Integral (Canto, Danza & Actuación)",
         preferredSchedule: "Turno Vespertino (Lunes a Viernes 16:00 - 20:00)",
@@ -362,6 +402,16 @@ export default function AuditionFeature() {
                   </div>
                 )}
 
+                {/* Hidden native camera/file input */}
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="user"
+                  className="hidden"
+                  onChange={(e) => handlePhotoUpload(e.target.files)}
+                />
+
                 {/* 1. Obra en Convocatoria (Selector reactivo) */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold text-purple-900 flex justify-between items-center">
@@ -377,6 +427,7 @@ export default function AuditionFeature() {
                         ...prev,
                         productionId: e.target.value,
                         productionName: selected ? selected.title : "Convocatoria General",
+                        googleDriveUrl: selected ? selected.driveFolderUrl || "" : "",
                       }));
                     }}
                     className="w-full bg-[#F8F9FA] border-2 border-purple-200 focus:border-purple-600 focus:bg-white rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-bold focus:outline-none cursor-pointer shadow-sm transition-all"
@@ -389,7 +440,43 @@ export default function AuditionFeature() {
                   </select>
                 </div>
 
-                {/* 2. Nombre Completo */}
+                {/* 2. Fotografía / Headshot del Aspirante (Móvil / Cámara) */}
+                <div className="p-3.5 bg-[#F8F9FA] border-2 border-dashed border-purple-200 rounded-2xl flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-14 h-14 rounded-2xl bg-purple-100 border-2 border-purple-300 overflow-hidden flex items-center justify-center shrink-0 shadow-inner">
+                      {formData.headshotUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={formData.headshotUrl} alt="Foto aspirante" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-2xl">📸</span>
+                      )}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-bold text-slate-900">Foto o Selfie para Casting</span>
+                      <span className="text-[10px] text-slate-500 leading-tight">
+                        {formData.headshotUrl ? "✓ Fotografía cargada con éxito" : "Tómate una foto o sube tu retrato desde tu celular"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={uploadingPhoto}
+                    onClick={() => photoInputRef.current?.click()}
+                    className="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shrink-0 cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    {uploadingPhoto ? (
+                      <span className="animate-pulse">Subiendo...</span>
+                    ) : (
+                      <>
+                        <span>{formData.headshotUrl ? "Cambiar" : "Tomar Foto"}</span>
+                        <span>📷</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* 3. Nombre Completo */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold text-slate-800">
                     Nombre completo del aspirante *

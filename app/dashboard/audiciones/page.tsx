@@ -11,7 +11,7 @@ import {
 import { AuditionStats } from "@/lib/storage";
 
 export default function AuditionsDashboardPage() {
-  const [activeTab, setActiveTab] = useState<"ranking" | "pipeline" | "cast" | "reports" | "rubrics">("ranking");
+  const [activeTab, setActiveTab] = useState<"ranking" | "pipeline" | "cast" | "reports" | "rubrics" | "history">("ranking");
   const [auditions, setAuditions] = useState<AuditionRegistration[]>([]);
   const [productions, setProductions] = useState<Production[]>([]);
   const [criteria, setCriteria] = useState<EvaluationCriteria[]>([]);
@@ -27,6 +27,21 @@ export default function AuditionsDashboardPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
+  // History Tab & Dossier Search State
+  const [historyQuery, setHistoryQuery] = useState("");
+  const [historyResults, setHistoryResults] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  // Morning 8:00 AM Reminder Modal State
+  const [morningReminderModalOpen, setMorningReminderModalOpen] = useState(false);
+  const [morningReminderLoading, setMorningReminderLoading] = useState(false);
+  const [morningWp, setMorningWp] = useState(true);
+  const [morningEmail, setMorningEmail] = useState(true);
+
+  // Director General Score Breakdown Modal State
+  const [scoreBreakdownModalOpen, setScoreBreakdownModalOpen] = useState(false);
+  const [scoreBreakdownTargetAudition, setScoreBreakdownTargetAudition] = useState<AuditionRegistration | null>(null);
+
   // Role Assignment Modal State
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [roleTargetAudition, setRoleTargetAudition] = useState<AuditionRegistration | null>(null);
@@ -35,10 +50,10 @@ export default function AuditionsDashboardPage() {
   const [notifyWhatsApp, setNotifyWhatsApp] = useState(true);
   const [notifyEmail, setNotifyEmail] = useState(true);
 
-  // Second Chance Modal State
+  // Second Chance Video Modal State
   const [secondChanceModalOpen, setSecondChanceModalOpen] = useState(false);
-  const [secondChanceDate, setSecondChanceDate] = useState("Próximo Sábado 5 de Septiembre 2026");
-  const [secondChanceTime, setSecondChanceTime] = useState("11:00 AM");
+  const [secondChanceDate, setSecondChanceDate] = useState("domingo 19 de octubre de 2025");
+  const [secondChanceTime, setSecondChanceTime] = useState("10:00 p.m. (hora CDMX)");
   const [secondChanceMessage, setSecondChanceMessage] = useState("");
   const [secondChanceWp, setSecondChanceWp] = useState(true);
   const [secondChanceEmail, setSecondChanceEmail] = useState(true);
@@ -85,6 +100,57 @@ export default function AuditionsDashboardPage() {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(""), 5000);
+  };
+
+  // Search Student Dossier History
+  const searchStudentHistory = async (query = historyQuery) => {
+    setHistoryLoading(true);
+    try {
+      const res = await fetch(`/api/auditions/history?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      if (data?.success && Array.isArray(data.students)) {
+        setHistoryResults(data.students);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // Dispatch 8:00 AM Morning Audition Reminder
+  const handleSendMorningReminder = async () => {
+    setMorningReminderLoading(true);
+    try {
+      const res = await fetch("/api/auditions/reminder-8am", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productionId: selectedProductionId,
+          auditionIds: selectedIds.length > 0 ? selectedIds : undefined,
+          notifyWhatsApp: morningWp,
+          notifyEmail: morningEmail,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message || "✓ Recordatorio 8:00 AM enviado con éxito.");
+        setMorningReminderModalOpen(false);
+        loadData();
+      } else {
+        alert(data.error || "Error al enviar recordatorio.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error de conexión al enviar recordatorios.");
+    } finally {
+      setMorningReminderLoading(false);
+    }
+  };
+
+  const openScoreBreakdownModal = (aud: AuditionRegistration) => {
+    setScoreBreakdownTargetAudition(aud);
+    setScoreBreakdownModalOpen(true);
   };
 
   // Helper to match candidate to production
@@ -575,6 +641,15 @@ export default function AuditionsDashboardPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={() => setMorningReminderModalOpen(true)}
+            className="px-3.5 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-amber-950/40 cursor-pointer"
+            title="Enviar recordatorio matutino a los aspirantes con cita, ubicación y Drive de la obra"
+          >
+            <span>⏰</span>
+            <span>Recordatorio 8:00 AM</span>
+          </button>
+
           <Link
             href="/jueces"
             target="_blank"
@@ -656,31 +731,22 @@ export default function AuditionsDashboardPage() {
                         e.currentTarget.onerror = null;
                         e.currentTarget.src = "/images/productions/si-no-es-ahora.jpg";
                       }}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-3xl">
-                      🎭
-                    </div>
+                    <div className="w-full h-full flex items-center justify-center text-2xl">🎭</div>
                   )}
-                  
-                  {/* Status Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
                   <div className="absolute top-2 left-2">
-                    {prod.isAuditionActive ? (
-                      <span className="px-2 py-0.5 bg-emerald-600/90 text-white font-mono text-[9px] font-black uppercase rounded-md shadow">
-                        ● Activa
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 bg-black/70 text-slate-300 font-mono text-[9px] rounded-md">
-                        Cartelera
+                    {prod.isAuditionActive && (
+                      <span className="px-2 py-0.5 bg-red-600 text-white font-mono text-[9px] font-bold rounded uppercase">
+                        ★ Activa
                       </span>
                     )}
                   </div>
-
-                  {/* Registered count pill */}
                   <div className="absolute bottom-2 right-2">
-                    <span className="px-2 py-0.5 bg-purple-600 text-white font-mono text-[10px] font-black rounded-lg shadow flex items-center gap-1">
-                      <span>👥 {prodAuditions.length}</span>
+                    <span className="px-2 py-0.5 bg-black/70 text-purple-300 font-mono text-[10px] font-bold rounded">
+                      {prodAuditions.length} Aspirantes
                     </span>
                   </div>
                 </div>
@@ -749,6 +815,21 @@ export default function AuditionsDashboardPage() {
             <span className="text-[10px] font-mono bg-black/40 px-1.5 py-0.5 rounded font-bold text-emerald-300">
               {castAuditions.length}
             </span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab("history");
+              if (historyResults.length === 0) searchStudentHistory("");
+            }}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+              activeTab === "history"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-950/50"
+                : "text-slate-400 hover:text-indigo-300"
+            }`}
+          >
+            <span>🗂️</span>
+            <span>Historial / Expedientes de Alumnos</span>
           </button>
 
           <button
@@ -873,21 +954,43 @@ export default function AuditionsDashboardPage() {
                             )}
                           </td>
 
-                          {/* Candidate Name & Short Folio */}
+                          {/* Candidate Name, Photo & Short Folio */}
                           <td className="py-3 px-4">
-                            <div className="flex flex-col">
-                              <span className="font-bold text-white text-sm flex items-center gap-2">
-                                {aud.fullName}
-                                {aud.status === "BLACKLIST" && (
-                                  <span className="text-xs text-rose-400" title="En Lista Negra">🚫</span>
+                            <div className="flex items-center gap-3">
+                              <div
+                                onClick={() => openScoreBreakdownModal(aud)}
+                                className="w-9 h-9 rounded-xl overflow-hidden bg-[#21262D] border border-slate-700 shrink-0 cursor-pointer hover:border-purple-400 transition-colors flex items-center justify-center"
+                                title="Clic para ver expediente y notas de jueces"
+                              >
+                                {aud.headshotUrl ? (
+                                  /* eslint-disable-next-line @next/next/no-img-element */
+                                  <img
+                                    src={aud.headshotUrl}
+                                    alt={aud.fullName}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-sm">👤</span>
                                 )}
-                              </span>
-                              <div className="flex items-center gap-2 mt-0.5 font-mono text-[10px] text-slate-400">
-                                <span className="text-purple-400 font-bold bg-purple-950/80 px-1.5 py-0.2 rounded border border-purple-500/30">
-                                  {aud.folio}
+                              </div>
+
+                              <div className="flex flex-col">
+                                <span
+                                  onClick={() => openScoreBreakdownModal(aud)}
+                                  className="font-bold text-white text-sm flex items-center gap-2 hover:text-purple-300 cursor-pointer transition-colors"
+                                >
+                                  {aud.fullName}
+                                  {aud.status === "BLACKLIST" && (
+                                    <span className="text-xs text-rose-400" title="En Lista Negra">🚫</span>
+                                  )}
                                 </span>
-                                <span>&bull;</span>
-                                <span>{aud.phone}</span>
+                                <div className="flex items-center gap-2 mt-0.5 font-mono text-[10px] text-slate-400">
+                                  <span className="text-purple-400 font-bold bg-purple-950/80 px-1.5 py-0.2 rounded border border-purple-500/30">
+                                    {aud.folio}
+                                  </span>
+                                  <span>&bull;</span>
+                                  <span>{aud.phone}</span>
+                                </div>
                               </div>
                             </div>
                           </td>
@@ -902,7 +1005,11 @@ export default function AuditionsDashboardPage() {
                           {/* Canto Score */}
                           <td className="py-3 px-4 text-center font-mono">
                             {aud.cantoAverage !== undefined ? (
-                              <span className={`border px-2 py-0.5 rounded font-bold ${getBadgeColor(aud.cantoAverage)}`}>
+                              <span
+                                onClick={() => openScoreBreakdownModal(aud)}
+                                className={`border px-2 py-0.5 rounded font-bold cursor-pointer hover:scale-105 transition-transform ${getBadgeColor(aud.cantoAverage)}`}
+                                title="Ver notas de Canto"
+                              >
                                 {aud.cantoAverage}
                               </span>
                             ) : (
@@ -913,7 +1020,11 @@ export default function AuditionsDashboardPage() {
                           {/* Dance Score */}
                           <td className="py-3 px-4 text-center font-mono">
                             {aud.danceAverage !== undefined ? (
-                              <span className={`border px-2 py-0.5 rounded font-bold ${getBadgeColor(aud.danceAverage)}`}>
+                              <span
+                                onClick={() => openScoreBreakdownModal(aud)}
+                                className={`border px-2 py-0.5 rounded font-bold cursor-pointer hover:scale-105 transition-transform ${getBadgeColor(aud.danceAverage)}`}
+                                title="Ver notas de Danza"
+                              >
                                 {aud.danceAverage}
                               </span>
                             ) : (
@@ -924,7 +1035,11 @@ export default function AuditionsDashboardPage() {
                           {/* Acting Score */}
                           <td className="py-3 px-4 text-center font-mono">
                             {aud.actingAverage !== undefined ? (
-                              <span className={`border px-2 py-0.5 rounded font-bold ${getBadgeColor(aud.actingAverage)}`}>
+                              <span
+                                onClick={() => openScoreBreakdownModal(aud)}
+                                className={`border px-2 py-0.5 rounded font-bold cursor-pointer hover:scale-105 transition-transform ${getBadgeColor(aud.actingAverage)}`}
+                                title="Ver notas de Actuación"
+                              >
                                 {aud.actingAverage}
                               </span>
                             ) : (
@@ -935,15 +1050,20 @@ export default function AuditionsDashboardPage() {
                           {/* Overall Score */}
                           <td className="py-3 px-4 text-center font-mono">
                             {hasOverall ? (
-                              <span className={`text-sm font-black px-3 py-1 rounded-xl shadow-md border ${
-                                (aud.overallScore || 0) >= 8
-                                  ? "bg-emerald-600 text-white border-emerald-400 shadow-emerald-950/50"
-                                  : (aud.overallScore || 0) >= 5
-                                  ? "bg-yellow-500 text-black border-yellow-300 shadow-yellow-950/50"
-                                  : "bg-red-600 text-white border-red-400 shadow-red-950/50"
-                              }`}>
+                              <button
+                                type="button"
+                                onClick={() => openScoreBreakdownModal(aud)}
+                                className={`text-sm font-black px-3 py-1 rounded-xl shadow-md border cursor-pointer hover:scale-105 transition-transform ${
+                                  (aud.overallScore || 0) >= 8
+                                    ? "bg-emerald-600 text-white border-emerald-400 shadow-emerald-950/50"
+                                    : (aud.overallScore || 0) >= 5
+                                    ? "bg-yellow-500 text-black border-yellow-300 shadow-yellow-950/50"
+                                    : "bg-red-600 text-white border-red-400 shadow-red-950/50"
+                                }`}
+                                title="Ver desglose completo de jueces"
+                              >
                                 {aud.overallScore} / 10
-                              </span>
+                              </button>
                             ) : (
                               <span className="text-slate-500 text-[10px]">Sin evaluar</span>
                             )}
@@ -961,19 +1081,29 @@ export default function AuditionsDashboardPage() {
                             )}
                           </td>
 
-                          {/* Action Button */}
+                          {/* Action Buttons */}
                           <td className="py-3 px-4 text-right">
-                            <button
-                              type="button"
-                              onClick={() => openAssignRoleModal(aud)}
-                              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer shadow ${
-                                aud.assignedRole
-                                  ? "bg-[#21262D] hover:bg-[#30363D] text-slate-200 border border-[#30363D]"
-                                  : "bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white"
-                              }`}
-                            >
-                              {aud.assignedRole ? "Editar Papel / Reenviar" : "🌟 Asignar Personaje"}
-                            </button>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => openScoreBreakdownModal(aud)}
+                                className="p-1.5 bg-[#21262D] hover:bg-[#30363D] text-slate-300 rounded-lg text-xs transition-colors cursor-pointer"
+                                title="Ver expediente completo"
+                              >
+                                👁️
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => openAssignRoleModal(aud)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer shadow ${
+                                  aud.assignedRole
+                                    ? "bg-[#21262D] hover:bg-[#30363D] text-slate-200 border border-[#30363D]"
+                                    : "bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white"
+                                }`}
+                              >
+                                {aud.assignedRole ? "Editar Papel / Reenviar" : "🌟 Asignar Personaje"}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1548,6 +1678,159 @@ export default function AuditionsDashboardPage() {
         </div>
       )}
 
+      {/* ================= TAB 6: HISTORIAL / EXPEDIENTES DE ALUMNOS ================= */}
+      {activeTab === "history" && (
+        <div className="flex flex-col gap-6">
+          <div className="bg-[#161B22] border border-[#30363D] rounded-3xl p-6 flex flex-col gap-4 shadow-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#30363D] pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">🗂️</span>
+                  <h2 className="text-base font-bold text-white">
+                    Expediente Histórico de Alumnos & Aspirantes
+                  </h2>
+                  <span className="bg-indigo-950 text-indigo-300 border border-indigo-500/40 text-[10px] font-mono px-2 py-0.5 rounded font-bold">
+                    {historyResults.length} Alumnos Encontrados
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  Busca a cualquier postulante por nombre, teléfono, correo o folio para consultar todas sus audiciones a lo largo de los años, calificaciones de jurados, notas y papeles asignados.
+                </p>
+              </div>
+
+              <div className="w-full sm:w-80 flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Buscar alumno, teléfono, folio..."
+                  value={historyQuery}
+                  onChange={(e) => {
+                    setHistoryQuery(e.target.value);
+                    searchStudentHistory(e.target.value);
+                  }}
+                  className="w-full bg-[#0D1117] border border-[#30363D] focus:border-indigo-500 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none font-sans"
+                />
+                <button
+                  type="button"
+                  onClick={() => searchStudentHistory(historyQuery)}
+                  className="p-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  title="Buscar"
+                >
+                  🔍
+                </button>
+              </div>
+            </div>
+
+            {/* Results */}
+            {historyLoading ? (
+              <div className="py-16 text-center text-slate-500 font-mono text-xs flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                <span>Consultando expedientes históricos...</span>
+              </div>
+            ) : historyResults.length === 0 ? (
+              <div className="py-16 text-center text-slate-500 font-mono text-xs">
+                No se encontraron registros de aspirantes con el término buscado.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {historyResults.map((item, idx) => {
+                  const c = item.candidate;
+                  return (
+                    <div
+                      key={idx}
+                      className="bg-[#0D1117] border border-[#30363D] hover:border-indigo-500/50 rounded-2xl p-5 flex flex-col justify-between gap-4 transition-all shadow-sm"
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Avatar / Headshot */}
+                        <div className="w-14 h-14 rounded-2xl overflow-hidden bg-slate-800 border-2 border-[#30363D] shrink-0 flex items-center justify-center">
+                          {c.headshotUrl ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img
+                              src={c.headshotUrl}
+                              alt={c.fullName}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-2xl">👤</span>
+                          )}
+                        </div>
+
+                        <div className="flex-1 flex flex-col gap-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-bold text-white text-sm truncate">{c.fullName}</h3>
+                            <span className="text-[10px] font-mono bg-indigo-950/80 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded font-bold shrink-0">
+                              {item.totalAuditions} {item.totalAuditions === 1 ? "Audición" : "Audiciones"}
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-slate-400">
+                            {c.phone && <span className="text-emerald-400 font-bold">📱 {c.phone}</span>}
+                            {c.email && <span className="truncate">✉️ {c.email}</span>}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Timeline of Auditions */}
+                      <div className="flex flex-col gap-2 pt-3 border-t border-[#21262D]">
+                        <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-bold">
+                          Historial de Convocatorias & Calificaciones:
+                        </span>
+                        <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+                          {item.history.map((h: AuditionRegistration) => (
+                            <div
+                              key={h.id}
+                              className="p-2.5 bg-[#161B22] rounded-xl border border-[#30363D] flex items-center justify-between gap-3 text-xs"
+                            >
+                              <div className="flex flex-col min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono text-purple-400 font-bold text-[10px] bg-purple-950/70 px-1.5 py-0.2 rounded border border-purple-500/30">
+                                    {h.folio}
+                                  </span>
+                                  <span className="font-bold text-white truncate text-[11px]">
+                                    {h.productionName || "DV Performing Arts"}
+                                  </span>
+                                </div>
+                                <span className="text-[10px] text-slate-500 font-mono mt-0.5">
+                                  {new Date(h.createdAt).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
+                                  {h.assignedRole && ` • Rol: ${h.assignedRole}`}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                {h.overallScore ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => openScoreBreakdownModal(h)}
+                                    className="px-2 py-0.5 rounded font-mono font-black text-[11px] bg-purple-950 text-purple-300 border border-purple-500/40 hover:bg-purple-900 cursor-pointer"
+                                    title="Ver desglose de jueces"
+                                  >
+                                    ⭐ {h.overallScore}/10
+                                  </button>
+                                ) : (
+                                  <span className="text-[10px] text-slate-600 font-mono">Sin calificar</span>
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={() => openScoreBreakdownModal(h)}
+                                  className="p-1 bg-[#21262D] hover:bg-[#30363D] text-slate-300 rounded text-xs cursor-pointer"
+                                  title="Ver expediente"
+                                >
+                                  👁️
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ================= MODAL: ASSIGN ROLE & NOTIFY WHATSAPP ================= */}
       {roleModalOpen && roleTargetAudition && (
         <div
@@ -1678,7 +1961,292 @@ export default function AuditionsDashboardPage() {
         </div>
       )}
 
-      {/* ================= MODAL: SEND SECOND CHANCE WHATSAPP/EMAIL ================= */}
+      {/* ================= MODAL: DIRECTOR GENERAL SCORE BREAKDOWN ================= */}
+      {scoreBreakdownModalOpen && scoreBreakdownTargetAudition && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setScoreBreakdownModalOpen(false)}
+        >
+          <div
+            className="bg-[#161B22] border-2 border-purple-500/70 rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden cursor-default max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-6 bg-gradient-to-r from-purple-950/80 to-slate-900 border-b border-[#30363D] flex justify-between items-start">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl overflow-hidden bg-slate-800 border-2 border-purple-500 shrink-0 flex items-center justify-center">
+                  {scoreBreakdownTargetAudition.headshotUrl ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={scoreBreakdownTargetAudition.headshotUrl}
+                      alt={scoreBreakdownTargetAudition.fullName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-2xl">👤</span>
+                  )}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono bg-purple-600 text-white px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                      {scoreBreakdownTargetAudition.folio}
+                    </span>
+                    <span className="text-xs text-purple-300 font-mono">
+                      {scoreBreakdownTargetAudition.productionName || "DV Performing Arts"}
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-black text-white mt-1">
+                    {scoreBreakdownTargetAudition.fullName}
+                  </h2>
+                  <div className="flex items-center gap-3 text-xs text-slate-300 font-mono mt-0.5">
+                    <span>📱 {scoreBreakdownTargetAudition.phone}</span>
+                    <span>&bull;</span>
+                    <span>✉️ {scoreBreakdownTargetAudition.email}</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setScoreBreakdownModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto flex flex-col gap-6 text-xs">
+              
+              {/* Overall Score Summary */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col items-center justify-center">
+                  <span className="text-[10px] text-slate-400 uppercase font-mono">Promedio Canto</span>
+                  <span className="text-base font-black text-pink-400 font-mono">
+                    {scoreBreakdownTargetAudition.cantoAverage !== undefined ? `${scoreBreakdownTargetAudition.cantoAverage} / 10` : "-"}
+                  </span>
+                </div>
+                <div className="p-3 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col items-center justify-center">
+                  <span className="text-[10px] text-slate-400 uppercase font-mono">Promedio Danza</span>
+                  <span className="text-base font-black text-indigo-400 font-mono">
+                    {scoreBreakdownTargetAudition.danceAverage !== undefined ? `${scoreBreakdownTargetAudition.danceAverage} / 10` : "-"}
+                  </span>
+                </div>
+                <div className="p-3 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col items-center justify-center">
+                  <span className="text-[10px] text-slate-400 uppercase font-mono">Promedio Actuación</span>
+                  <span className="text-base font-black text-orange-400 font-mono">
+                    {scoreBreakdownTargetAudition.actingAverage !== undefined ? `${scoreBreakdownTargetAudition.actingAverage} / 10` : "-"}
+                  </span>
+                </div>
+                <div className="p-3 bg-purple-950/60 border border-purple-500/40 rounded-xl flex flex-col items-center justify-center">
+                  <span className="text-[10px] text-purple-300 uppercase font-mono font-bold">Puntaje Global</span>
+                  <span className="text-lg font-black text-white font-mono">
+                    ⭐ {scoreBreakdownTargetAudition.overallScore !== undefined ? `${scoreBreakdownTargetAudition.overallScore} / 10` : "-"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Juror Scorecards Breakdown */}
+              <div className="flex flex-col gap-3">
+                <h3 className="font-bold text-white text-xs uppercase tracking-wider font-mono flex items-center gap-2">
+                  <span>⚖️</span> Evaluación Detallada por Juez & Disciplina:
+                </h3>
+
+                {!scoreBreakdownTargetAudition.scores || scoreBreakdownTargetAudition.scores.length === 0 ? (
+                  <div className="py-8 text-center text-slate-500 font-mono text-xs bg-[#0D1117] rounded-2xl border border-[#30363D]">
+                    Este aspirante aún no cuenta con evaluaciones capturadas por los jueces.
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {scoreBreakdownTargetAudition.scores.map((sc, scIdx) => {
+                      const discEmoji = sc.discipline === "CANTO" ? "🎵" : sc.discipline === "COREOGRAFIA" ? "💃" : "🎭";
+                      return (
+                        <div
+                          key={scIdx}
+                          className="bg-[#0D1117] border border-[#30363D] rounded-2xl p-4 flex flex-col gap-3"
+                        >
+                          <div className="flex items-center justify-between border-b border-[#21262D] pb-2.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-base">{discEmoji}</span>
+                              <div>
+                                <span className="font-bold text-white">{sc.judgeName}</span>
+                                <span className="text-[11px] text-slate-400 ml-1.5">({sc.judgeTitle || "Juez"})</span>
+                              </div>
+                              <span className="text-[10px] font-mono bg-purple-950/80 text-purple-300 border border-purple-500/30 px-2 py-0.2 rounded font-bold">
+                                {sc.discipline}
+                              </span>
+                            </div>
+                            <span className="text-sm font-black text-yellow-400 font-mono bg-yellow-950/60 border border-yellow-500/40 px-2.5 py-0.5 rounded-lg">
+                              ⭐ {sc.averageScore} / 10
+                            </span>
+                          </div>
+
+                          {/* Rubrics breakdown */}
+                          {sc.scores && Object.keys(sc.scores).length > 0 && (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                              {Object.entries(sc.scores).map(([critId, scoreVal]) => {
+                                const critObj = criteria.find((c) => c.id === critId);
+                                const critName = critObj?.name || critId;
+                                return (
+                                  <div
+                                    key={critId}
+                                    className="p-2 bg-[#161B22] border border-[#21262D] rounded-lg flex items-center justify-between text-[11px]"
+                                  >
+                                    <span className="text-slate-300 truncate">{critName}</span>
+                                    <span className="font-mono font-bold text-purple-300">{scoreVal}/10</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* Juror Confidential Notes */}
+                          {sc.judgeNotes && (
+                            <div className="p-3 bg-purple-950/20 border border-purple-500/20 rounded-xl text-slate-300 text-xs">
+                              <span className="text-[10px] font-mono text-purple-400 font-bold block mb-1">
+                                📝 Notas y Observaciones del Juez:
+                              </span>
+                              <p className="italic">{sc.judgeNotes}</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Experience notes provided by candidate during registration */}
+              {scoreBreakdownTargetAudition.experienceNotes && (
+                <div className="p-4 bg-[#0D1117] border border-[#30363D] rounded-2xl flex flex-col gap-1.5">
+                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-bold">
+                    📋 Experiencia Escénica Declarada por el Aspirante:
+                  </span>
+                  <p className="text-slate-300 text-xs leading-relaxed">
+                    {scoreBreakdownTargetAudition.experienceNotes}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-[#0D1117] border-t border-[#30363D] flex justify-end">
+              <button
+                type="button"
+                onClick={() => setScoreBreakdownModalOpen(false)}
+                className="px-5 py-2 bg-[#21262D] hover:bg-[#30363D] text-white rounded-xl font-bold transition-colors cursor-pointer"
+              >
+                Cerrar Expediente
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: 8:00 AM MORNING AUDITION REMINDER ================= */}
+      {morningReminderModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setMorningReminderModalOpen(false)}
+        >
+          <div
+            className="bg-[#161B22] border-2 border-amber-500/70 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-6 bg-gradient-to-r from-amber-950/80 to-slate-900 border-b border-[#30363D] flex justify-between items-start">
+              <div>
+                <span className="text-[10px] font-mono bg-amber-500 text-black px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                  Notificación Automática Matutina
+                </span>
+                <h2 className="text-xl font-black text-white mt-1.5">
+                  Recordatorio 8:00 AM (Día de Audición)
+                </h2>
+                <p className="text-xs text-amber-300 font-mono mt-0.5">
+                  {selectedIds.length > 0
+                    ? `${selectedIds.length} aspirante(s) seleccionados recibirán el recordatorio`
+                    : `Se enviará a todos los aspirantes de "${activeProductionObj?.title || "Todas las obras"}"`}
+                </p>
+              </div>
+              <button
+                onClick={() => setMorningReminderModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 flex flex-col gap-4 text-xs">
+              <div className="p-4 bg-[#0D1117] border border-amber-500/30 rounded-2xl flex flex-col gap-2">
+                <span className="font-bold text-white flex items-center gap-1.5 text-xs">
+                  <span>⏰</span> ¿Qué contiene este mensaje para los alumnos?
+                </span>
+                <ul className="text-slate-300 text-[11px] list-disc list-inside space-y-1">
+                  <li>Número de audición oficial y folio.</li>
+                  <li>Horario y cita de presentación.</li>
+                  <li>Sede oficial y enlace directo a <strong>Google Maps / Waze</strong>.</li>
+                  <li>Enlace a la carpeta de Google Drive con pistas y libretos de la obra.</li>
+                  <li>Recomendaciones de vestimenta deportiva para el bloque coreográfico.</li>
+                </ul>
+              </div>
+
+              {/* Channel Toggles */}
+              <div className="p-4 bg-[#0D1117] border border-[#30363D] rounded-2xl flex flex-col gap-3">
+                <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider font-mono">
+                  Canales de Notificación:
+                </span>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-400 text-base">📱</span>
+                    <span className="text-slate-200 font-semibold">WhatsApp (Evolution API)</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={morningWp}
+                    onChange={(e) => setMorningWp(e.target.checked)}
+                    className="w-4 h-4 text-emerald-500 rounded bg-[#161B22] border-[#30363D] cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-rose-400 text-base">✉️</span>
+                    <span className="text-slate-200 font-semibold">Correo Electrónico (Workspace)</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={morningEmail}
+                    onChange={(e) => setMorningEmail(e.target.checked)}
+                    className="w-4 h-4 text-rose-500 rounded bg-[#161B22] border-[#30363D] cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setMorningReminderModalOpen(false)}
+                  className="px-4 py-2 bg-[#21262D] hover:bg-[#30363D] text-slate-300 rounded-xl font-bold transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSendMorningReminder}
+                  disabled={morningReminderLoading}
+                  className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-black uppercase tracking-wider rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {morningReminderLoading ? "Disparando Recordatorios..." : "⏰ Disparar Recordatorio 8:00 AM"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: SEND SECOND CHANCE VIDEO AUDITION ================= */}
       {secondChanceModalOpen && (
         <div
           className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
@@ -1692,13 +2260,13 @@ export default function AuditionsDashboardPage() {
             <div className="p-6 bg-gradient-to-r from-yellow-950/60 to-slate-900 border-b border-[#30363D] flex justify-between items-start">
               <div>
                 <span className="text-[10px] font-mono bg-yellow-500 text-black px-2 py-0.5 rounded font-bold uppercase tracking-wider">
-                  Reprogramación de Audición
+                  Reprogramación & Video Audición
                 </span>
                 <h2 className="text-xl font-black text-white mt-1.5">
-                  Disparar 2ª Oportunidad
+                  Disparar 2ª Oportunidad (Envío de Video)
                 </h2>
                 <p className="text-xs text-yellow-300 font-mono">
-                  {selectedIds.length} aspirante(s) recibirán este mensaje de convocatoria
+                  {selectedIds.length} aspirante(s) recibirán este mensaje de convocatoria por video
                 </p>
               </div>
               <button
@@ -1712,9 +2280,22 @@ export default function AuditionsDashboardPage() {
             {/* Modal Form */}
             <form onSubmit={handleSendSecondChance} className="p-6 flex flex-col gap-4 text-xs">
               
+              {/* Guidelines Preview Banner */}
+              <div className="p-3.5 bg-[#0D1117] border border-yellow-500/30 rounded-2xl flex flex-col gap-1.5 text-[11px]">
+                <span className="font-bold text-yellow-400 flex items-center gap-1.5">
+                  <span>🎬</span> Lineamientos del Video de Audición:
+                </span>
+                <ul className="text-slate-300 space-y-0.5 list-disc list-inside">
+                  <li><strong>Formato:</strong> Horizontal, máx. 1:30 min.</li>
+                  <li><strong>Contenido:</strong> Canción contemporánea o de teatro musical.</li>
+                  <li><strong>Medio:</strong> Enlace a Drive o YouTube no listado.</li>
+                  <li><strong>Nombre de archivo:</strong> <code className="text-yellow-300 font-mono">Audicion_[Nombre]_[Folio].mp4</code></li>
+                </ul>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="font-bold text-white">📅 Nueva Fecha de Audición:</label>
+                  <label className="font-bold text-white">📅 Fecha Límite de Envío:</label>
                   <input
                     type="text"
                     value={secondChanceDate}
@@ -1725,7 +2306,7 @@ export default function AuditionsDashboardPage() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="font-bold text-white">⏰ Horario / Cita:</label>
+                  <label className="font-bold text-white">⏰ Hora Límite (CDMX):</label>
                   <input
                     type="text"
                     value={secondChanceTime}
@@ -1742,8 +2323,8 @@ export default function AuditionsDashboardPage() {
                   Mensaje Personalizado (opcional, usa {'{nombre}'}, {'{folio}'}, {'{obra}'}, {'{fecha}'}, {'{hora}'}):
                 </label>
                 <textarea
-                  rows={3}
-                  placeholder="Deja en blanco para usar la plantilla oficial predeterminada de 2ª oportunidad..."
+                  rows={2}
+                  placeholder="Deja en blanco para usar la plantilla oficial predeterminada con los lineamientos de video..."
                   value={secondChanceMessage}
                   onChange={(e) => setSecondChanceMessage(e.target.value)}
                   className="bg-[#0D1117] border border-[#30363D] rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none font-mono text-[11px]"

@@ -94,13 +94,13 @@ export async function sendWhatsAppMessage(payload: MessagePayload): Promise<Send
  */
 export async function sendAuditionConfirmation(data: AuditionNotificationData): Promise<SendMessageResult> {
   const auditionNum = data.folio.replace(/\D/g, "").slice(-4) || "585";
-  const driveLink = "https://drive.google.com/drive/folders/1qadnY5yaF1ZXprIXP5NY1cmAJkvQU08C?usp=drive_link";
+  const driveLink = data.googleDriveUrl || "https://prev.dvperformingarts.com/audiciones/consulta?folio=" + data.folio;
 
   const messageBody = `🎭 *¡HOLA ${data.fullName.trim().toUpperCase()}, YA DISTE EL PRIMER PASO!* 🎭
 
 Es hora de preparar la canción que te ayudará a obtener el papel de tus sueños.
 
-📋 *Tu número de audición para "${data.productionName || "Si no es ahora"}" es:*
+📋 *Tu número de audición para "${data.productionName || "DV Performing Arts"}" es:*
 *${auditionNum}* (Folio: \`${data.folio}\`)
 
 💡 *Consejos para el día de la audición:*
@@ -111,14 +111,156 @@ Es hora de preparar la canción que te ayudará a obtener el papel de tus sueño
 • *Enfoque:* Si estás nerviosx, respira profundo y recuerda que estás haciendo algo que amas.
 • *Acompañantes:* No podrás entrar acompañado, pero te podrán esperar afuera de las instalaciones.
 
-📁 *Encuentra el material para realizar tu audición en este enlace:*
-${driveLink}
-
-🔍 *Consulta o recuerda tus datos de audición en línea:*
+${data.googleDriveUrl ? `📁 *Encuentra el material para realizar tu audición en este enlace:*\n${data.googleDriveUrl}\n\n` : ""}🔍 *Consulta o recuerda tus datos de audición en línea:*
 https://prev.dvperformingarts.com/audiciones/consulta?folio=${data.folio}
 
 Todo lo mejor,
 *Diego Vieyra — Director Artístico*
+*DV Performing Arts*`;
+
+  return sendWhatsAppMessage({
+    to: data.phone,
+    body: messageBody,
+  });
+}
+
+/**
+ * Builds and sends the 8:00 AM Day-of-Audition Reminder WhatsApp message
+ */
+export async function sendAuditionMorningReminderWhatsApp(data: AuditionNotificationData): Promise<SendMessageResult> {
+  const auditionNum = data.folio.replace(/\D/g, "").slice(-4) || "585";
+  const mapsLink = data.venueMapsUrl || "https://maps.app.goo.gl/yQ3q4o1N1XnF4qL99";
+  const venueText = data.venueAddress || "Paseo de los Insurgentes #1506, Col. Jardines del Moral, León, Gto.";
+
+  const messageBody = `⏰ *¡HOY ES TU AUDICIÓN! • DV PERFORMING ARTS* 🎭
+
+¡Hola *${data.fullName.trim().toUpperCase()}*! Te recordamos que hoy es tu llamado oficial de audición para la obra *"${data.productionName || "DV Performing Arts"}"*.
+
+📋 *Tu Número de Audición:* *${auditionNum}* (Folio: \`${data.folio}\`)
+📍 *Sede:* ${venueText}
+🗺️ *Ubicación en Google Maps:* ${mapsLink}
+⏰ *Horario:* ${data.auditionTime || "Preséntate 15 minutos antes de tu turno"}
+
+💡 *Recordatorios para hoy:*
+• Trae tu pista musical en el celular con suficiente batería.
+• Usa ropa deportiva o de trabajo escénico cómoda para la etapa de coreografía.
+• Lleva agua para mantenerte hidratadx.
+${data.googleDriveUrl ? `• Material oficial en Google Drive: ${data.googleDriveUrl}\n` : ""}
+¡Mucho éxito, estamos listos para verte en acción!
+*Diego Vieyra — Dirección Artística*
+*DV Performing Arts*`;
+
+  return sendWhatsAppMessage({
+    to: data.phone,
+    body: messageBody,
+  });
+}
+
+/**
+ * Builds and sends the Second Chance Video Audition WhatsApp message for no-shows
+ */
+export async function sendSecondChanceVideoWhatsApp(
+  data: AuditionNotificationData,
+  options?: {
+    deadlineDate?: string;
+    deadlineTime?: string;
+    submissionEmail?: string;
+    videoDuration?: string;
+  }
+): Promise<SendMessageResult> {
+  const deadlineDate = options?.deadlineDate || "domingo 19 de octubre de 2025";
+  const deadlineTime = options?.deadlineTime || "10:00 p.m. (hora CDMX)";
+  const submissionEmail = options?.submissionEmail || "contacto@dvperformingarts.com";
+  const videoDuration = options?.videoDuration || "máx. 1:30";
+  const candidateCleanName = data.fullName.replace(/\s+/g, "");
+
+  const messageBody = `🎭 *SEGUNDA OPORTUNIDAD: VIDEO DE AUDICIÓN • DV PERFORMING ARTS* 🎭
+
+¡Hola *${data.fullName.trim().toUpperCase()}*!
+
+Sabemos que algunas personas no pudieron asistir a las audiciones presenciales para *"${data.productionName || "la producción"}"*, por eso abrimos una segunda oportunidad para enviar tu video de audición y ser evaluadx por el jurado.
+
+⏰ *Fecha y hora límite:* ${deadlineDate} a las ${deadlineTime}
+📩 *Cómo enviar:* responde a este mensaje con el enlace a tu video (Google Drive / YouTube en modo no listado) o envíalo a *${submissionEmail}*.
+🎬 *Formato:* horizontal, ${videoDuration}
+🎵 *Contenido:* interpretación de una canción contemporánea o de teatro musical
+📝 *Asunto sugerido:* Audición – ${data.fullName.trim()}
+📄 *Nombre del archivo:* Audicion_${candidateCleanName}_${data.folio}.mp4
+
+No dejes pasar esta oportunidad. ¡Queremos verte en acción!
+Gracias por tu interés,
+
+*Equipo de Dirección & Casting*
+*DV Performing Arts*`;
+
+  return sendWhatsAppMessage({
+    to: data.phone,
+    body: messageBody,
+  });
+}
+
+/**
+ * Builds and sends the Juror Invitation WhatsApp message to a teacher
+ */
+export async function sendJurorInvitationWhatsApp(data: {
+  teacherName: string;
+  phone: string;
+  productionName: string;
+  discipline: string;
+  auditionDate?: string;
+  venue?: string;
+  confirmationUrl: string;
+}): Promise<SendMessageResult> {
+  const messageBody = `🌟 *INVITACIÓN OFICIAL A PANEL DE JURADOS • DV PERFORMING ARTS* 🌟
+
+Estimado/a Maestro/a *${data.teacherName.trim().toUpperCase()}*,
+
+La Dirección General te ha designado como **Jurado Oficial Evaluador** para la disciplina de *${data.discipline}* en las audiciones de la obra:
+🎬 *"${data.productionName}"*
+
+📅 *Fecha:* ${data.auditionDate || "Próxima sesión de casting"}
+📍 *Sede:* ${data.venue || "Auditorio Principal DV Performing Arts"}
+
+📲 *Por favor confirma tu asistencia en este enlace:*
+👉 ${data.confirmationUrl}
+
+Podrás ingresar a tu panel de calificación usando tu número de WhatsApp y tu contraseña en:
+https://prev.dvperformingarts.com/jurado
+
+¡Agradecemos tu invaluable criterio artístico!
+*Diego Vieyra — Director General*`;
+
+  return sendWhatsAppMessage({
+    to: data.phone,
+    body: messageBody,
+  });
+}
+
+/**
+ * Builds and sends the New Production / Audition Call Broadcast WhatsApp message
+ */
+export async function sendNewProductionBroadcastWhatsApp(data: {
+  candidateName: string;
+  phone: string;
+  productionTitle: string;
+  synopsis?: string;
+  auditionDates?: string;
+  registrationUrl: string;
+}): Promise<SendMessageResult> {
+  const messageBody = `🎭 *¡NUEVA CONVOCATORIA DE CASTING ABIERTA! • DV PERFORMING ARTS* 🎭
+
+¡Hola *${data.candidateName.trim()}*!
+
+Te anunciamos con emoción nuestra nueva puesta en escena:
+🌟 *"${data.productionTitle.toUpperCase()}"*
+
+${data.synopsis ? `📖 *Sinopsis:* ${data.synopsis}\n` : ""}
+📅 *Fechas de Audición:* ${data.auditionDates || "Convocatoria abierta"}
+
+👉 *¡Inscríbete y asegura tu lugar ahora mismo en la web!*
+🔗 ${data.registrationUrl}
+
+¡Esperamos verte nuevamente en el escenario!
 *DV Performing Arts*`;
 
   return sendWhatsAppMessage({
@@ -159,22 +301,7 @@ Ingresa al enlace desde tu celular o computadora para conocer tu resolución ofi
  * Builds and sends the Audition Reminder WhatsApp message (prior to audition day)
  */
 export async function sendAuditionReminder(data: AuditionNotificationData): Promise<SendMessageResult> {
-  const messageBody = `🔔 *RECORDATORIO DE AUDICIÓN &bull; DV PERFORMING ARTS*
-
-Estimado/a *${data.fullName.trim()}*, te recordamos que tu audición para la obra *${data.productionName || "Si No Es Ahora"}* (${data.programName}) está programada:
-
-📋 *Folio de Acceso:* \`${data.folio}\`
-🎬 *Obra:* ${data.productionName || "Si No Es Ahora"}
-📅 *Fecha:* ${data.auditionDate || "Próxima sesión de audiciones"}
-⏰ *Horario:* ${data.auditionTime || "16:00 hrs"}
-📍 *Ubicación:* Paseo de los Insurgentes #1506, Col. Jardines del Moral, León, Gto.
-
-Recuerda presentarte con ropa cómoda de trabajo escénico e hidratación. ¡Te esperamos para darlo todo en el escenario! 🌟`;
-
-  return sendWhatsAppMessage({
-    to: data.phone,
-    body: messageBody,
-  });
+  return sendAuditionMorningReminderWhatsApp(data);
 }
 
 /**

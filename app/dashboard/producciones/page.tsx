@@ -11,6 +11,7 @@ export default function ProductionsDashboardPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProd, setEditingProd] = useState<Partial<Production> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [broadcastingProdId, setBroadcastingProdId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState("");
 
   const loadProductions = () => {
@@ -33,6 +34,35 @@ export default function ProductionsDashboardPage() {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(""), 4000);
+  };
+
+  const handleBroadcastProduction = async (prod: Production) => {
+    const confirmMsg = `¿Deseas enviar una difusión masiva por WhatsApp y Correo a toda la base histórica de aspirantes para anunciar la convocatoria de "${prod.title}"?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setBroadcastingProdId(prod.id);
+    try {
+      const res = await fetch("/api/messaging/broadcast-new-production", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productionId: prod.id,
+          notifyWhatsApp: true,
+          notifyEmail: true,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(`📢 ${data.message}`);
+      } else {
+        alert(data.error || "Error al realizar la difusión.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error de conexión al difundir la producción.");
+    } finally {
+      setBroadcastingProdId(null);
+    }
   };
 
   const handleSetActive = async (id: string, title: string) => {
@@ -194,10 +224,19 @@ export default function ProductionsDashboardPage() {
             </div>
           </div>
 
-          <div className="shrink-0 flex flex-col gap-2">
+          <div className="shrink-0 flex flex-col sm:flex-row md:flex-col gap-2">
+            <button
+              onClick={() => handleBroadcastProduction(activeAudition)}
+              disabled={broadcastingProdId === activeAudition.id}
+              className="px-4 py-2 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white rounded-lg text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              title="Enviar difusión por WhatsApp y Email a la base de datos histórica"
+            >
+              <span>📢</span>
+              <span>{broadcastingProdId === activeAudition.id ? "Difundiendo..." : "Difundir a Base Histórica"}</span>
+            </button>
             <button
               onClick={() => openEditModal(activeAudition)}
-              className="px-4 py-2 bg-[#21262D] hover:bg-[#30363D] text-slate-200 border border-[#30363D] rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+              className="px-4 py-2 bg-[#21262D] hover:bg-[#30363D] text-slate-200 border border-[#30363D] rounded-lg text-xs font-semibold transition-colors cursor-pointer text-center"
             >
               Editar Convocatoria & Foto
             </button>
@@ -255,24 +294,46 @@ export default function ProductionsDashboardPage() {
                   <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed">
                     {prod.synopsis || "Sin sinopsis registrada."}
                   </p>
+
+                  {prod.driveFolderUrl && (
+                    <a
+                      href={prod.driveFolderUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] font-mono text-blue-400 hover:underline flex items-center gap-1 mt-1 truncate"
+                    >
+                      <span>📁</span> Drive: Material de audición ↗
+                    </a>
+                  )}
                 </div>
 
                 {/* Actions bottom bar */}
-                <div className="pt-4 border-t border-[#30363D] flex items-center justify-between gap-2">
-                  {!isCurrentActive ? (
-                    <button
-                      onClick={() => handleSetActive(prod.id, prod.title)}
-                      className="px-3 py-1.5 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/40 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
-                    >
-                      <span>★</span> Activar para Audición
-                    </button>
-                  ) : (
-                    <span className="text-xs font-bold text-emerald-400 font-mono flex items-center gap-1">
-                      <span>✓</span> En Convocatoria
-                    </span>
-                  )}
-
+                <div className="pt-4 border-t border-[#30363D] flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
+                    {!isCurrentActive ? (
+                      <button
+                        onClick={() => handleSetActive(prod.id, prod.title)}
+                        className="px-2.5 py-1.5 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/40 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
+                      >
+                        <span>★</span> Activar
+                      </button>
+                    ) : (
+                      <span className="text-xs font-bold text-emerald-400 font-mono flex items-center gap-1">
+                        <span>✓</span> En Convocatoria
+                      </span>
+                    )}
+
+                    <button
+                      onClick={() => handleBroadcastProduction(prod)}
+                      disabled={broadcastingProdId === prod.id}
+                      className="p-1.5 bg-purple-950/50 hover:bg-purple-900 text-purple-300 border border-purple-500/30 rounded-lg text-xs transition-colors cursor-pointer"
+                      title="Difundir convocatoria a la base histórica de aspirantes"
+                    >
+                      📢
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => openEditModal(prod)}
                       className="px-2.5 py-1.5 bg-[#21262D] hover:bg-purple-600 hover:text-white rounded-lg text-xs text-slate-300 font-semibold transition-colors"
@@ -396,6 +457,26 @@ export default function ProductionsDashboardPage() {
                     className="bg-[#0D1117] border border-[#30363D] rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none"
                   />
                 </div>
+              </div>
+
+              {/* Google Drive Materials Folder */}
+              <div className="flex flex-col gap-1.5 p-4 bg-[#0D1117] border border-blue-500/30 rounded-xl my-1">
+                <label className="font-semibold text-blue-300 flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-1.5">
+                    <span>📁</span> Enlace de Google Drive con Material de Audición
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-mono">Pistas, libretos y letras</span>
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://drive.google.com/drive/folders/1w77x-..."
+                  value={editingProd.driveFolderUrl || ""}
+                  onChange={(e) => setEditingProd({ ...editingProd, driveFolderUrl: e.target.value })}
+                  className="bg-[#161B22] border border-[#30363D] focus:border-blue-500 rounded-lg px-3.5 py-2 text-xs text-blue-200 focus:outline-none font-mono text-[11px]"
+                />
+                <span className="text-[10px] text-slate-400">
+                  Este enlace se enviará de forma automática en los WhatsApps de registro y recordatorios de esta obra.
+                </span>
               </div>
 
               {/* Audition Deadline & Event Date (Vigencia Temporal) */}

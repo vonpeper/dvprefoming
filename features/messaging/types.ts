@@ -22,10 +22,14 @@ export interface AuditionNotificationData {
   folio: string;
   programName: string;
   productionName?: string;
+  googleDriveUrl?: string;
   phone: string;
   email?: string;
   auditionDate?: string;
   auditionTime?: string;
+  venueName?: string;
+  venueAddress?: string;
+  venueMapsUrl?: string;
   assignedRole?: string;
   overallScore?: number;
   notes?: string;

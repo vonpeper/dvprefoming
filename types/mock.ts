@@ -48,6 +48,7 @@ export interface Production {
   season?: string; // e.g. "Temporada 2026"
   imageUrl?: string;
   ticketUrl?: string; // Enlace externo al servicio de boletería (Boletópolis, etc.)
+  driveFolderUrl?: string; // Enlace a Google Drive con material de audición (pistas, libretos, letras)
   productionStatus?: "AUDITIONS_OPEN" | "IN_SEASON" | "UPCOMING" | "ARCHIVED";
   isAuditionActive?: boolean; // If true, this production is the active call for auditions
   auditionDates?: string; // e.g. "Sábados de Marzo 2026"
@@ -103,8 +104,10 @@ export interface AuditionRegistration {
   phone: string;
   birthDate?: string | Date;
   age?: number | string;
+  headshotUrl?: string; // Foto oficial o selfie del aspirante tomada desde el móvil
   productionId?: string; // Target play e.g. "prod_si_no_es_ahora"
   productionName?: string; // Target play name e.g. "Si No Es Ahora (El Musical)"
+  googleDriveUrl?: string; // Enlace a Google Drive con material de audición de la obra
   programId: string; // Reference to Program.id
   programName?: string; // e.g. "Teatro Musical Integral"
   preferredSchedule?: string; // e.g. "Turno Vespertino 16:00 - 20:00"
@@ -112,8 +115,10 @@ export interface AuditionRegistration {
   status: AuditionStatus;
   whatsappNotified?: boolean;
   emailNotified?: boolean;
+  reminder8amNotifiedAt?: Date | string;
   auditionNumber?: number | string;
   notes?: string;
+  studentId?: string; // Identificador correlativo del alumno para historial
   
   // Casting & Scoring fields
   assignedRole?: string; // Personaje o rol asignado (ej. "Benny - Protagónico")
@@ -161,10 +166,14 @@ export type UserRole = "ADMIN" | "DOCENTE_JUEZ" | "EDITOR";
 export interface UserAccount {
   id: string;
   username: string; // Email o nombre de usuario para inicio de sesión
+  phone?: string; // Teléfono / WhatsApp para inicio de sesión y notificaciones del jurado
   fullName: string;
   role: UserRole;
   password?: string;
   title?: string; // e.g. "Director General", "Docente de Danza"
+  assignedDiscipline?: EvaluationDiscipline | "ALL"; // Disciplina que califica el docente
+  attendanceStatus?: "CONFIRMED" | "PENDING" | "DECLINED"; // Confirmación de asistencia como jurado
+  attendanceConfirmedAt?: string | Date;
   status: "ACTIVE" | "INACTIVE";
   lastLogin?: string;
   createdAt: string | Date;

@@ -20,6 +20,10 @@ export async function GET(req: NextRequest) {
       fullName: u.fullName,
       role: u.role,
       title: u.title || "",
+      phone: u.phone || "",
+      assignedDiscipline: u.assignedDiscipline || "ALL",
+      attendanceStatus: u.attendanceStatus || "PENDING",
+      attendanceConfirmedAt: u.attendanceConfirmedAt,
       status: u.status,
       lastLogin: u.lastLogin,
       createdAt: u.createdAt,
@@ -40,7 +44,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { username, fullName, role, password, title, status } = body;
+    const { username, fullName, role, password, title, status, phone, assignedDiscipline } = body;
 
     if (!username || !fullName || !password) {
       return NextResponse.json(
@@ -63,6 +67,8 @@ export async function POST(req: NextRequest) {
       password,
       title: title || "",
       status: status || "ACTIVE",
+      phone: phone || "",
+      assignedDiscipline: assignedDiscipline || "ALL",
     });
 
     return NextResponse.json({
@@ -74,6 +80,9 @@ export async function POST(req: NextRequest) {
         fullName: newUser.fullName,
         role: newUser.role,
         title: newUser.title,
+        phone: newUser.phone,
+        assignedDiscipline: newUser.assignedDiscipline,
+        attendanceStatus: newUser.attendanceStatus,
         status: newUser.status,
         createdAt: newUser.createdAt,
       },
@@ -90,7 +99,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, username, fullName, role, password, title, status } = body;
+    const { id, username, fullName, role, password, title, status, phone, assignedDiscipline } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -105,6 +114,8 @@ export async function PUT(req: NextRequest) {
     if (role !== undefined) updates.role = role;
     if (title !== undefined) updates.title = title;
     if (status !== undefined) updates.status = status;
+    if (phone !== undefined) updates.phone = phone;
+    if (assignedDiscipline !== undefined) updates.assignedDiscipline = assignedDiscipline;
     if (password && password.trim().length > 0) {
       if (password.length < 6) {
         return NextResponse.json(
@@ -132,6 +143,9 @@ export async function PUT(req: NextRequest) {
         fullName: updated.fullName,
         role: updated.role,
         title: updated.title,
+        phone: updated.phone,
+        assignedDiscipline: updated.assignedDiscipline,
+        attendanceStatus: updated.attendanceStatus,
         status: updated.status,
         updatedAt: updated.updatedAt,
       },

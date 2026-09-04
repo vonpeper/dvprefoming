@@ -444,3 +444,340 @@ export async function sendAuditionApprovalEmail(data: AuditionEmailData): Promis
     };
   }
 }
+
+/**
+ * Sends HTML Email for 8:00 AM Day-of-Audition Reminder
+ */
+export async function sendAuditionMorningReminderEmail(data: AuditionEmailData): Promise<{ success: boolean; messageId?: string; simulated?: boolean; error?: string }> {
+  const settings = getNotificationSettings();
+  if (!settings.emailNotificationsEnabled) return { success: true, simulated: true };
+
+  const auditionNum = data.auditionNumber || data.folio.replace(/\D/g, "").slice(-4) || "585";
+  const fromAddress = settings.smtpFrom || process.env.SMTP_FROM || '"DV Performing Arts" <contacto@dvperformingarts.com>';
+  const pass = process.env.SMTP_PASSWORD || process.env.GOOGLE_WORKSPACE_APP_PASSWORD;
+
+  if (!pass) {
+    console.log(`[EMAIL SIMULATED - NO SMTP_PASSWORD] Sending morning reminder to: ${data.email}`);
+    return { success: true, messageId: `sim_remind_${Date.now()}`, simulated: true };
+  }
+
+  const driveLink = data.googleDriveUrl || settings.googleDriveMaterialUrl || "https://drive.google.com/drive/folders/1qadnY5yaF1ZXprIXP5NY1cmAJkvQU08C?usp=drive_link";
+  const mapsLink = data.venueMapsUrl || "https://maps.app.goo.gl/yQ3q4o1N1XnF4qL99";
+  const venueText = data.venueAddress || "Paseo de los Insurgentes #1506, Col. Jardines del Moral, León, Gto.";
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>⏰ ¡Hoy es tu Audición! - DV Performing Arts</title>
+</head>
+<body style="margin:0;padding:0;background-color:#07070A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#FFF;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#07070A;padding:40px 10px;">
+    <tr><td align="center">
+      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width:600px;background-color:#0E0E14;border:2px solid #E11D48;border-radius:24px;overflow:hidden;">
+        <tr>
+          <td align="center" style="background:linear-gradient(180deg,#2A0E1C 0%,#0E0E14 100%);padding:30px 20px;border-bottom:1px solid #3F1D2C;">
+            <span style="font-family:monospace;font-size:11px;font-weight:bold;color:#F43F5E;letter-spacing:2px;text-transform:uppercase;">
+              ⏰ RECORDATORIO DE AUDICIÓN OFICIAL
+            </span>
+            <h1 style="margin:6px 0 0 0;font-size:24px;font-weight:900;color:#FFF;">¡HOY ES TU AUDICIÓN!</h1>
+            <p style="margin:4px 0 0 0;font-size:13px;color:#FDA4AF;">"${data.productionName}" • Folio #${auditionNum}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:30px 25px;">
+            <p style="margin:0 0 15px 0;font-size:15px;color:#E4E4E7;">
+              Hola <strong>${data.fullName}</strong>, te recordamos que hoy es tu cita oficial de audición.
+            </p>
+            <div style="background:#18121E;border:1px solid #3B2038;border-radius:14px;padding:18px;margin-bottom:20px;">
+              <p style="margin:0 0 8px 0;font-size:13px;color:#D4D4D8;">📍 <strong>Sede:</strong> ${venueText}</p>
+              <p style="margin:0 0 8px 0;font-size:13px;color:#D4D4D8;">🗺️ <strong>Google Maps:</strong> <a href="${mapsLink}" target="_blank" style="color:#F43F5E;">Abrir ubicación en Maps ↗</a></p>
+              <p style="margin:0;font-size:13px;color:#D4D4D8;">⏰ <strong>Horario:</strong> ${data.auditionDate || "Preséntate 15 minutos antes de tu cita"}</p>
+            </div>
+            <p style="font-size:13px;color:#A1A1AA;line-height:1.6;">
+              Recuerda llevar tu pista lista en el celular, ropa deportiva/cómoda y tu botella de agua.
+            </p>
+            <div style="text-align:center;margin:25px 0;">
+              <a href="${driveLink}" target="_blank" style="background:linear-gradient(90deg,#9333EA,#E11D48);color:#FFF;padding:14px 28px;border-radius:12px;font-weight:bold;text-decoration:none;display:inline-block;font-size:13px;">
+                📁 Ver Material en Google Drive ↗
+              </a>
+            </div>
+            <p style="margin:0;font-size:13px;color:#E4E4E7;font-style:italic;">¡Mucho éxito!<br><strong>Diego Vieyra</strong> — Director General</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+  `;
+
+  try {
+    const transporter = getEmailTransporter();
+    const info = await transporter.sendMail({
+      from: fromAddress,
+      to: data.email,
+      subject: `⏰ ¡Hoy es tu Audición! Folio #${auditionNum} | "${data.productionName}"`,
+      html: htmlContent,
+    });
+    return { success: true, messageId: info.messageId, simulated: false };
+  } catch (error) {
+    console.error("[EMAIL ERROR]", error);
+    return { success: false, error: error instanceof Error ? error.message : "Error al enviar recordatorio" };
+  }
+}
+
+/**
+ * Sends HTML Email for Second Chance Video Audition
+ */
+export async function sendSecondChanceVideoEmail(
+  data: AuditionEmailData,
+  options?: {
+    deadlineDate?: string;
+    deadlineTime?: string;
+    submissionEmail?: string;
+    videoDuration?: string;
+  }
+): Promise<{ success: boolean; messageId?: string; simulated?: boolean; error?: string }> {
+  const settings = getNotificationSettings();
+  if (!settings.emailNotificationsEnabled) return { success: true, simulated: true };
+
+  const auditionNum = data.auditionNumber || data.folio.replace(/\D/g, "").slice(-4) || "585";
+  const fromAddress = settings.smtpFrom || process.env.SMTP_FROM || '"DV Performing Arts" <contacto@dvperformingarts.com>';
+  const pass = process.env.SMTP_PASSWORD || process.env.GOOGLE_WORKSPACE_APP_PASSWORD;
+
+  if (!pass) {
+    console.log(`[EMAIL SIMULATED - NO SMTP_PASSWORD] Sending second chance email to: ${data.email}`);
+    return { success: true, messageId: `sim_2nd_${Date.now()}`, simulated: true };
+  }
+
+  const deadlineDate = options?.deadlineDate || "domingo 19 de octubre de 2025";
+  const deadlineTime = options?.deadlineTime || "10:00 p.m. (hora CDMX)";
+  const submissionEmail = options?.submissionEmail || "contacto@dvperformingarts.com";
+  const videoDuration = options?.videoDuration || "máx. 1:30";
+  const candidateCleanName = data.fullName.replace(/\s+/g, "");
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><title>Segunda Oportunidad de Audición - DV Performing Arts</title></head>
+<body style="margin:0;padding:0;background-color:#07070A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#FFF;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#07070A;padding:40px 10px;">
+    <tr><td align="center">
+      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width:600px;background-color:#0E0E14;border:2px solid #8B5CF6;border-radius:24px;overflow:hidden;">
+        <tr>
+          <td align="center" style="background:linear-gradient(180deg,#1E1035 0%,#0E0E14 100%);padding:30px 20px;border-bottom:1px solid #331F58;">
+            <span style="font-family:monospace;font-size:11px;font-weight:bold;color:#C084FC;letter-spacing:2px;text-transform:uppercase;">
+              ★ SEGUNDA OPORTUNIDAD • VIDEO DE AUDICIÓN
+            </span>
+            <h1 style="margin:6px 0 0 0;font-size:24px;font-weight:900;color:#FFF;">ENVÍA TU VIDEO DE AUDICIÓN</h1>
+            <p style="margin:4px 0 0 0;font-size:13px;color:#DDD6FE;">"${data.productionName}" • Folio #${auditionNum}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:30px 25px;">
+            <p style="margin:0 0 15px 0;font-size:15px;color:#E4E4E7;line-height:1.6;">
+              Hola <strong>${data.fullName}</strong>,<br><br>
+              Sabemos que algunas personas no pudieron asistir a las audiciones presenciales, por eso abrimos una <strong>segunda oportunidad</strong> para enviar tu video de audición y ser evaluadx por el jurado.
+            </p>
+            <div style="background:#14111E;border:1px solid #2B2144;border-radius:14px;padding:18px;margin-bottom:20px;font-size:13.5px;line-height:1.7;color:#D4D4D8;">
+              <p style="margin:0 0 8px 0;">⏰ <strong>Fecha y hora límite:</strong> ${deadlineDate} a las ${deadlineTime}</p>
+              <p style="margin:0 0 8px 0;">📩 <strong>Cómo enviar:</strong> Responde este correo con el enlace a tu video (Google Drive / YouTube en modo no listado) o envíalo a <a href="mailto:${submissionEmail}" style="color:#C084FC;">${submissionEmail}</a>.</p>
+              <p style="margin:0 0 8px 0;">🎬 <strong>Formato:</strong> Horizontal, ${videoDuration}</p>
+              <p style="margin:0 0 8px 0;">🎵 <strong>Contenido:</strong> Interpretación de una canción contemporánea o de teatro musical</p>
+              <p style="margin:0 0 8px 0;">📝 <strong>Asunto sugerido:</strong> Audición – ${data.fullName.trim()}</p>
+              <p style="margin:0;">📄 <strong>Nombre del archivo:</strong> Audicion_${candidateCleanName}_${data.folio}.mp4</p>
+            </div>
+            <p style="font-size:14px;color:#A78BFA;font-weight:bold;">
+              No dejes pasar esta oportunidad. ¡Queremos verte en acción!
+            </p>
+            <p style="margin:20px 0 0 0;font-size:13px;color:#E4E4E7;">
+              Gracias por tu interés,<br>
+              <strong>Equipo de DV Performing Arts</strong>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+  `;
+
+  try {
+    const transporter = getEmailTransporter();
+    const info = await transporter.sendMail({
+      from: fromAddress,
+      to: data.email,
+      subject: `🎬 Segunda Oportunidad: Envía tu Video de Audición para "${data.productionName}" | Folio #${auditionNum}`,
+      html: htmlContent,
+    });
+    return { success: true, messageId: info.messageId, simulated: false };
+  } catch (error) {
+    console.error("[EMAIL ERROR]", error);
+    return { success: false, error: error instanceof Error ? error.message : "Error al enviar correo de segunda oportunidad" };
+  }
+}
+
+/**
+ * Sends HTML Email for Juror / Teacher Invitation
+ */
+export async function sendJurorInvitationEmail(data: {
+  teacherName: string;
+  email: string;
+  productionName: string;
+  discipline: string;
+  auditionDate?: string;
+  venue?: string;
+  confirmationUrl: string;
+}): Promise<{ success: boolean; messageId?: string; simulated?: boolean; error?: string }> {
+  const settings = getNotificationSettings();
+  if (!settings.emailNotificationsEnabled) return { success: true, simulated: true };
+
+  const fromAddress = settings.smtpFrom || process.env.SMTP_FROM || '"DV Performing Arts" <contacto@dvperformingarts.com>';
+  const pass = process.env.SMTP_PASSWORD || process.env.GOOGLE_WORKSPACE_APP_PASSWORD;
+
+  if (!pass) {
+    console.log(`[EMAIL SIMULATED - NO SMTP_PASSWORD] Sending juror invite to: ${data.email}`);
+    return { success: true, messageId: `sim_juror_${Date.now()}`, simulated: true };
+  }
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><title>Invitación a Panel de Jurados - DV Performing Arts</title></head>
+<body style="margin:0;padding:0;background-color:#07070A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#FFF;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#07070A;padding:40px 10px;">
+    <tr><td align="center">
+      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width:600px;background-color:#0E0E14;border:2px solid #3B82F6;border-radius:24px;overflow:hidden;">
+        <tr>
+          <td align="center" style="background:linear-gradient(180deg,#10243E 0%,#0E0E14 100%);padding:30px 20px;border-bottom:1px solid #1E3A5F;">
+            <span style="font-family:monospace;font-size:11px;font-weight:bold;color:#60A5FA;letter-spacing:2px;text-transform:uppercase;">
+              ★ DESIGNACIÓN DE JURADO OFICIAL
+            </span>
+            <h1 style="margin:6px 0 0 0;font-size:24px;font-weight:900;color:#FFF;">INVITACIÓN A PANEL DE CASTING</h1>
+            <p style="margin:4px 0 0 0;font-size:13px;color:#93C5FD;">"${data.productionName}" • Disciplina: ${data.discipline}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:30px 25px;">
+            <p style="margin:0 0 15px 0;font-size:15px;color:#E4E4E7;line-height:1.6;">
+              Estimado/a Maestro/a <strong>${data.teacherName}</strong>,<br><br>
+              La Dirección General de DV Performing Arts te ha designado como <strong>Jurado Oficial</strong> para evaluar la disciplina de <strong>${data.discipline}</strong> en las audiciones de <strong>"${data.productionName}"</strong>.
+            </p>
+            <div style="background:#101726;border:1px solid #1E2D4A;border-radius:14px;padding:18px;margin-bottom:20px;font-size:13.5px;line-height:1.7;color:#D4D4D8;">
+              <p style="margin:0 0 8px 0;">📅 <strong>Fecha de llamado:</strong> ${data.auditionDate || "Próxima sesión de casting"}</p>
+              <p style="margin:0;">📍 <strong>Sede:</strong> ${data.venue || "Auditorio Principal DV Performing Arts"}</p>
+            </div>
+            <div style="text-align:center;margin:25px 0;">
+              <a href="${data.confirmationUrl}" target="_blank" style="background:linear-gradient(90deg,#2563EB,#7C3AED);color:#FFF;padding:15px 32px;border-radius:12px;font-weight:bold;text-decoration:none;display:inline-block;font-size:14px;">
+                ✓ Confirmar Asistencia como Jurado ↗
+              </a>
+            </div>
+            <p style="font-size:12px;color:#94A3B8;text-align:center;">
+              Podrás acceder al panel de calificación con tu número de WhatsApp y contraseña en:<br>
+              <a href="https://prev.dvperformingarts.com/jurado" style="color:#60A5FA;">https://prev.dvperformingarts.com/jurado</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+  `;
+
+  try {
+    const transporter = getEmailTransporter();
+    const info = await transporter.sendMail({
+      from: fromAddress,
+      to: data.email,
+      subject: `🌟 Invitación a Panel de Jurados • "${data.productionName}" (${data.discipline})`,
+      html: htmlContent,
+    });
+    return { success: true, messageId: info.messageId, simulated: false };
+  } catch (error) {
+    console.error("[EMAIL ERROR]", error);
+    return { success: false, error: error instanceof Error ? error.message : "Error al enviar invitación de jurado" };
+  }
+}
+
+/**
+ * Sends HTML Email Broadcasting a New Production to Candidates
+ */
+export async function sendNewProductionBroadcastEmail(data: {
+  candidateName: string;
+  email: string;
+  productionTitle: string;
+  synopsis?: string;
+  auditionDates?: string;
+  registrationUrl: string;
+  imageUrl?: string;
+}): Promise<{ success: boolean; messageId?: string; simulated?: boolean; error?: string }> {
+  const settings = getNotificationSettings();
+  if (!settings.emailNotificationsEnabled) return { success: true, simulated: true };
+
+  const fromAddress = settings.smtpFrom || process.env.SMTP_FROM || '"DV Performing Arts" <contacto@dvperformingarts.com>';
+  const pass = process.env.SMTP_PASSWORD || process.env.GOOGLE_WORKSPACE_APP_PASSWORD;
+
+  if (!pass) {
+    console.log(`[EMAIL SIMULATED - NO SMTP_PASSWORD] Broadcasting new show to: ${data.email}`);
+    return { success: true, messageId: `sim_broad_${Date.now()}`, simulated: true };
+  }
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><title>¡Nueva Convocatoria Abierta! - DV Performing Arts</title></head>
+<body style="margin:0;padding:0;background-color:#07070A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#FFF;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#07070A;padding:40px 10px;">
+    <tr><td align="center">
+      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width:600px;background-color:#0E0E14;border:2px solid #E11D48;border-radius:24px;overflow:hidden;">
+        <tr>
+          <td align="center" style="background:linear-gradient(180deg,#2A0E1C 0%,#0E0E14 100%);padding:30px 20px;border-bottom:1px solid #3F1D2C;">
+            <span style="font-family:monospace;font-size:11px;font-weight:bold;color:#F43F5E;letter-spacing:2px;text-transform:uppercase;">
+              ● NUEVA PUESTA EN ESCENA
+            </span>
+            <h1 style="margin:6px 0 0 0;font-size:26px;font-weight:900;color:#FFF;">¡CONVOCATORIA DE AUDICIONES ABIERTA!</h1>
+            <p style="margin:4px 0 0 0;font-size:15px;color:#FDA4AF;font-weight:bold;">"${data.productionTitle}"</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:30px 25px;">
+            <p style="margin:0 0 15px 0;font-size:15px;color:#E4E4E7;line-height:1.6;">
+              ¡Hola <strong>${data.candidateName}</strong>! Te invitamos a participar en el casting oficial para nuestra próxima gran producción:
+            </p>
+            ${data.synopsis ? `<p style="font-size:13.5px;color:#D4D4D8;background:#18101E;border:1px solid #361F38;padding:15px;border-radius:12px;line-height:1.6;">${data.synopsis}</p>` : ""}
+            <p style="font-size:13.5px;color:#E4E4E7;">
+              📅 <strong>Fechas de Audición:</strong> ${data.auditionDates || "Convocatoria abierta para la temporada 2026"}
+            </p>
+            <div style="text-align:center;margin:30px 0;">
+              <a href="${data.registrationUrl}" target="_blank" style="background:linear-gradient(90deg,#9333EA,#E11D48);color:#FFF;padding:16px 36px;border-radius:14px;font-weight:bold;text-decoration:none;display:inline-block;font-size:14px;text-transform:uppercase;letter-spacing:1px;box-shadow:0 10px 25px rgba(225,29,72,0.4);">
+                ★ Registrar mi Audición en la Web ↗
+              </a>
+            </div>
+            <p style="margin:0;font-size:13px;color:#E4E4E7;font-style:italic;">¡Queremos verte en el elenco!<br><strong>DV Performing Arts</strong></p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+  `;
+
+  try {
+    const transporter = getEmailTransporter();
+    const info = await transporter.sendMail({
+      from: fromAddress,
+      to: data.email,
+      subject: `🎭 ¡Nueva Convocatoria Abierta! Audiciones para "${data.productionTitle}" • DV Performing Arts`,
+      html: htmlContent,
+    });
+    return { success: true, messageId: info.messageId, simulated: false };
+  } catch (error) {
+    console.error("[EMAIL ERROR]", error);
+    return { success: false, error: error instanceof Error ? error.message : "Error al enviar difusión" };
+  }
+}

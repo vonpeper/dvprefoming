@@ -10,6 +10,10 @@ interface UserItem {
   fullName: string;
   role: UserRole;
   title?: string;
+  phone?: string;
+  assignedDiscipline?: "CANTO" | "COREOGRAFIA" | "ACTUACION" | "ALL";
+  attendanceStatus?: "CONFIRMED" | "DECLINED" | "PENDING";
+  attendanceConfirmedAt?: string;
   status: "ACTIVE" | "INACTIVE";
   lastLogin?: string;
   createdAt: string;
@@ -29,6 +33,7 @@ export default function UsersSettingsPage() {
   const [editingUser, setEditingUser] = useState<UserItem | null>(null);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [selectedUserForPassword, setSelectedUserForPassword] = useState<UserItem | null>(null);
+  const [invitingJurorId, setInvitingJurorId] = useState<string | null>(null);
 
   // Form State for Create / Edit User
   const [formData, setFormData] = useState({
@@ -36,6 +41,8 @@ export default function UsersSettingsPage() {
     fullName: "",
     role: "DOCENTE_JUEZ" as UserRole,
     title: "",
+    phone: "",
+    assignedDiscipline: "ALL" as "CANTO" | "COREOGRAFIA" | "ACTUACION" | "ALL",
     password: "",
     status: "ACTIVE" as "ACTIVE" | "INACTIVE",
   });
@@ -82,6 +89,8 @@ export default function UsersSettingsPage() {
       fullName: "",
       role: "DOCENTE_JUEZ",
       title: "",
+      phone: "",
+      assignedDiscipline: "ALL",
       password: "",
       status: "ACTIVE",
     });
@@ -95,6 +104,8 @@ export default function UsersSettingsPage() {
       fullName: user.fullName,
       role: user.role,
       title: user.title || "",
+      phone: user.phone || "",
+      assignedDiscipline: user.assignedDiscipline || "ALL",
       password: "", // Leave blank unless changing
       status: user.status,
     });
@@ -106,6 +117,39 @@ export default function UsersSettingsPage() {
     setNewPassword("");
     setConfirmPassword("");
     setIsPasswordModalOpen(true);
+  };
+
+  const handleSendJurorInvite = async (user: UserItem) => {
+    if (!user.phone && !user.username.includes("@")) {
+      showToast("error", "El docente requiere tener teléfono de WhatsApp o correo electrónico para recibir invitación.");
+      return;
+    }
+
+    try {
+      setInvitingJurorId(user.id);
+      const res = await fetch("/api/jurado/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jurorId: user.id,
+          notifyWhatsApp: Boolean(user.phone),
+          notifyEmail: user.username.includes("@"),
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast("success", `📲 Invitación enviada a ${user.fullName} por WhatsApp/Email.`);
+        fetchUsers();
+      } else {
+        showToast("error", data?.error || "Error al enviar invitación.");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("error", "Error al conectar con el servidor de mensajería.");
+    } finally {
+      setInvitingJurorId(null);
+    }
   };
 
   const handleSaveUser = async (e: React.FormEvent) => {
@@ -130,6 +174,8 @@ export default function UsersSettingsPage() {
           fullName: formData.fullName,
           role: formData.role,
           title: formData.title,
+          phone: formData.phone,
+          assignedDiscipline: formData.assignedDiscipline,
           status: formData.status,
         };
         if (formData.password && formData.password.trim().length >= 6) {
@@ -453,10 +499,10 @@ export default function UsersSettingsPage() {
             <thead>
               <tr className="bg-[#0D1117] text-slate-400 font-mono text-[11px] uppercase border-b border-[#30363D]">
                 <th className="py-3.5 px-4">Usuario & Nombre</th>
-                <th className="py-3.5 px-4">Correo / Login</th>
-                <th className="py-3.5 px-4 text-center">Rol de Acceso</th>
+                <th className="py-3.5 px-4">WhatsApp / Login</th>
+                <th className="py-3.5 px-4 text-center">Disciplina Jurado</th>
+                <th className="py-3.5 px-4 text-center">Confirmación Jurado</th>
                 <th className="py-3.5 px-4 text-center">Estatus</th>
-                <th className="py-3.5 px-4 text-center">Último Acceso</th>
                 <th className="py-3.5 px-4 text-right">Acciones</th>
               </tr>
             </thead>
@@ -493,7 +539,15 @@ export default function UsersSettingsPage() {
                     },
                   };
 
+                  const disciplineBadges: Record<string, { label: string; style: string }> = {
+                    CANTO: { label: "🎵 Canto & Voz", style: "bg-pink-950/70 text-pink-300 border-pink-500/40" },
+                    COREOGRAFIA: { label: "💃 Coreografía", style: "bg-indigo-950/70 text-indigo-300 border-indigo-500/40" },
+                    ACTUACION: { label: "🎭 Actuación", style: "bg-orange-950/70 text-orange-300 border-orange-500/40" },
+                    ALL: { label: "👑 Dirección General", style: "bg-purple-950/70 text-purple-300 border-purple-500/40" },
+                  };
+
                   const badge = roleBadges[user.role] || roleBadges.DOCENTE_JUEZ;
+                  const discBadge = disciplineBadges[user.assignedDiscipline || "ALL"] || disciplineBadges.ALL;
 
                   return (
                     <tr key={user.id} className="hover:bg-[#21262D]/50 transition-colors">
@@ -511,18 +565,51 @@ export default function UsersSettingsPage() {
                         </div>
                       </td>
 
-                      {/* Login / Email */}
+                      {/* Login / WhatsApp */}
                       <td className="py-3.5 px-4 font-mono text-xs">
-                        <span className="text-purple-300 bg-purple-950/40 border border-purple-500/30 px-2 py-0.5 rounded">
-                          {user.username}
+                        <div className="flex flex-col gap-1">
+                          <span className="text-purple-300 bg-purple-950/40 border border-purple-500/30 px-2 py-0.5 rounded w-fit">
+                            {user.username}
+                          </span>
+                          {user.phone ? (
+                            <span className="text-emerald-400 text-[10px] flex items-center gap-1 font-bold">
+                              <span>📱</span> {user.phone}
+                            </span>
+                          ) : (
+                            <span className="text-slate-500 text-[10px] italic">Sin WhatsApp registrado</span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Discipline Badge */}
+                      <td className="py-3.5 px-4 text-center">
+                        <span className={`inline-block text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg border ${discBadge.style}`}>
+                          {discBadge.label}
                         </span>
                       </td>
 
-                      {/* Role Badge */}
+                      {/* Attendance Confirmation Badge */}
                       <td className="py-3.5 px-4 text-center">
-                        <span className={`inline-block text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg border ${badge.style}`}>
-                          {badge.label}
-                        </span>
+                        {user.attendanceStatus === "CONFIRMED" ? (
+                          <div className="flex flex-col items-center gap-0.5">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/40">
+                              <span>✅</span> Confirmado
+                            </span>
+                            {user.attendanceConfirmedAt && (
+                              <span className="text-[9px] text-slate-500 font-mono">
+                                {new Date(user.attendanceConfirmedAt).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
+                              </span>
+                            )}
+                          </div>
+                        ) : user.attendanceStatus === "DECLINED" ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-950/80 text-rose-300 border border-rose-500/40">
+                            <span>❌</span> Declinó
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-800 text-zinc-400 border border-zinc-700">
+                            <span>⏳</span> Pendiente
+                          </span>
+                        )}
                       </td>
 
                       {/* Status */}
@@ -542,24 +629,22 @@ export default function UsersSettingsPage() {
                         </button>
                       </td>
 
-                      {/* Last Login */}
-                      <td className="py-3.5 px-4 text-center font-mono text-[11px] text-slate-400">
-                        {user.lastLogin ? (
-                          new Date(user.lastLogin).toLocaleDateString("es-MX", {
-                            day: "2-digit",
-                            month: "short",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        ) : (
-                          <span className="text-slate-600 italic">Sin actividad</span>
-                        )}
-                      </td>
-
                       {/* Actions */}
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           
+                          {/* Send Juror Invitation */}
+                          <button
+                            type="button"
+                            onClick={() => handleSendJurorInvite(user)}
+                            disabled={invitingJurorId === user.id}
+                            className="px-2.5 py-1.5 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50"
+                            title="Enviar convocatoria de jurado por WhatsApp y Email con enlace de confirmación"
+                          >
+                            <span>📲</span>
+                            <span className="hidden xl:inline">{invitingJurorId === user.id ? "Enviando..." : "Convocar"}</span>
+                          </button>
+
                           {/* Change Password */}
                           <button
                             type="button"
@@ -637,19 +722,30 @@ export default function UsersSettingsPage() {
               </div>
 
               {/* Username / Email */}
-              <div className="flex flex-col gap-1.5">
-                <label className="font-semibold text-slate-300">Correo o Usuario de Inicio de Sesión *</label>
-                <input
-                  type="text"
-                  placeholder="Ej. fanny@dvperformingarts.com o fanny"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  className="bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-purple-300 font-mono font-bold focus:outline-none"
-                  required
-                />
-                <span className="text-[10px] text-slate-500">
-                  Este es el identificador con el que el usuario iniciará sesión en el sistema.
-                </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-slate-300">Correo o Usuario de Inicio *</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. fanny@dvperformingarts.com"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    className="bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-purple-300 font-mono font-bold focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-slate-300">📱 WhatsApp (10 dígitos)</label>
+                  <input
+                    type="tel"
+                    placeholder="Ej. 4771234567"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-emerald-400 font-mono font-bold focus:outline-none"
+                  />
+                  <span className="text-[9px] text-slate-500">Permite login con teléfono en /jurado</span>
+                </div>
               </div>
 
               {/* Title / Position */}
@@ -664,13 +760,28 @@ export default function UsersSettingsPage() {
                 />
               </div>
 
+              {/* Assigned Discipline Selection */}
+              <div className="flex flex-col gap-1.5">
+                <label className="font-semibold text-slate-300">Disciplina Asignada para Calificación *</label>
+                <select
+                  value={formData.assignedDiscipline}
+                  onChange={(e) => setFormData({ ...formData, assignedDiscipline: e.target.value as any })}
+                  className="bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-white font-mono focus:outline-none cursor-pointer"
+                >
+                  <option value="CANTO">🎵 Canto & Técnica Vocal (Solo evalúa Canto)</option>
+                  <option value="COREOGRAFIA">💃 Danza & Coreografía (Solo evalúa Danza)</option>
+                  <option value="ACTUACION">🎭 Actuación & Expresión Escénica (Solo evalúa Actuación)</option>
+                  <option value="ALL">👑 Dirección General (Acceso a todas las áreas y desglose)</option>
+                </select>
+              </div>
+
               {/* Role Selection */}
               <div className="flex flex-col gap-1.5">
                 <label className="font-semibold text-slate-300">Rol de Acceso en la Plataforma *</label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { id: "ADMIN", label: "👑 Admin", desc: "Control Total" },
-                    { id: "DOCENTE_JUEZ", label: "⚖️ Jurado", desc: "Mesa de Calificación" },
+                    { id: "DOCENTE_JUEZ", label: "⚖️ Jurado", desc: "Mesa de Jueces" },
                     { id: "EDITOR", label: "✍️ Editor", desc: "CMS & Noticias" },
                   ].map((r) => (
                     <button

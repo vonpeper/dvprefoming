@@ -99,6 +99,9 @@ export function normalizeAuditionRecord(
     ...aud,
     folio,
     auditionNumber,
+    headshotUrl: aud.headshotUrl || "",
+    googleDriveUrl: aud.googleDriveUrl || matchedProd?.driveFolderUrl || "",
+    studentId: aud.studentId || (aud.phone ? aud.phone.replace(/\D/g, "").slice(-10) : undefined),
     productionId: matchedProd?.id || "prod_si_no_es_ahora",
     productionName: matchedProd?.title || "Si No Es Ahora (El Musical)",
     programId: aud.programId || "prog_teatro_musical",
@@ -146,10 +149,15 @@ export function createAudition(data: Omit<AuditionRegistration, "id" | "folio" |
   const nextNum = 500 + auditions.length + 1;
   const folio = `DV-${nextNum}`;
 
+  const cleanPhoneDigits = data.phone ? data.phone.replace(/\D/g, "").slice(-10) : "";
+
   const newRecord: AuditionRegistration = {
     id: `aud_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
     folio,
     auditionNumber: String(nextNum),
+    headshotUrl: data.headshotUrl || "",
+    googleDriveUrl: data.googleDriveUrl || matchedProd?.driveFolderUrl || "",
+    studentId: data.studentId || cleanPhoneDigits || undefined,
     ...data,
     productionId: matchedProd?.id || "prod_si_no_es_ahora",
     productionName: matchedProd?.title || "Si No Es Ahora (El Musical)",
@@ -1143,10 +1151,13 @@ export const DEFAULT_USERS: UserAccount[] = [
   {
     id: "usr_admin_master",
     username: "admin@dvperformingarts.com",
+    phone: "4776558156",
     fullName: "Diego Vieyra",
     role: "ADMIN",
     password: process.env.ADMIN_PASSWORD || "DVPerforming@2026!Admin",
     title: "Director General & Fundador",
+    assignedDiscipline: "ALL",
+    attendanceStatus: "CONFIRMED",
     status: "ACTIVE",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -1154,10 +1165,13 @@ export const DEFAULT_USERS: UserAccount[] = [
   {
     id: "usr_fanny_monroy",
     username: "fanny@dvperformingarts.com",
+    phone: "4771000001",
     fullName: "Fanny Monroy",
     role: "DOCENTE_JUEZ",
     password: "DV@Docente2026",
     title: "Directora Vocal & Maestra de Canto",
+    assignedDiscipline: "CANTO",
+    attendanceStatus: "CONFIRMED",
     status: "ACTIVE",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -1165,10 +1179,13 @@ export const DEFAULT_USERS: UserAccount[] = [
   {
     id: "usr_andres_rodriguez",
     username: "andres@dvperformingarts.com",
+    phone: "4771000002",
     fullName: "Andrés Rodríguez",
     role: "DOCENTE_JUEZ",
     password: "DV@Docente2026",
     title: "Coreógrafo & Director de Danza",
+    assignedDiscipline: "COREOGRAFIA",
+    attendanceStatus: "CONFIRMED",
     status: "ACTIVE",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -1176,10 +1193,13 @@ export const DEFAULT_USERS: UserAccount[] = [
   {
     id: "usr_angel_piedra",
     username: "angel@dvperformingarts.com",
+    phone: "4771000003",
     fullName: "Angel Piedra",
     role: "DOCENTE_JUEZ",
     password: "DV@Docente2026",
     title: "Docente de Actuación & Texto Teatral",
+    assignedDiscipline: "ACTUACION",
+    attendanceStatus: "CONFIRMED",
     status: "ACTIVE",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -1187,6 +1207,7 @@ export const DEFAULT_USERS: UserAccount[] = [
   {
     id: "usr_editor_prensa",
     username: "prensa@dvperformingarts.com",
+    phone: "4771000004",
     fullName: "Equipo Editorial DV",
     role: "EDITOR",
     password: "DV@Editor2026",
@@ -1235,10 +1256,13 @@ export function createUser(data: Omit<UserAccount, "id" | "createdAt" | "updated
   const newUser: UserAccount = {
     id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
     username: cleanUsername,
+    phone: data.phone?.trim() || "",
     fullName: data.fullName.trim(),
     role: data.role || "DOCENTE_JUEZ",
     password: data.password || "DV@User2026",
     title: data.title?.trim() || "Docente / Evaluador",
+    assignedDiscipline: data.assignedDiscipline || (data.role === "ADMIN" ? "ALL" : "CANTO"),
+    attendanceStatus: data.attendanceStatus || "PENDING",
     status: data.status || "ACTIVE",
     createdAt: now,
     updatedAt: now,
@@ -1297,35 +1321,49 @@ export function authenticateStoredUser(
   passInput: string
 ): { success: boolean; user?: UserAccount } {
   const cleanInput = usernameInput.trim().toLowerCase();
+  const rawNumeric = cleanInput.replace(/\D/g, "");
   const masterUser = (process.env.ADMIN_USER || "admin@dvperformingarts.com").toLowerCase();
   const masterPass = process.env.ADMIN_PASSWORD || "DVPerforming@2026!Admin";
 
   // 1. Check default master admin
-  if ((cleanInput === masterUser || cleanInput === "admin") && passInput === masterPass) {
+  if ((cleanInput === masterUser || cleanInput === "admin" || (rawNumeric.length >= 10 && "4776558156".includes(rawNumeric))) && passInput === masterPass) {
     return {
       success: true,
       user: {
         id: "usr_admin_master",
         username: masterUser,
+        phone: "4776558156",
         fullName: "Diego Vieyra",
         role: "ADMIN",
         status: "ACTIVE",
         title: "Director General & Fundador",
+        assignedDiscipline: "ALL",
+        attendanceStatus: "CONFIRMED",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
     };
   }
 
-  // 2. Check stored users
+  // 2. Check stored users by username OR by phone number (WhatsApp)
   try {
     const users = getStoredUsers();
-    const found = users.find(
-      (u) =>
-        (u.username.toLowerCase() === cleanInput ||
-          (!cleanInput.includes("@") && u.username.toLowerCase().startsWith(cleanInput))) &&
-        u.status === "ACTIVE"
-    );
+    const found = users.find((u) => {
+      if (u.status !== "ACTIVE") return false;
+      const uUser = u.username.toLowerCase();
+      // Match username or email
+      if (uUser === cleanInput || (!cleanInput.includes("@") && uUser.startsWith(cleanInput))) {
+        return true;
+      }
+      // Match phone number (last 10 digits)
+      if (rawNumeric.length >= 7 && u.phone) {
+        const uPhoneDigits = u.phone.replace(/\D/g, "");
+        if (uPhoneDigits.endsWith(rawNumeric) || rawNumeric.endsWith(uPhoneDigits)) {
+          return true;
+        }
+      }
+      return false;
+    });
 
     if (found && found.password && found.password === passInput) {
       found.lastLogin = new Date().toISOString();
@@ -1337,6 +1375,63 @@ export function authenticateStoredUser(
   }
 
   return { success: false };
+}
+
+/**
+ * Searches and returns all audition history grouped for a student / candidate
+ */
+export function getStudentAuditionsHistory(query: string): {
+  candidate: {
+    fullName: string;
+    phone: string;
+    email: string;
+    studentId?: string;
+    headshotUrl?: string;
+  };
+  totalAuditions: number;
+  history: AuditionRegistration[];
+}[] {
+  const auditions = getStoredAuditions();
+  const cleanQ = query.trim().toLowerCase();
+  const numQ = cleanQ.replace(/\D/g, "");
+
+  // Group auditions by unique student key (phone or email)
+  const studentMap: Record<string, AuditionRegistration[]> = {};
+
+  auditions.forEach((aud) => {
+    const key = (aud.phone ? aud.phone.replace(/\D/g, "").slice(-10) : "") || aud.email.toLowerCase() || aud.id;
+    if (!studentMap[key]) studentMap[key] = [];
+    studentMap[key].push(aud);
+  });
+
+  const results = Object.values(studentMap).map((records) => {
+    // Sort records by createdAt desc
+    records.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const latest = records[0];
+    return {
+      candidate: {
+        fullName: latest.fullName,
+        phone: latest.phone,
+        email: latest.email,
+        studentId: latest.studentId || (latest.phone ? latest.phone.replace(/\D/g, "").slice(-10) : undefined),
+        headshotUrl: latest.headshotUrl || "",
+      },
+      totalAuditions: records.length,
+      history: records,
+    };
+  });
+
+  if (!cleanQ) {
+    return results;
+  }
+
+  return results.filter((item) => {
+    const matchName = item.candidate.fullName.toLowerCase().includes(cleanQ);
+    const matchEmail = item.candidate.email.toLowerCase().includes(cleanQ);
+    const matchPhone = numQ.length > 3 && item.candidate.phone.replace(/\D/g, "").includes(numQ);
+    const matchHistoryFolio = item.history.some((h) => h.folio.toLowerCase().includes(cleanQ) || (h.productionName && h.productionName.toLowerCase().includes(cleanQ)));
+    return matchName || matchEmail || matchPhone || matchHistoryFolio;
+  });
 }
 
 
