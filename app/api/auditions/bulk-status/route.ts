@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { bulkUpdateAuditionStatus, markNoShowsForProduction } from "@/lib/storage";
+import { bulkUpdateAuditionStatus, markNoShowsForProduction, bulkDeleteAuditions } from "@/lib/storage";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,7 +17,24 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 2. Bulk status update for list of IDs
+    // 2. Bulk Deletion of Auditions
+    if (action === "DELETE") {
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return NextResponse.json(
+          { success: false, error: "Debes seleccionar al menos un aspirante para eliminar." },
+          { status: 400 }
+        );
+      }
+      const result = bulkDeleteAuditions(ids);
+      return NextResponse.json({
+        success: true,
+        action: "DELETE",
+        deletedCount: result.deletedCount,
+        message: `Se eliminaron ${result.deletedCount} registro(s) de aspirante(s) correctamente.`,
+      });
+    }
+
+    // 3. Bulk status update for list of IDs
     if (!Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json(
         { success: false, error: "Debes seleccionar al menos un aspirante." },

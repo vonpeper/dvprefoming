@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getStoredAuditions, updateAuditionTechnicalDossier } from "@/lib/storage";
+import {
+  getStoredAuditions,
+  updateAuditionTechnicalDossier,
+  deleteAudition,
+  deleteStudentAuditions,
+} from "@/lib/storage";
 
 export async function GET(req: NextRequest) {
   try {
@@ -56,10 +61,62 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       audition: updated,
-      message: "Cédula técnica y ficha médica actualizada correctamente.",
+      message: "Cédula técnica y datos del aspirante actualizados correctamente.",
     });
   } catch (error) {
     console.error("[POST AUDITION DOSSIER ERROR]", error);
     return NextResponse.json({ error: "Error al actualizar la cédula técnica." }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    let id = searchParams.get("id");
+    let studentFolio = searchParams.get("studentFolio");
+    let phone = searchParams.get("phone");
+
+    // Also check body if not in query params
+    if (!id && !studentFolio && !phone) {
+      try {
+        const body = await req.json();
+        if (body.id) id = body.id;
+        if (body.studentFolio) studentFolio = body.studentFolio;
+        if (body.phone) phone = body.phone;
+      } catch {
+        // Body was empty
+      }
+    }
+
+    // 1. Delete by full student expediente
+    if (studentFolio || phone) {
+      const target = studentFolio || phone || "";
+      const result = deleteStudentAuditions(target);
+      return NextResponse.json({
+        success: true,
+        message: `Se eliminaron ${result.deletedCount} registro(s) del expediente del estudiante.`,
+        deletedCount: result.deletedCount,
+      });
+    }
+
+    // 2. Delete single audition record
+    if (id) {
+      const ok = deleteAudition(id);
+      if (!ok) {
+        return NextResponse.json({ error: "Registro de audición no encontrado para eliminar." }, { status: 404 });
+      }
+      return NextResponse.json({
+        success: true,
+        message: "Registro de audición eliminado correctamente.",
+      });
+    }
+
+    return NextResponse.json(
+      { error: "Se requiere parámetro 'id' o 'studentFolio' para eliminar." },
+      { status: 400 }
+    );
+  } catch (error) {
+    console.error("[DELETE AUDITION DOSSIER ERROR]", error);
+    return NextResponse.json({ error: "Error al eliminar registro de audición." }, { status: 500 });
   }
 }

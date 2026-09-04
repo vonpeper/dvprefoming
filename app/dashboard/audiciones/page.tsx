@@ -45,6 +45,15 @@ export default function AuditionsDashboardPage() {
   const [dossierEditing, setDossierEditing] = useState(false);
   const [dossierSaving, setDossierSaving] = useState(false);
   const [dossierFormData, setDossierFormData] = useState({
+    fullName: "",
+    phone: "",
+    email: "",
+    studentFolio: "",
+    folio: "",
+    productionCode: "",
+    age: "",
+    birthDate: "",
+    experienceNotes: "",
     emergencyContactName: "",
     emergencyContactPhone: "",
     emergencyContactRelation: "",
@@ -57,6 +66,7 @@ export default function AuditionsDashboardPage() {
     assignedRole: "",
     notes: "",
     googleDriveUrl: "",
+    headshotUrl: "",
     fullBodyPhotoUrl: "",
   });
 
@@ -178,12 +188,24 @@ export default function AuditionsDashboardPage() {
   };
 
   // Open Full Theatrical Student Dossier
-  const openTheatricalDossier = (aud: AuditionRegistration, tab: "casting" | "medical" | "evaluation" | "history" = "casting") => {
-
+  const openTheatricalDossier = (
+    aud: AuditionRegistration,
+    tab: "casting" | "medical" | "evaluation" | "history" = "casting",
+    startInEditMode = false
+  ) => {
     setDossierTarget(aud);
     setDossierActiveTab(tab);
-    setDossierEditing(false);
+    setDossierEditing(startInEditMode);
     setDossierFormData({
+      fullName: aud.fullName || "",
+      phone: aud.phone || "",
+      email: aud.email || "",
+      studentFolio: aud.studentFolio || "",
+      folio: aud.folio || "",
+      productionCode: aud.productionCode || "",
+      age: aud.age !== undefined ? String(aud.age) : "",
+      birthDate: aud.birthDate ? (typeof aud.birthDate === "string" ? aud.birthDate.slice(0, 10) : new Date(aud.birthDate).toISOString().slice(0, 10)) : "",
+      experienceNotes: aud.experienceNotes || "",
       emergencyContactName: aud.emergencyContactName || "Contacto Familiar Registrado",
       emergencyContactPhone: aud.emergencyContactPhone || (aud.phone ? `477${aud.phone.replace(/\D/g, "").slice(-7)}` : "4776558156"),
       emergencyContactRelation: aud.emergencyContactRelation || "Madre / Tutor Legal",
@@ -196,6 +218,7 @@ export default function AuditionsDashboardPage() {
       assignedRole: aud.assignedRole || "",
       notes: aud.notes || "",
       googleDriveUrl: aud.googleDriveUrl || "",
+      headshotUrl: aud.headshotUrl || "",
       fullBodyPhotoUrl: aud.fullBodyPhotoUrl || "",
     });
     setDossierModalOpen(true);
@@ -218,10 +241,11 @@ export default function AuditionsDashboardPage() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        showToast("✓ Cédula técnica y ficha médica de escenario guardada correctamente.");
+        showToast("✓ Cédula técnica y datos del aspirante guardados correctamente.");
         setDossierTarget(data.audition);
         setDossierEditing(false);
         loadData();
+        searchStudentHistory();
       } else {
         alert(data.error || "Error al actualizar la cédula técnica.");
       }
@@ -230,6 +254,100 @@ export default function AuditionsDashboardPage() {
       alert("Error de conexión al guardar los datos.");
     } finally {
       setDossierSaving(false);
+    }
+  };
+
+  // Delete a single audition registration
+  const handleDeleteSingleAudition = async (id: string, candidateName?: string) => {
+    if (!confirm(`¿Estás seguro de que deseas ELIMINAR el registro de audición de "${candidateName || id}"?\n\nEsta acción eliminará su calificación y datos de esta convocatoria.`)) {
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/auditions/dossier?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast("✓ Registro de audición eliminado correctamente.");
+        if (dossierModalOpen && dossierTarget?.id === id) {
+          setDossierModalOpen(false);
+        }
+        loadData();
+        searchStudentHistory();
+      } else {
+        alert(data.error || "Error al eliminar el registro.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error de conexión al eliminar.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Delete all audition records for a student (Expediente completo)
+  const handleDeleteStudentExpediente = async (studentFolioOrPhone: string, studentName: string) => {
+    if (!confirm(`⚠️ ALERTA DE SEGURIDAD:\n\n¿Deseas ELIMINAR TODO EL EXPEDIENTE del alumno "${studentName}" (${studentFolioOrPhone}) y todas sus audiciones históricas?\n\nEsta acción borrará todas sus participaciones en todas las obras y no se puede deshacer.`)) {
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/auditions/dossier?studentFolio=${encodeURIComponent(studentFolioOrPhone)}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(`✓ Expediente de ${studentName} eliminado (${data.deletedCount} registros eliminados).`);
+        if (dossierModalOpen) {
+          setDossierModalOpen(false);
+        }
+        loadData();
+        searchStudentHistory();
+      } else {
+        alert(data.error || "Error al eliminar el expediente.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error de conexión al eliminar expediente.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Bulk Delete Selected Auditions
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`⚠️ ¿Estás seguro de que deseas ELIMINAR a los ${selectedIds.length} aspirantes seleccionados? Esta acción es irreversible.`)) {
+      return;
+    }
+
+    setBulkActionLoading(true);
+    try {
+      const res = await fetch("/api/auditions/bulk-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "DELETE",
+          ids: selectedIds,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(`✓ ${data.message || "Aspirantes eliminados con éxito."}`);
+        setSelectedIds([]);
+        loadData();
+        searchStudentHistory();
+      } else {
+        alert(data.error || "Error al eliminar aspirantes.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error de conexión al eliminar en bloque.");
+    } finally {
+      setBulkActionLoading(false);
     }
   };
 
@@ -1194,6 +1312,22 @@ export default function AuditionsDashboardPage() {
                               </button>
                               <button
                                 type="button"
+                                onClick={() => openTheatricalDossier(aud, "casting", true)}
+                                className="p-1.5 bg-[#21262D] hover:bg-amber-950/60 text-amber-300 hover:text-amber-200 border border-[#30363D] rounded-xl text-xs cursor-pointer transition-colors"
+                                title="Editar datos del alumno / cédula"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteSingleAudition(aud.id, aud.fullName)}
+                                className="p-1.5 bg-[#21262D] hover:bg-rose-950/60 text-rose-400 hover:text-rose-200 border border-[#30363D] rounded-xl text-xs cursor-pointer transition-colors"
+                                title="Eliminar registro de audición"
+                              >
+                                🗑️
+                              </button>
+                              <button
+                                type="button"
                                 onClick={() => openAssignRoleModal(aud)}
                                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow ${
                                   aud.assignedRole
@@ -1302,6 +1436,16 @@ export default function AuditionsDashboardPage() {
                 >
                   <span>⚪</span>
                   <span>No Seleccionado</span>
+                </button>
+
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={bulkActionLoading}
+                  className="px-3.5 py-2 bg-red-700 hover:bg-red-600 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1.5 cursor-pointer transition-all disabled:opacity-50"
+                  title="Eliminar permanentemente a los aspirantes seleccionados"
+                >
+                  <span>🗑️</span>
+                  <span>Eliminar ({selectedIds.length})</span>
                 </button>
 
                 <button
@@ -1474,6 +1618,24 @@ export default function AuditionsDashboardPage() {
                                 title="Abrir Cédula Técnica & Ficha Médica"
                               >
                                 📜
+                              </button>
+
+                              {/* Edit Dossier Mode */}
+                              <button
+                                onClick={() => openTheatricalDossier(aud, "casting", true)}
+                                className="p-1.5 bg-[#21262D] hover:bg-amber-950/60 text-amber-300 hover:text-amber-200 border border-[#30363D] rounded-lg text-xs cursor-pointer transition-colors"
+                                title="Editar datos del alumno / cédula"
+                              >
+                                ✏️
+                              </button>
+
+                              {/* Delete Single Audition */}
+                              <button
+                                onClick={() => handleDeleteSingleAudition(aud.id, aud.fullName)}
+                                className="p-1.5 bg-[#21262D] hover:bg-rose-950/60 text-rose-400 hover:text-rose-200 border border-[#30363D] rounded-lg text-xs cursor-pointer transition-colors"
+                                title="Eliminar registro de audición"
+                              >
+                                🗑️
                               </button>
 
                               {/* Assign Role */}
@@ -1691,10 +1853,24 @@ export default function AuditionsDashboardPage() {
                               <span>Cédula</span>
                             </button>
                             <button
+                              onClick={() => openTheatricalDossier(castMember, "casting", true)}
+                              className="p-1.5 bg-[#21262D] hover:bg-amber-950/60 text-amber-300 hover:text-amber-200 border border-[#30363D] rounded-xl text-xs cursor-pointer transition-colors"
+                              title="Editar datos del alumno / cédula"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSingleAudition(castMember.id, castMember.fullName)}
+                              className="p-1.5 bg-[#21262D] hover:bg-rose-950/60 text-rose-400 hover:text-rose-200 border border-[#30363D] rounded-xl text-xs cursor-pointer transition-colors"
+                              title="Eliminar registro de audición"
+                            >
+                              🗑️
+                            </button>
+                            <button
                               onClick={() => openAssignRoleModal(castMember)}
                               className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow"
                             >
-                              ✏️ Editar Rol
+                              🎭 Rol
                             </button>
                           </div>
                         </td>
@@ -1999,7 +2175,7 @@ export default function AuditionsDashboardPage() {
                         </div>
 
                         <div className="flex-1 flex flex-col gap-1 min-w-0">
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <h3
                               onClick={() => item.history?.[0] && openTheatricalDossier(item.history[0], "casting")}
                               className="font-bold text-white text-sm truncate hover:text-indigo-300 cursor-pointer transition-colors flex items-center gap-1.5"
@@ -2011,9 +2187,32 @@ export default function AuditionsDashboardPage() {
                                 </span>
                               )}
                             </h3>
-                            <span className="text-[10px] font-mono bg-indigo-950/80 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded font-bold shrink-0">
-                              {item.totalAuditions} {item.totalAuditions === 1 ? "Audición" : "Audiciones"}
-                            </span>
+
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {item.history?.[0] && (
+                                <button
+                                  type="button"
+                                  onClick={() => openTheatricalDossier(item.history[0], "casting", true)}
+                                  className="px-2 py-1 bg-[#21262D] hover:bg-amber-950/60 text-amber-300 hover:text-amber-200 border border-[#30363D] rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                                  title="Editar datos del aspirante / cédula"
+                                >
+                                  <span>✏️</span>
+                                  <span className="hidden sm:inline">Editar Alumno</span>
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteStudentExpediente(item.studentFolio || item.candidate.phone, item.candidate.fullName)}
+                                className="px-2 py-1 bg-[#21262D] hover:bg-rose-950/60 text-rose-400 hover:text-rose-200 border border-[#30363D] rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                                title="Eliminar todo el expediente y audiciones de este alumno"
+                              >
+                                <span>🗑️</span>
+                                <span className="hidden sm:inline">Eliminar Expediente</span>
+                              </button>
+                              <span className="text-[10px] font-mono bg-indigo-950/80 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded font-bold shrink-0">
+                                {item.totalAuditions} {item.totalAuditions === 1 ? "Audición" : "Audiciones"}
+                              </span>
+                            </div>
                           </div>
 
                           <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-slate-400">
@@ -2055,7 +2254,7 @@ export default function AuditionsDashboardPage() {
                                 </span>
                               </div>
 
-                              <div className="flex items-center gap-2 shrink-0">
+                              <div className="flex items-center gap-1.5 shrink-0">
                                 {h.overallScore ? (
                                   <button
                                     type="button"
@@ -2076,7 +2275,25 @@ export default function AuditionsDashboardPage() {
                                   title="Ver Cédula Técnica & Ficha Médica"
                                 >
                                   <span>📜</span>
-                                  <span>Cédula</span>
+                                  <span className="hidden sm:inline">Cédula</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => openTheatricalDossier(h, "casting", true)}
+                                  className="p-1 bg-[#21262D] hover:bg-amber-950/60 text-amber-300 hover:text-amber-200 border border-[#30363D] rounded-lg text-xs cursor-pointer transition-colors"
+                                  title="Editar esta audición"
+                                >
+                                  ✏️
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteSingleAudition(h.id, h.fullName)}
+                                  className="p-1 bg-[#21262D] hover:bg-rose-950/60 text-rose-400 hover:text-rose-200 border border-[#30363D] rounded-lg text-xs cursor-pointer transition-colors"
+                                  title="Eliminar este registro de audición"
+                                >
+                                  🗑️
                                 </button>
                               </div>
                             </div>
@@ -2376,6 +2593,141 @@ export default function AuditionsDashboardPage() {
               {/* TAB 1: CÉDULA TÉCNICA & OBRA */}
               {dossierActiveTab === "casting" && (
                 <form onSubmit={handleSaveTheatricalDossier} className="flex flex-col gap-5">
+                  {/* Candidate Personal & Relational Folio Identity Card */}
+                  <div className="bg-[#0D1117] border border-indigo-500/40 rounded-2xl p-4 flex flex-col gap-3 shadow-sm">
+                    <div className="flex items-center justify-between border-b border-[#21262D] pb-2">
+                      <span className="font-bold text-white uppercase tracking-wider font-mono text-xs flex items-center gap-1.5">
+                        <span>👤</span> Ficha de Identidad & Datos del Aspirante
+                      </span>
+                      <span className="text-[10px] font-mono text-indigo-400 font-bold">
+                        {dossierEditing ? "✏️ Editando Ficha General" : `Folio Alumno: ${dossierFormData.studentFolio || dossierTarget.studentFolio || "DV-ART-0482"}`}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {/* Full Name */}
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[11px] font-semibold text-slate-300">Nombre Completo:</label>
+                        {dossierEditing ? (
+                          <input
+                            type="text"
+                            value={dossierFormData.fullName}
+                            onChange={(e) => setDossierFormData({ ...dossierFormData, fullName: e.target.value })}
+                            className="bg-[#161B22] border border-purple-500/60 focus:border-indigo-500 rounded-xl p-2 text-xs text-white font-bold"
+                            required
+                          />
+                        ) : (
+                          <div className="p-2 bg-[#161B22] border border-[#21262D] rounded-xl text-white font-bold text-xs truncate">
+                            {dossierFormData.fullName || dossierTarget.fullName}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Phone */}
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[11px] font-semibold text-slate-300">Teléfono / WhatsApp:</label>
+                        {dossierEditing ? (
+                          <input
+                            type="tel"
+                            value={dossierFormData.phone}
+                            onChange={(e) => setDossierFormData({ ...dossierFormData, phone: e.target.value })}
+                            className="bg-[#161B22] border border-emerald-500/60 focus:border-emerald-400 rounded-xl p-2 text-xs text-emerald-400 font-mono font-bold"
+                            required
+                          />
+                        ) : (
+                          <div className="p-2 bg-[#161B22] border border-[#21262D] rounded-xl text-emerald-400 font-mono font-bold text-xs truncate">
+                            {dossierFormData.phone || dossierTarget.phone}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Email */}
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[11px] font-semibold text-slate-300">Correo Electrónico:</label>
+                        {dossierEditing ? (
+                          <input
+                            type="email"
+                            value={dossierFormData.email}
+                            onChange={(e) => setDossierFormData({ ...dossierFormData, email: e.target.value })}
+                            className="bg-[#161B22] border border-[#30363D] focus:border-indigo-500 rounded-xl p-2 text-xs text-white"
+                            required
+                          />
+                        ) : (
+                          <div className="p-2 bg-[#161B22] border border-[#21262D] rounded-xl text-slate-300 text-xs truncate">
+                            {dossierFormData.email || dossierTarget.email}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Student Folio */}
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1">
+                          <span>🎓</span> Folio Permanente Alumno:
+                        </label>
+                        {dossierEditing ? (
+                          <input
+                            type="text"
+                            value={dossierFormData.studentFolio}
+                            onChange={(e) => setDossierFormData({ ...dossierFormData, studentFolio: e.target.value })}
+                            placeholder="DV-ART-XXXX"
+                            className="bg-[#161B22] border border-purple-500/50 rounded-xl p-2 text-xs text-purple-300 font-mono font-bold uppercase"
+                          />
+                        ) : (
+                          <div className="p-2 bg-[#161B22] border border-[#21262D] rounded-xl text-purple-300 font-mono font-bold text-xs">
+                            {dossierFormData.studentFolio || dossierTarget.studentFolio || "DV-ART-0482"}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Audition Folio */}
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1">
+                          <span>🎫</span> Folio Casting / Audición:
+                        </label>
+                        {dossierEditing ? (
+                          <input
+                            type="text"
+                            value={dossierFormData.folio}
+                            onChange={(e) => setDossierFormData({ ...dossierFormData, folio: e.target.value })}
+                            placeholder="AUD-XXXX"
+                            className="bg-[#161B22] border border-[#30363D] rounded-xl p-2 text-xs text-white font-mono font-bold uppercase"
+                          />
+                        ) : (
+                          <div className="p-2 bg-[#161B22] border border-[#21262D] rounded-xl text-white font-mono font-bold text-xs">
+                            {dossierFormData.folio || dossierTarget.folio}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* BirthDate & Age */}
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[11px] font-semibold text-slate-300">Fecha Nacimiento / Edad:</label>
+                        {dossierEditing ? (
+                          <div className="flex gap-2">
+                            <input
+                              type="date"
+                              value={dossierFormData.birthDate}
+                              onChange={(e) => setDossierFormData({ ...dossierFormData, birthDate: e.target.value })}
+                              className="flex-1 bg-[#161B22] border border-[#30363D] rounded-xl p-2 text-xs text-white"
+                            />
+                            <input
+                              type="number"
+                              value={dossierFormData.age}
+                              onChange={(e) => setDossierFormData({ ...dossierFormData, age: e.target.value })}
+                              placeholder="Edad"
+                              className="w-16 bg-[#161B22] border border-[#30363D] rounded-xl p-2 text-xs text-white text-center font-mono"
+                            />
+                          </div>
+                        ) : (
+                          <div className="p-2 bg-[#161B22] border border-[#21262D] rounded-xl text-slate-300 text-xs font-mono">
+                            {dossierFormData.birthDate || (dossierTarget.birthDate ? String(dossierTarget.birthDate).slice(0, 10) : "No registrada")}
+                            {dossierFormData.age ? ` (${dossierFormData.age} años)` : dossierTarget.age ? ` (${dossierTarget.age} años)` : ""}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     
                     {/* Left Column: Theatrical Profile */}
@@ -2995,14 +3347,36 @@ export default function AuditionsDashboardPage() {
             </div>
 
             {/* 4. Modal Bottom Footer */}
-            <div className="p-4 bg-[#0D1117] border-t border-[#30363D] flex items-center justify-between">
+            <div className="p-4 bg-[#0D1117] border-t border-[#30363D] flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
                 <span>Director General & Jurado</span>
                 <span>&bull;</span>
                 <span className="text-purple-300 font-bold">DV Performing Arts</span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Delete single audition record */}
+                <button
+                  type="button"
+                  onClick={() => handleDeleteSingleAudition(dossierTarget.id, dossierTarget.fullName)}
+                  className="px-3 py-2 bg-rose-950/60 hover:bg-rose-900 text-rose-300 hover:text-white border border-rose-500/40 rounded-xl font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                  title="Eliminar solo este registro de audición"
+                >
+                  <span>🗑️</span>
+                  <span className="hidden sm:inline">Eliminar Registro</span>
+                </button>
+
+                {/* Delete full student dossier */}
+                <button
+                  type="button"
+                  onClick={() => handleDeleteStudentExpediente(dossierTarget.studentFolio || dossierTarget.phone, dossierTarget.fullName)}
+                  className="px-3 py-2 bg-red-950/80 hover:bg-red-900 text-red-300 hover:text-white border border-red-500/50 rounded-xl font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                  title="Eliminar todo el expediente y todas las audiciones de este alumno"
+                >
+                  <span>⚠️</span>
+                  <span className="hidden sm:inline">Eliminar Expediente</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => openAssignRoleModal(dossierTarget)}

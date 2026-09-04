@@ -1006,6 +1006,62 @@ export function updateAuditionTechnicalDossier(
   return auditions[idx];
 }
 
+/**
+ * Deletes a single audition record by ID or Folio
+ */
+export function deleteAudition(idOrFolio: string): boolean {
+  const auditions = getStoredAuditions();
+  const filtered = auditions.filter(
+    (a) => a.id !== idOrFolio && a.folio.toLowerCase() !== idOrFolio.toLowerCase()
+  );
+  if (filtered.length === auditions.length) return false;
+  saveStoredAuditions(filtered);
+  return true;
+}
+
+/**
+ * Bulk deletes multiple audition records by list of IDs
+ */
+export function bulkDeleteAuditions(ids: string[]): { deletedCount: number } {
+  const auditions = getStoredAuditions();
+  const idSet = new Set(ids.map((i) => i.toLowerCase()));
+  const filtered = auditions.filter(
+    (a) => !idSet.has(a.id.toLowerCase()) && !idSet.has(a.folio.toLowerCase())
+  );
+  const deletedCount = auditions.length - filtered.length;
+  if (deletedCount > 0) {
+    saveStoredAuditions(filtered);
+  }
+  return { deletedCount };
+}
+
+/**
+ * Deletes all audition records associated with a student (by studentFolio, phone, email or ID)
+ */
+export function deleteStudentAuditions(identifier: string): { deletedCount: number } {
+  const auditions = getStoredAuditions();
+  const clean = identifier.trim().toLowerCase();
+  const numOnly = clean.replace(/\D/g, "");
+
+  const filtered = auditions.filter((a) => {
+    if (a.studentFolio && a.studentFolio.toLowerCase() === clean) return false;
+    if (a.id && a.id.toLowerCase() === clean) return false;
+    if (a.folio && a.folio.toLowerCase() === clean) return false;
+    if (a.email && a.email.toLowerCase() === clean) return false;
+    if (numOnly.length >= 7 && a.phone) {
+      const aPhone = a.phone.replace(/\D/g, "");
+      if (aPhone.endsWith(numOnly) || numOnly.endsWith(aPhone)) return false;
+    }
+    return true;
+  });
+
+  const deletedCount = auditions.length - filtered.length;
+  if (deletedCount > 0) {
+    saveStoredAuditions(filtered);
+  }
+  return { deletedCount };
+}
+
 
 export interface AuditionStats {
   totalAuditions: number;
