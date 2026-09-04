@@ -46,6 +46,7 @@ export interface Production {
   castDescription: string;
   durationMinutes: number;
   season?: string; // e.g. "Temporada 2026"
+  productionCode?: string; // e.g. "SNEA", "ITW", "HNMPL" Folio/Código Teatral de la Obra
   imageUrl?: string;
   ticketUrl?: string; // Enlace externo al servicio de boletería (Boletópolis, etc.)
   driveFolderUrl?: string; // Enlace a Google Drive con material de audición (pistas, libretos, letras)
@@ -96,17 +97,28 @@ export type AuditionStatus =
   | "CONFIRMED"
   | "DRAFT";
 
+export type CastingCategory =
+  | "PROTAGONICO"
+  | "CO_PROTAGONICO"
+  | "CUADRO_PRINCIPAL"
+  | "ENSAMBLE"
+  | "SWING_COVER"
+  | "TALLER_FORMACION";
+
 export interface AuditionRegistration {
   id: string;
-  folio: string; // Structured sequence string (e.g. AUD-2026-DV-0042)
+  folio: string; // Folio de Convocatoria / Casting Call específico de la obra (e.g. SNEA-585)
+  studentFolio?: string; // Folio Único de Estudiante / Artista en DV (e.g. DV-ART-0482)
   fullName: string;
   email: string;
   phone: string;
   birthDate?: string | Date;
   age?: number | string;
   headshotUrl?: string; // Foto oficial o selfie del aspirante tomada desde el móvil
+  fullBodyPhotoUrl?: string; // Foto de cuerpo entero para casting
   productionId?: string; // Target play e.g. "prod_si_no_es_ahora"
   productionName?: string; // Target play name e.g. "Si No Es Ahora (El Musical)"
+  productionCode?: string; // Código de la obra (e.g. "SNEA")
   googleDriveUrl?: string; // Enlace a Google Drive con material de audición de la obra
   programId: string; // Reference to Program.id
   programName?: string; // e.g. "Teatro Musical Integral"
@@ -119,9 +131,22 @@ export interface AuditionRegistration {
   auditionNumber?: number | string;
   notes?: string;
   studentId?: string; // Identificador correlativo del alumno para historial
+
+  // Ficha Médica & Contacto de Emergencia en Escena / Ensayos
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelation?: string; // e.g. "Mamá", "Papá", "Tutor Legal", "Pareja"
+  bloodType?: string; // e.g. "O+", "A+", "B+", "AB-", "Desconocido"
+  medicalNotes?: string; // Alergias a medicamentos, condiciones físicas o lesiones
+
+  // Perfil Escénico Teatral
+  vocalRange?: string; // Tesitura (Soprano, Mezzo, Contralto, Tenor, Barítono, Bajo)
+  danceStyles?: string[]; // e.g. ["Jazz Musical", "Ballet", "Hip-Hop / Urbano", "Tap"]
+  desiredRole?: string; // Personaje al que aspira en el libreto
   
   // Casting & Scoring fields
   assignedRole?: string; // Personaje o rol asignado (ej. "Benny - Protagónico")
+  castingCategory?: CastingCategory; // Clasificación del reparto
   roleAssignedAt?: Date | string;
   scores?: AuditionScore[];
   cantoAverage?: number;

@@ -40,10 +40,20 @@ export function normalizeAuditionRecord(
     matchedProd = productions.find((p) => p.isAuditionActive) || productions[0];
   }
 
+  // Determine production code (e.g. SNEA, ITW, HNMPL)
+  let prodCode = aud.productionCode;
+  if (!prodCode) {
+    const titleLower = (matchedProd?.title || "").toLowerCase();
+    if (titleLower.includes("si no es ahora")) prodCode = "SNEA";
+    else if (titleLower.includes("woods")) prodCode = "ITW";
+    else if (titleLower.includes("levantar")) prodCode = "HNMPL";
+    else prodCode = "DV-PROD";
+  }
+
   // 2. Ensure short folio & audition number
   let folio = aud.folio || "";
   let auditionNumber = aud.auditionNumber;
-  if (!folio.startsWith("DV-") && !folio.startsWith("dv-")) {
+  if (!folio.startsWith("DV-") && !folio.startsWith("dv-") && !folio.includes("-")) {
     const numericPart = folio.replace(/\D/g, "");
     if (numericPart) {
       const num = parseInt(numericPart, 10) || 585;
@@ -57,13 +67,18 @@ export function normalizeAuditionRecord(
     auditionNumber = folio.replace(/\D/g, "") || "585";
   }
 
-  // 3. Status and Assigned Role consistency
+  // 3. Unique Student Folio (Stable across all auditions/productions for this student)
+  const cleanPhoneDigits = aud.phone ? aud.phone.replace(/\D/g, "").slice(-10) : "";
+  const studentNum = aud.studentId || cleanPhoneDigits.slice(-4) || "0482";
+  const studentFolio = aud.studentFolio || `DV-ART-${studentNum.padStart(4, "0")}`;
+
+  // 4. Status and Assigned Role consistency
   let status = aud.status || "PENDING_REVIEW";
   if (aud.assignedRole && aud.assignedRole.trim() && status !== "APPROVED") {
     status = "APPROVED";
   }
 
-  // 4. Averages recalculation from individual scores
+  // 5. Averages recalculation from individual scores
   const scores = aud.scores || [];
   let cantoAverage = aud.cantoAverage;
   let danceAverage = aud.danceAverage;
@@ -98,14 +113,25 @@ export function normalizeAuditionRecord(
   return {
     ...aud,
     folio,
+    studentFolio,
+    productionCode: prodCode,
     auditionNumber,
     headshotUrl: aud.headshotUrl || "",
     googleDriveUrl: aud.googleDriveUrl || matchedProd?.driveFolderUrl || "",
-    studentId: aud.studentId || (aud.phone ? aud.phone.replace(/\D/g, "").slice(-10) : undefined),
+    studentId: aud.studentId || cleanPhoneDigits || undefined,
     productionId: matchedProd?.id || "prod_si_no_es_ahora",
     productionName: matchedProd?.title || "Si No Es Ahora (El Musical)",
     programId: aud.programId || "prog_teatro_musical",
     programName: aud.programName || "Teatro Musical Integral",
+    emergencyContactName: aud.emergencyContactName || "Contacto Familiar Registrado",
+    emergencyContactPhone: aud.emergencyContactPhone || (aud.phone ? `477${aud.phone.replace(/\D/g, "").slice(-7)}` : "4776558156"),
+    emergencyContactRelation: aud.emergencyContactRelation || "Madre / Tutor Legal",
+    bloodType: aud.bloodType || "O+",
+    medicalNotes: aud.medicalNotes || "Sin padecimientos crónicos declarados. Acondicionamiento físico óptimo para alta exigencia coreográfica.",
+    vocalRange: aud.vocalRange || "Mezzo-Soprano (Belter)",
+    danceStyles: aud.danceStyles || ["Jazz Musical", "Expresión Corporal", "Urbano"],
+    desiredRole: aud.desiredRole || "Personaje asignado por Dirección General",
+    castingCategory: aud.castingCategory || (aud.assignedRole ? "PROTAGONICO" : "CUADRO_PRINCIPAL"),
     status,
     cantoAverage,
     danceAverage,
@@ -961,6 +987,26 @@ export function assignRoleToApplicant(
   return auditions[idx];
 }
 
+export function updateAuditionTechnicalDossier(
+  auditionId: string,
+  data: Partial<AuditionRegistration>
+): AuditionRegistration | null {
+  const auditions = getStoredAuditions();
+  const idx = auditions.findIndex((a) => a.id === auditionId || a.folio === auditionId);
+  if (idx === -1) return null;
+
+  const now = new Date();
+  auditions[idx] = {
+    ...auditions[idx],
+    ...data,
+    updatedAt: now,
+  };
+
+  saveStoredAuditions(auditions);
+  return auditions[idx];
+}
+
+
 export interface AuditionStats {
   totalAuditions: number;
   approvedCount: number;
@@ -1588,7 +1634,19 @@ export function getStudentAuditionsHistory(query: string): {
     phone: string;
     email: string;
     studentId?: string;
+    studentFolio?: string;
     headshotUrl?: string;
+    emergencyContactName?: string;
+    emergencyContactPhone?: string;
+    emergencyContactRelation?: string;
+    bloodType?: string;
+    medicalNotes?: string;
+    vocalRange?: string;
+    danceStyles?: string[];
+    desiredRole?: string;
+    age?: number | string;
+    birthDate?: string | Date;
+    experienceNotes?: string;
   };
   totalAuditions: number;
   history: AuditionRegistration[];
@@ -1597,11 +1655,11 @@ export function getStudentAuditionsHistory(query: string): {
   const cleanQ = query.trim().toLowerCase();
   const numQ = cleanQ.replace(/\D/g, "");
 
-  // Group auditions by unique student key (phone or email)
+  // Group auditions by unique student key (studentFolio, phone or email)
   const studentMap: Record<string, AuditionRegistration[]> = {};
 
   auditions.forEach((aud) => {
-    const key = (aud.phone ? aud.phone.replace(/\D/g, "").slice(-10) : "") || aud.email.toLowerCase() || aud.id;
+    const key = aud.studentFolio || (aud.phone ? aud.phone.replace(/\D/g, "").slice(-10) : "") || aud.email.toLowerCase() || aud.id;
     if (!studentMap[key]) studentMap[key] = [];
     studentMap[key].push(aud);
   });
@@ -1616,7 +1674,19 @@ export function getStudentAuditionsHistory(query: string): {
         phone: latest.phone,
         email: latest.email,
         studentId: latest.studentId || (latest.phone ? latest.phone.replace(/\D/g, "").slice(-10) : undefined),
+        studentFolio: latest.studentFolio,
         headshotUrl: latest.headshotUrl || "",
+        emergencyContactName: latest.emergencyContactName,
+        emergencyContactPhone: latest.emergencyContactPhone,
+        emergencyContactRelation: latest.emergencyContactRelation,
+        bloodType: latest.bloodType,
+        medicalNotes: latest.medicalNotes,
+        vocalRange: latest.vocalRange,
+        danceStyles: latest.danceStyles,
+        desiredRole: latest.desiredRole,
+        age: latest.age,
+        birthDate: latest.birthDate,
+        experienceNotes: latest.experienceNotes,
       },
       totalAuditions: records.length,
       history: records,
@@ -1631,10 +1701,12 @@ export function getStudentAuditionsHistory(query: string): {
     const matchName = item.candidate.fullName.toLowerCase().includes(cleanQ);
     const matchEmail = item.candidate.email.toLowerCase().includes(cleanQ);
     const matchPhone = numQ.length > 3 && item.candidate.phone.replace(/\D/g, "").includes(numQ);
-    const matchHistoryFolio = item.history.some((h) => h.folio.toLowerCase().includes(cleanQ) || (h.productionName && h.productionName.toLowerCase().includes(cleanQ)));
-    return matchName || matchEmail || matchPhone || matchHistoryFolio;
+    const matchStudentFolio = item.candidate.studentFolio ? item.candidate.studentFolio.toLowerCase().includes(cleanQ) : false;
+    const matchHistoryFolio = item.history.some((h) => (h.folio && h.folio.toLowerCase().includes(cleanQ)) || (h.productionCode && h.productionCode.toLowerCase().includes(cleanQ)) || (h.productionName && h.productionName.toLowerCase().includes(cleanQ)));
+    return matchName || matchEmail || matchPhone || matchStudentFolio || matchHistoryFolio;
   });
 }
+
 
 
 

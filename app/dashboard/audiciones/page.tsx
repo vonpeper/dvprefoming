@@ -38,7 +38,29 @@ export default function AuditionsDashboardPage() {
   const [morningWp, setMorningWp] = useState(true);
   const [morningEmail, setMorningEmail] = useState(true);
 
-  // Director General Score Breakdown Modal State
+  // Full Theatrical Student Dossier / Cédula Técnica Modal State
+  const [dossierModalOpen, setDossierModalOpen] = useState(false);
+  const [dossierTarget, setDossierTarget] = useState<AuditionRegistration | null>(null);
+  const [dossierActiveTab, setDossierActiveTab] = useState<"casting" | "medical" | "evaluation" | "history">("casting");
+  const [dossierEditing, setDossierEditing] = useState(false);
+  const [dossierSaving, setDossierSaving] = useState(false);
+  const [dossierFormData, setDossierFormData] = useState({
+    emergencyContactName: "",
+    emergencyContactPhone: "",
+    emergencyContactRelation: "",
+    bloodType: "O+",
+    medicalNotes: "",
+    vocalRange: "Mezzo-Soprano (Belter)",
+    danceStyles: ["Jazz Musical", "Expresión Corporal", "Urbano"],
+    desiredRole: "",
+    castingCategory: "CUADRO_PRINCIPAL",
+    assignedRole: "",
+    notes: "",
+    googleDriveUrl: "",
+    fullBodyPhotoUrl: "",
+  });
+
+  // Director General Score Breakdown Modal State (backward compatible)
   const [scoreBreakdownModalOpen, setScoreBreakdownModalOpen] = useState(false);
   const [scoreBreakdownTargetAudition, setScoreBreakdownTargetAudition] = useState<AuditionRegistration | null>(null);
 
@@ -83,7 +105,14 @@ export default function AuditionsDashboardPage() {
       fetch(`/api/auditions/stats${selectedProductionId !== "ALL" ? `?productionId=${selectedProductionId}` : ""}`).then((res) => res.json()),
     ])
       .then(([audData, prodData, critData, statsData]) => {
-        if (audData?.auditions) setAuditions(audData.auditions);
+        if (audData?.auditions) {
+          setAuditions(audData.auditions);
+          // If dossier is currently open, keep target updated
+          if (dossierTarget) {
+            const updatedTarget = audData.auditions.find((a: AuditionRegistration) => a.id === dossierTarget.id);
+            if (updatedTarget) setDossierTarget(updatedTarget);
+          }
+        }
         if (prodData?.productions) setProductions(prodData.productions);
         if (critData?.criteria) setCriteria(critData.criteria);
         if (statsData?.stats) setStats(statsData.stats);
@@ -148,10 +177,66 @@ export default function AuditionsDashboardPage() {
     }
   };
 
-  const openScoreBreakdownModal = (aud: AuditionRegistration) => {
-    setScoreBreakdownTargetAudition(aud);
-    setScoreBreakdownModalOpen(true);
+  // Open Full Theatrical Student Dossier
+  const openTheatricalDossier = (aud: AuditionRegistration, tab: "casting" | "medical" | "evaluation" | "history" = "casting") => {
+
+    setDossierTarget(aud);
+    setDossierActiveTab(tab);
+    setDossierEditing(false);
+    setDossierFormData({
+      emergencyContactName: aud.emergencyContactName || "Contacto Familiar Registrado",
+      emergencyContactPhone: aud.emergencyContactPhone || (aud.phone ? `477${aud.phone.replace(/\D/g, "").slice(-7)}` : "4776558156"),
+      emergencyContactRelation: aud.emergencyContactRelation || "Madre / Tutor Legal",
+      bloodType: aud.bloodType || "O+",
+      medicalNotes: aud.medicalNotes || "Sin padecimientos crónicos declarados. Acondicionamiento físico óptimo para ensayos y escena.",
+      vocalRange: aud.vocalRange || "Mezzo-Soprano (Belter)",
+      danceStyles: aud.danceStyles || ["Jazz Musical", "Expresión Corporal", "Urbano"],
+      desiredRole: aud.desiredRole || "Personaje asignado por Dirección General",
+      castingCategory: aud.castingCategory || (aud.assignedRole ? "PROTAGONICO" : "CUADRO_PRINCIPAL"),
+      assignedRole: aud.assignedRole || "",
+      notes: aud.notes || "",
+      googleDriveUrl: aud.googleDriveUrl || "",
+      fullBodyPhotoUrl: aud.fullBodyPhotoUrl || "",
+    });
+    setDossierModalOpen(true);
   };
+
+  // Save updates to Theatrical Technical Sheet / Dossier
+  const handleSaveTheatricalDossier = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!dossierTarget) return;
+
+    setDossierSaving(true);
+    try {
+      const res = await fetch("/api/auditions/dossier", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: dossierTarget.id,
+          ...dossierFormData,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast("✓ Cédula técnica y ficha médica de escenario guardada correctamente.");
+        setDossierTarget(data.audition);
+        setDossierEditing(false);
+        loadData();
+      } else {
+        alert(data.error || "Error al actualizar la cédula técnica.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error de conexión al guardar los datos.");
+    } finally {
+      setDossierSaving(false);
+    }
+  };
+
+  const openScoreBreakdownModal = (aud: AuditionRegistration) => {
+    openTheatricalDossier(aud, "evaluation");
+  };
+
 
   // Helper to match candidate to production
   const matchCandidateToProd = (a: AuditionRegistration, prodId: string) => {
@@ -954,13 +1039,13 @@ export default function AuditionsDashboardPage() {
                             )}
                           </td>
 
-                          {/* Candidate Name, Photo & Short Folio */}
+                          {/* Candidate Name, Photo & Multi-Folios */}
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-3">
                               <div
-                                onClick={() => openScoreBreakdownModal(aud)}
-                                className="w-9 h-9 rounded-xl overflow-hidden bg-[#21262D] border border-slate-700 shrink-0 cursor-pointer hover:border-purple-400 transition-colors flex items-center justify-center"
-                                title="Clic para ver expediente y notas de jueces"
+                                onClick={() => openTheatricalDossier(aud, "casting")}
+                                className="w-10 h-10 rounded-xl overflow-hidden bg-[#21262D] border border-slate-700 shrink-0 cursor-pointer hover:border-purple-400 transition-colors flex items-center justify-center shadow"
+                                title="Clic para abrir Cédula Técnica & Ficha Médica"
                               >
                                 {aud.headshotUrl ? (
                                   /* eslint-disable-next-line @next/next/no-img-element */
@@ -976,19 +1061,28 @@ export default function AuditionsDashboardPage() {
 
                               <div className="flex flex-col">
                                 <span
-                                  onClick={() => openScoreBreakdownModal(aud)}
+                                  onClick={() => openTheatricalDossier(aud, "casting")}
                                   className="font-bold text-white text-sm flex items-center gap-2 hover:text-purple-300 cursor-pointer transition-colors"
                                 >
                                   {aud.fullName}
                                   {aud.status === "BLACKLIST" && (
                                     <span className="text-xs text-rose-400" title="En Lista Negra">🚫</span>
                                   )}
+                                  {aud.bloodType && (
+                                    <span className="text-[9px] font-mono font-bold text-rose-300 bg-rose-950/80 border border-rose-500/30 px-1 rounded">
+                                      🩸 {aud.bloodType}
+                                    </span>
+                                  )}
                                 </span>
-                                <div className="flex items-center gap-2 mt-0.5 font-mono text-[10px] text-slate-400">
-                                  <span className="text-purple-400 font-bold bg-purple-950/80 px-1.5 py-0.2 rounded border border-purple-500/30">
-                                    {aud.folio}
+                                <div className="flex flex-wrap items-center gap-1.5 mt-0.5 font-mono text-[10px] text-slate-400">
+                                  <span className="text-purple-300 font-bold bg-purple-950/90 px-1.5 py-0.2 rounded border border-purple-500/40" title="Folio Permanente de Alumno / Artista">
+                                    🎓 {aud.studentFolio || "DV-ART-0482"}
                                   </span>
-                                  <span>&bull;</span>
+                                  <span className="text-slate-500">&bull;</span>
+                                  <span className="text-purple-400 font-bold bg-[#0D1117] px-1.5 py-0.2 rounded border border-purple-500/30" title="Folio de Convocatoria">
+                                    🎫 {aud.folio}
+                                  </span>
+                                  <span className="text-slate-500">&bull;</span>
                                   <span>{aud.phone}</span>
                                 </div>
                               </div>
@@ -997,18 +1091,23 @@ export default function AuditionsDashboardPage() {
 
                           {/* Production */}
                           <td className="py-3 px-4">
-                            <span className="text-xs text-slate-300">
-                              {aud.productionName || "Si No Es Ahora"}
-                            </span>
+                            <div className="flex flex-col">
+                              <span className="text-xs font-semibold text-slate-200">
+                                {aud.productionName || "Si No Es Ahora"}
+                              </span>
+                              <span className="text-[10px] font-mono text-purple-400 font-bold">
+                                🎭 {aud.productionCode || "SNEA"}
+                              </span>
+                            </div>
                           </td>
 
                           {/* Canto Score */}
                           <td className="py-3 px-4 text-center font-mono">
                             {aud.cantoAverage !== undefined ? (
                               <span
-                                onClick={() => openScoreBreakdownModal(aud)}
+                                onClick={() => openTheatricalDossier(aud, "evaluation")}
                                 className={`border px-2 py-0.5 rounded font-bold cursor-pointer hover:scale-105 transition-transform ${getBadgeColor(aud.cantoAverage)}`}
-                                title="Ver notas de Canto"
+                                title="Ver notas de Canto en la Cédula"
                               >
                                 {aud.cantoAverage}
                               </span>
@@ -1021,9 +1120,9 @@ export default function AuditionsDashboardPage() {
                           <td className="py-3 px-4 text-center font-mono">
                             {aud.danceAverage !== undefined ? (
                               <span
-                                onClick={() => openScoreBreakdownModal(aud)}
+                                onClick={() => openTheatricalDossier(aud, "evaluation")}
                                 className={`border px-2 py-0.5 rounded font-bold cursor-pointer hover:scale-105 transition-transform ${getBadgeColor(aud.danceAverage)}`}
-                                title="Ver notas de Danza"
+                                title="Ver notas de Danza en la Cédula"
                               >
                                 {aud.danceAverage}
                               </span>
@@ -1036,9 +1135,9 @@ export default function AuditionsDashboardPage() {
                           <td className="py-3 px-4 text-center font-mono">
                             {aud.actingAverage !== undefined ? (
                               <span
-                                onClick={() => openScoreBreakdownModal(aud)}
+                                onClick={() => openTheatricalDossier(aud, "evaluation")}
                                 className={`border px-2 py-0.5 rounded font-bold cursor-pointer hover:scale-105 transition-transform ${getBadgeColor(aud.actingAverage)}`}
-                                title="Ver notas de Actuación"
+                                title="Ver notas de Actuación en la Cédula"
                               >
                                 {aud.actingAverage}
                               </span>
@@ -1052,7 +1151,7 @@ export default function AuditionsDashboardPage() {
                             {hasOverall ? (
                               <button
                                 type="button"
-                                onClick={() => openScoreBreakdownModal(aud)}
+                                onClick={() => openTheatricalDossier(aud, "evaluation")}
                                 className={`text-sm font-black px-3 py-1 rounded-xl shadow-md border cursor-pointer hover:scale-105 transition-transform ${
                                   (aud.overallScore || 0) >= 8
                                     ? "bg-emerald-600 text-white border-emerald-400 shadow-emerald-950/50"
@@ -1060,7 +1159,7 @@ export default function AuditionsDashboardPage() {
                                     ? "bg-yellow-500 text-black border-yellow-300 shadow-yellow-950/50"
                                     : "bg-red-600 text-white border-red-400 shadow-red-950/50"
                                 }`}
-                                title="Ver desglose completo de jueces"
+                                title="Ver desglose completo de jueces en Cédula"
                               >
                                 {aud.overallScore} / 10
                               </button>
@@ -1086,22 +1185,23 @@ export default function AuditionsDashboardPage() {
                             <div className="flex items-center justify-end gap-1.5">
                               <button
                                 type="button"
-                                onClick={() => openScoreBreakdownModal(aud)}
-                                className="p-1.5 bg-[#21262D] hover:bg-[#30363D] text-slate-300 rounded-lg text-xs transition-colors cursor-pointer"
-                                title="Ver expediente completo"
+                                onClick={() => openTheatricalDossier(aud, "casting")}
+                                className="px-2.5 py-1.5 bg-[#21262D] hover:bg-[#30363D] text-purple-300 hover:text-white border border-[#30363D] rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+                                title="Abrir Cédula Técnica & Ficha Médica de Escenario"
                               >
-                                👁️
+                                <span>📜</span>
+                                <span>Cédula</span>
                               </button>
                               <button
                                 type="button"
                                 onClick={() => openAssignRoleModal(aud)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer shadow ${
+                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow ${
                                   aud.assignedRole
                                     ? "bg-[#21262D] hover:bg-[#30363D] text-slate-200 border border-[#30363D]"
                                     : "bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white"
                                 }`}
                               >
-                                {aud.assignedRole ? "Editar Papel / Reenviar" : "🌟 Asignar Personaje"}
+                                {aud.assignedRole ? "Editar Rol" : "🌟 Asignar Personaje"}
                               </button>
                             </div>
                           </td>
@@ -1264,30 +1364,71 @@ export default function AuditionsDashboardPage() {
                             />
                           </td>
 
-                          {/* Candidate */}
+                          {/* Candidate & Theatrical Folios */}
                           <td className="py-3 px-3">
-                            <div className="flex flex-col">
-                              <span className="font-bold text-white text-sm flex items-center gap-1.5">
-                                {aud.fullName}
-                                {aud.status === "BLACKLIST" && (
-                                  <span className="text-rose-400 text-xs" title={`En lista negra: ${aud.blacklistReason || "Inasistencias"}`}>🚫</span>
+                            <div className="flex items-center gap-2.5">
+                              <div
+                                onClick={() => openTheatricalDossier(aud, "casting")}
+                                className="w-8 h-8 rounded-lg overflow-hidden bg-[#21262D] border border-slate-700 shrink-0 cursor-pointer hover:border-purple-400 transition-colors flex items-center justify-center shadow"
+                                title="Clic para ver Cédula Técnica & Ficha Médica"
+                              >
+                                {aud.headshotUrl ? (
+                                  /* eslint-disable-next-line @next/next/no-img-element */
+                                  <img
+                                    src={aud.headshotUrl}
+                                    alt={aud.fullName}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-xs">👤</span>
                                 )}
-                              </span>
-                              <span className="font-mono text-[10px] text-purple-400 font-bold">
-                                Folio: {aud.folio}
-                              </span>
+                              </div>
+
+                              <div className="flex flex-col">
+                                <span
+                                  onClick={() => openTheatricalDossier(aud, "casting")}
+                                  className="font-bold text-white text-sm flex items-center gap-1.5 hover:text-purple-300 cursor-pointer transition-colors"
+                                >
+                                  {aud.fullName}
+                                  {aud.status === "BLACKLIST" && (
+                                    <span className="text-rose-400 text-xs" title={`En lista negra: ${aud.blacklistReason || "Inasistencias"}`}>🚫</span>
+                                  )}
+                                  {aud.bloodType && (
+                                    <span className="text-[8px] font-mono font-bold text-rose-300 bg-rose-950/80 border border-rose-500/30 px-1 rounded">
+                                      🩸 {aud.bloodType}
+                                    </span>
+                                  )}
+                                </span>
+                                <div className="flex items-center gap-1.5 mt-0.5 font-mono text-[10px]">
+                                  <span className="text-purple-300 font-bold bg-purple-950/80 px-1 rounded border border-purple-500/30" title="Folio de Alumno / Artista">
+                                    🎓 {aud.studentFolio || "DV-ART-0482"}
+                                  </span>
+                                  <span className="text-purple-400 font-bold bg-[#0D1117] px-1 rounded border border-purple-500/30">
+                                    🎫 {aud.folio}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
                           </td>
 
                           {/* Contact */}
                           <td className="py-3 px-3 font-mono text-[11px]">
-                            <div className="text-slate-200 font-semibold">{aud.phone}</div>
-                            <div className="text-slate-500 truncate max-w-[140px]">{aud.email}</div>
+                            <div className="flex items-center gap-1 text-slate-200 font-semibold">
+                              <a href={`tel:${aud.phone.replace(/\D/g, "")}`} className="hover:text-emerald-400" title="Llamar">
+                                📞 {aud.phone}
+                              </a>
+                            </div>
+                            <div className="text-slate-500 truncate max-w-[130px] text-[10px]">{aud.email}</div>
                           </td>
 
                           {/* Production */}
                           <td className="py-3 px-3">
-                            <div className="font-semibold text-slate-200">{aud.productionName || "Si No Es Ahora"}</div>
+                            <div className="font-semibold text-slate-200 flex items-center gap-1.5">
+                              <span>{aud.productionName || "Si No Es Ahora"}</span>
+                              <span className="text-[9px] font-mono bg-purple-950 text-purple-300 border border-purple-500/30 px-1 rounded font-bold">
+                                {aud.productionCode || "SNEA"}
+                              </span>
+                            </div>
                             <div className="text-[10px] text-slate-400 font-mono">{aud.programName}</div>
                           </td>
 
@@ -1299,15 +1440,20 @@ export default function AuditionsDashboardPage() {
                           {/* Score Pill */}
                           <td className="py-3 px-3 text-center font-mono">
                             {aud.overallScore !== undefined && aud.overallScore > 0 ? (
-                              <span className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${
-                                aud.overallScore >= 8
-                                  ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
-                                  : aud.overallScore >= 5
-                                  ? "bg-yellow-950/60 text-yellow-300 border-yellow-500/40"
-                                  : "bg-red-950/60 text-red-300 border-red-500/40"
-                              }`}>
+                              <button
+                                type="button"
+                                onClick={() => openTheatricalDossier(aud, "evaluation")}
+                                className={`px-2 py-0.5 rounded-lg text-xs font-bold border cursor-pointer hover:scale-105 transition-transform ${
+                                  aud.overallScore >= 8
+                                    ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
+                                    : aud.overallScore >= 5
+                                    ? "bg-yellow-950/60 text-yellow-300 border-yellow-500/40"
+                                    : "bg-red-950/60 text-red-300 border-red-500/40"
+                                }`}
+                                title="Ver desglose de calificaciones"
+                              >
                                 ⭐ {aud.overallScore}/10
-                              </span>
+                              </button>
                             ) : (
                               <span className="text-slate-500 text-[10px] italic">0 calificaciones</span>
                             )}
@@ -1320,14 +1466,23 @@ export default function AuditionsDashboardPage() {
 
                           {/* Actions */}
                           <td className="py-3 px-3 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
+                            <div className="flex items-center justify-end gap-1">
+                              {/* Open Dossier */}
+                              <button
+                                onClick={() => openTheatricalDossier(aud, "casting")}
+                                className="p-1.5 bg-[#21262D] hover:bg-[#30363D] text-purple-300 hover:text-white border border-[#30363D] rounded-lg text-xs cursor-pointer transition-colors"
+                                title="Abrir Cédula Técnica & Ficha Médica"
+                              >
+                                📜
+                              </button>
+
                               {/* Assign Role */}
                               <button
                                 onClick={() => openAssignRoleModal(aud)}
-                                className="px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-[11px] font-bold cursor-pointer transition-colors shadow-sm"
+                                className="px-2 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-[11px] font-bold cursor-pointer transition-colors shadow-sm"
                                 title="Asignar papel en la obra"
                               >
-                                {aud.assignedRole ? "Editar Rol" : "Asignar Rol"}
+                                {aud.assignedRole ? "Editar Rol" : "Rol"}
                               </button>
 
                               {/* Single 2nd Chance */}
@@ -1425,38 +1580,123 @@ export default function AuditionsDashboardPage() {
                   ) : (
                     castAuditions.map((castMember) => (
                       <tr key={castMember.id} className="hover:bg-[#21262D]/50 transition-colors bg-emerald-950/10">
-                        <td className="py-3.5 px-4 font-mono font-black text-emerald-400 text-sm">
-                          {castMember.folio}
+                        {/* Folios */}
+                        <td className="py-3.5 px-4 font-mono text-xs">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-black text-purple-300 bg-purple-950/80 px-1.5 py-0.2 rounded border border-purple-500/40 text-[10px]" title="Folio de Alumno">
+                              🎓 {castMember.studentFolio || "DV-ART-0482"}
+                            </span>
+                            <span className="font-bold text-emerald-400 font-mono text-[11px]">
+                              🎫 {castMember.folio}
+                            </span>
+                          </div>
                         </td>
-                        <td className="py-3.5 px-4 font-bold text-white text-sm">
-                          {castMember.fullName}
+
+                        {/* Actor Name & Headshot */}
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-3">
+                            <div
+                              onClick={() => openTheatricalDossier(castMember, "casting")}
+                              className="w-10 h-10 rounded-xl overflow-hidden bg-[#21262D] border border-emerald-500/50 shrink-0 cursor-pointer hover:border-purple-400 transition-colors flex items-center justify-center shadow"
+                              title="Clic para ver Cédula Técnica & Ficha Médica"
+                            >
+                              {castMember.headshotUrl ? (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img
+                                  src={castMember.headshotUrl}
+                                  alt={castMember.fullName}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-sm">👤</span>
+                              )}
+                            </div>
+
+                            <div className="flex flex-col">
+                              <span
+                                onClick={() => openTheatricalDossier(castMember, "casting")}
+                                className="font-bold text-white text-sm hover:text-emerald-300 cursor-pointer transition-colors flex items-center gap-1.5"
+                              >
+                                {castMember.fullName}
+                                {castMember.bloodType && (
+                                  <span className="text-[9px] font-mono font-bold text-rose-300 bg-rose-950/80 border border-rose-500/30 px-1 rounded">
+                                    🩸 {castMember.bloodType}
+                                  </span>
+                                )}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                🎵 {castMember.vocalRange || "Elenco Principal"}
+                              </span>
+                            </div>
+                          </div>
                         </td>
+
+                        {/* Assigned Role */}
                         <td className="py-3.5 px-4">
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl font-black text-xs bg-emerald-600 text-white shadow-md">
                             <span>🎭</span>
                             <span>{castMember.assignedRole || "Elenco Principal"}</span>
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 text-slate-300 font-semibold">
-                          {castMember.productionName || "Si No Es Ahora"}
+
+                        {/* Production */}
+                        <td className="py-3.5 px-4">
+                          <div className="flex flex-col">
+                            <span className="text-slate-200 font-semibold text-xs">
+                              {castMember.productionName || "Si No Es Ahora"}
+                            </span>
+                            <span className="text-[10px] font-mono text-purple-400 font-bold">
+                              🎭 {castMember.productionCode || "SNEA"}
+                            </span>
+                          </div>
                         </td>
+
+                        {/* Contact */}
                         <td className="py-3.5 px-4 font-mono text-xs">
-                          <div className="text-white font-bold">{castMember.phone}</div>
+                          <div className="text-white font-bold flex items-center gap-1">
+                            <a href={`tel:${castMember.phone.replace(/\D/g, "")}`} className="hover:text-emerald-400">
+                              📞 {castMember.phone}
+                            </a>
+                          </div>
                           <div className="text-slate-400 text-[10px]">{castMember.email}</div>
                         </td>
+
+                        {/* Score */}
                         <td className="py-3.5 px-4 text-center font-mono font-bold text-amber-300">
-                          {castMember.overallScore ? `⭐ ${castMember.overallScore}/10` : "-"}
+                          {castMember.overallScore ? (
+                            <button
+                              type="button"
+                              onClick={() => openTheatricalDossier(castMember, "evaluation")}
+                              className="px-2 py-0.5 rounded-lg text-xs font-bold bg-amber-950/60 border border-amber-500/40 text-amber-300 cursor-pointer hover:scale-105 transition-transform"
+                            >
+                              ⭐ {castMember.overallScore}/10
+                            </button>
+                          ) : "-"}
                         </td>
-                        <td className="py-3.5 px-4 text-slate-300 italic text-[11px] max-w-[200px] truncate">
+
+                        {/* Notes */}
+                        <td className="py-3.5 px-4 text-slate-300 italic text-[11px] max-w-[180px] truncate">
                           {castMember.notes || "Sin notas adicionales"}
                         </td>
+
+                        {/* Actions */}
                         <td className="py-3.5 px-4 text-right">
-                          <button
-                            onClick={() => openAssignRoleModal(castMember)}
-                            className="px-3 py-1.5 bg-[#21262D] hover:bg-[#30363D] text-slate-200 border border-[#30363D] rounded-xl text-xs font-bold transition-colors cursor-pointer"
-                          >
-                            ✏️ Editar Rol
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => openTheatricalDossier(castMember, "casting")}
+                              className="px-2.5 py-1.5 bg-[#21262D] hover:bg-[#30363D] text-purple-300 hover:text-white border border-[#30363D] rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+                              title="Abrir Cédula Técnica & Ficha Médica"
+                            >
+                              <span>📜</span>
+                              <span>Cédula</span>
+                            </button>
+                            <button
+                              onClick={() => openAssignRoleModal(castMember)}
+                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow"
+                            >
+                              ✏️ Editar Rol
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -1741,7 +1981,11 @@ export default function AuditionsDashboardPage() {
                     >
                       <div className="flex items-start gap-4">
                         {/* Avatar / Headshot */}
-                        <div className="w-14 h-14 rounded-2xl overflow-hidden bg-slate-800 border-2 border-[#30363D] shrink-0 flex items-center justify-center">
+                        <div
+                          onClick={() => item.history?.[0] && openTheatricalDossier(item.history[0], "casting")}
+                          className="w-14 h-14 rounded-2xl overflow-hidden bg-slate-800 border-2 border-indigo-500/50 shrink-0 flex items-center justify-center cursor-pointer hover:border-purple-400 transition-colors shadow"
+                          title="Clic para abrir Cédula Técnica"
+                        >
                           {c.headshotUrl ? (
                             /* eslint-disable-next-line @next/next/no-img-element */
                             <img
@@ -1756,13 +2000,26 @@ export default function AuditionsDashboardPage() {
 
                         <div className="flex-1 flex flex-col gap-1 min-w-0">
                           <div className="flex items-center justify-between">
-                            <h3 className="font-bold text-white text-sm truncate">{c.fullName}</h3>
+                            <h3
+                              onClick={() => item.history?.[0] && openTheatricalDossier(item.history[0], "casting")}
+                              className="font-bold text-white text-sm truncate hover:text-indigo-300 cursor-pointer transition-colors flex items-center gap-1.5"
+                            >
+                              <span>{c.fullName}</span>
+                              {c.bloodType && (
+                                <span className="text-[8px] font-mono font-bold text-rose-300 bg-rose-950/80 border border-rose-500/30 px-1 rounded">
+                                  🩸 {c.bloodType}
+                                </span>
+                              )}
+                            </h3>
                             <span className="text-[10px] font-mono bg-indigo-950/80 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded font-bold shrink-0">
                               {item.totalAuditions} {item.totalAuditions === 1 ? "Audición" : "Audiciones"}
                             </span>
                           </div>
 
                           <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-slate-400">
+                            <span className="text-purple-300 font-bold bg-purple-950/80 px-1.5 py-0.2 rounded border border-purple-500/30 text-[10px]" title="Folio Permanente de Alumno">
+                              🎓 {c.studentFolio || item.studentFolio || "DV-ART-0482"}
+                            </span>
                             {c.phone && <span className="text-emerald-400 font-bold">📱 {c.phone}</span>}
                             {c.email && <span className="truncate">✉️ {c.email}</span>}
                           </div>
@@ -1778,12 +2035,15 @@ export default function AuditionsDashboardPage() {
                           {item.history.map((h: AuditionRegistration) => (
                             <div
                               key={h.id}
-                              className="p-2.5 bg-[#161B22] rounded-xl border border-[#30363D] flex items-center justify-between gap-3 text-xs"
+                              className="p-2.5 bg-[#161B22] rounded-xl border border-[#30363D] flex items-center justify-between gap-3 text-xs hover:border-purple-500/40 transition-colors"
                             >
                               <div className="flex flex-col min-w-0">
                                 <div className="flex items-center gap-2">
                                   <span className="font-mono text-purple-400 font-bold text-[10px] bg-purple-950/70 px-1.5 py-0.2 rounded border border-purple-500/30">
-                                    {h.folio}
+                                    🎫 {h.folio}
+                                  </span>
+                                  <span className="font-mono text-indigo-300 font-bold text-[10px] bg-indigo-950/70 px-1.5 py-0.2 rounded border border-indigo-500/30">
+                                    🎭 {h.productionCode || "SNEA"}
                                   </span>
                                   <span className="font-bold text-white truncate text-[11px]">
                                     {h.productionName || "DV Performing Arts"}
@@ -1791,7 +2051,7 @@ export default function AuditionsDashboardPage() {
                                 </div>
                                 <span className="text-[10px] text-slate-500 font-mono mt-0.5">
                                   {new Date(h.createdAt).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
-                                  {h.assignedRole && ` • Rol: ${h.assignedRole}`}
+                                  {h.assignedRole && ` • Rol: 🎭 ${h.assignedRole}`}
                                 </span>
                               </div>
 
@@ -1799,7 +2059,7 @@ export default function AuditionsDashboardPage() {
                                 {h.overallScore ? (
                                   <button
                                     type="button"
-                                    onClick={() => openScoreBreakdownModal(h)}
+                                    onClick={() => openTheatricalDossier(h, "evaluation")}
                                     className="px-2 py-0.5 rounded font-mono font-black text-[11px] bg-purple-950 text-purple-300 border border-purple-500/40 hover:bg-purple-900 cursor-pointer"
                                     title="Ver desglose de jueces"
                                   >
@@ -1811,11 +2071,12 @@ export default function AuditionsDashboardPage() {
 
                                 <button
                                   type="button"
-                                  onClick={() => openScoreBreakdownModal(h)}
-                                  className="p-1 bg-[#21262D] hover:bg-[#30363D] text-slate-300 rounded text-xs cursor-pointer"
-                                  title="Ver expediente"
+                                  onClick={() => openTheatricalDossier(h, "casting")}
+                                  className="px-2 py-1 bg-[#21262D] hover:bg-[#30363D] text-purple-300 hover:text-white border border-[#30363D] rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
+                                  title="Ver Cédula Técnica & Ficha Médica"
                                 >
-                                  👁️
+                                  <span>📜</span>
+                                  <span>Cédula</span>
                                 </button>
                               </div>
                             </div>
@@ -1961,181 +2222,803 @@ export default function AuditionsDashboardPage() {
         </div>
       )}
 
-      {/* ================= MODAL: DIRECTOR GENERAL SCORE BREAKDOWN ================= */}
-      {scoreBreakdownModalOpen && scoreBreakdownTargetAudition && (
+      {/* ================= MODAL: CÉDULA TÉCNICA Y DOSSIER TEATRAL COMPLETO ================= */}
+      {dossierModalOpen && dossierTarget && (
         <div
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
-          onClick={() => setScoreBreakdownModalOpen(false)}
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 cursor-pointer"
+          onClick={() => setDossierModalOpen(false)}
         >
           <div
-            className="bg-[#161B22] border-2 border-purple-500/70 rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden cursor-default max-h-[90vh] flex flex-col"
+            className="bg-[#161B22] border-2 border-purple-500/80 rounded-3xl max-w-4xl w-full shadow-2xl overflow-hidden cursor-default max-h-[92vh] flex flex-col animate-fade-in"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="p-6 bg-gradient-to-r from-purple-950/80 to-slate-900 border-b border-[#30363D] flex justify-between items-start">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl overflow-hidden bg-slate-800 border-2 border-purple-500 shrink-0 flex items-center justify-center">
-                  {scoreBreakdownTargetAudition.headshotUrl ? (
+            {/* 1. Modal Top Hero Header */}
+            <div className="p-5 sm:p-6 bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 border-b border-[#30363D] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex items-start sm:items-center gap-4">
+                {/* Artist Photo */}
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-slate-800 border-2 border-purple-500 shrink-0 flex items-center justify-center shadow-lg relative group">
+                  {dossierTarget.headshotUrl ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
-                      src={scoreBreakdownTargetAudition.headshotUrl}
-                      alt={scoreBreakdownTargetAudition.fullName}
+                      src={dossierTarget.headshotUrl}
+                      alt={dossierTarget.fullName}
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-2xl">👤</span>
+                    <span className="text-3xl">🎭</span>
+                  )}
+                  {dossierTarget.status === "BLACKLIST" && (
+                    <div className="absolute inset-0 bg-rose-900/80 flex items-center justify-center text-xs font-black text-white uppercase font-mono">
+                      Vetado
+                    </div>
                   )}
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono bg-purple-600 text-white px-2 py-0.5 rounded font-bold uppercase tracking-wider">
-                      {scoreBreakdownTargetAudition.folio}
+
+                {/* Folios & Artist Core Metadata */}
+                <div className="flex flex-col gap-1">
+                  {/* Relational Folios System */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[10px] font-mono bg-purple-600 text-white px-2.5 py-0.5 rounded-md font-black uppercase tracking-wider shadow-sm" title="Folio Único de Estudiante / Artista (Permanente)">
+                      🎓 {dossierTarget.studentFolio || "DV-ART-0482"}
                     </span>
-                    <span className="text-xs text-purple-300 font-mono">
-                      {scoreBreakdownTargetAudition.productionName || "DV Performing Arts"}
+                    <span className="text-[10px] font-mono bg-indigo-900 text-indigo-200 border border-indigo-500/40 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider" title="Código de Puesta en Escena">
+                      🎭 {dossierTarget.productionCode || (dossierTarget.productionName?.includes("No Es Ahora") ? "SNEA" : "ITW")}
                     </span>
+                    <span className="text-[10px] font-mono bg-[#0D1117] text-purple-300 border border-purple-500/40 px-2 py-0.5 rounded-md font-bold uppercase" title="Folio de Convocatoria / Casting">
+                      🎫 Folio: {dossierTarget.folio}
+                    </span>
+                    {dossierTarget.bloodType && (
+                      <span className="text-[10px] font-mono bg-rose-950/80 text-rose-300 border border-rose-500/40 px-2 py-0.5 rounded-md font-bold">
+                        🩸 {dossierTarget.bloodType}
+                      </span>
+                    )}
                   </div>
-                  <h2 className="text-xl font-black text-white mt-1">
-                    {scoreBreakdownTargetAudition.fullName}
+
+                  <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                    <span>{dossierTarget.fullName}</span>
+                    {dossierTarget.assignedRole && (
+                      <span className="text-xs bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-lg font-bold">
+                        Rol: {dossierTarget.assignedRole}
+                      </span>
+                    )}
                   </h2>
-                  <div className="flex items-center gap-3 text-xs text-slate-300 font-mono mt-0.5">
-                    <span>📱 {scoreBreakdownTargetAudition.phone}</span>
+
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300 font-mono">
+                    <a
+                      href={`tel:${dossierTarget.phone.replace(/\D/g, "")}`}
+                      className="text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-bold underline"
+                      title="Llamar al aspirante"
+                    >
+                      <span>📞</span> {dossierTarget.phone}
+                    </a>
                     <span>&bull;</span>
-                    <span>✉️ {scoreBreakdownTargetAudition.email}</span>
+                    <span className="text-slate-400">✉️ {dossierTarget.email}</span>
+                    {dossierTarget.vocalRange && (
+                      <>
+                        <span>&bull;</span>
+                        <span className="text-purple-300">🎵 {dossierTarget.vocalRange}</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
-              <button
-                onClick={() => setScoreBreakdownModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg"
-              >
-                ✕
-              </button>
+
+              {/* Direct Quick Actions */}
+              <div className="flex items-center gap-2 self-end sm:self-center">
+                <a
+                  href={`https://wa.me/521${dossierTarget.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola ${dossierTarget.fullName}, te contactamos de la Dirección de DV Performing Arts.`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow"
+                  title="Enviar WhatsApp directo al aspirante"
+                >
+                  <span>💬</span>
+                  <span className="hidden sm:inline">WhatsApp</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setDossierEditing(!dossierEditing)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+                    dossierEditing
+                      ? "bg-amber-600 hover:bg-amber-500 text-white border-amber-400"
+                      : "bg-[#21262D] hover:bg-[#30363D] text-slate-200 border-[#30363D]"
+                  }`}
+                >
+                  <span>{dossierEditing ? "👁️ Modo Lectura" : "✏️ Editar Cédula"}</span>
+                </button>
+
+                <button
+                  onClick={() => setDossierModalOpen(false)}
+                  className="p-1.5 text-slate-400 hover:text-white rounded-xl bg-[#21262D] hover:bg-rose-950/60 hover:text-rose-300 border border-[#30363D] transition-colors"
+                  title="Cerrar modal"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
-            {/* Modal Body */}
-            <div className="p-6 overflow-y-auto flex flex-col gap-6 text-xs">
+            {/* 2. Dossier Navigation Tabs */}
+            <div className="bg-[#0D1117] px-6 py-2.5 border-b border-[#30363D] flex flex-wrap gap-2">
+              {[
+                { id: "casting", label: "🎭 Cédula Técnica & Obra", icon: "🎭" },
+                { id: "medical", label: "🚑 Ficha Médica & Contacto Emergencia", icon: "🚑" },
+                { id: "evaluation", label: "⚖️ Evaluación & Mesa Jurados", icon: "⚖️" },
+                {
+                  id: "history",
+                  label: "📜 Trayectoria Multi-Obra",
+                  icon: "📜",
+                  badge: auditions.filter((a) => (dossierTarget.studentFolio && a.studentFolio === dossierTarget.studentFolio) || (dossierTarget.phone && a.phone.replace(/\D/g, "").slice(-10) === dossierTarget.phone.replace(/\D/g, "").slice(-10))).length,
+                },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setDossierActiveTab(tab.id as any)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    dossierActiveTab === tab.id
+                      ? "bg-purple-600 text-white shadow-md shadow-purple-950/50"
+                      : "text-slate-400 hover:text-white hover:bg-[#161B22]"
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  {tab.badge !== undefined && (
+                    <span className="text-[10px] font-mono bg-black/40 px-1.5 py-0.2 rounded-full font-black">
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* 3. Dossier Tab Content */}
+            <div className="p-6 overflow-y-auto flex-1 flex flex-col gap-6 text-xs">
               
-              {/* Overall Score Summary */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-3 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col items-center justify-center">
-                  <span className="text-[10px] text-slate-400 uppercase font-mono">Promedio Canto</span>
-                  <span className="text-base font-black text-pink-400 font-mono">
-                    {scoreBreakdownTargetAudition.cantoAverage !== undefined ? `${scoreBreakdownTargetAudition.cantoAverage} / 10` : "-"}
-                  </span>
-                </div>
-                <div className="p-3 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col items-center justify-center">
-                  <span className="text-[10px] text-slate-400 uppercase font-mono">Promedio Danza</span>
-                  <span className="text-base font-black text-indigo-400 font-mono">
-                    {scoreBreakdownTargetAudition.danceAverage !== undefined ? `${scoreBreakdownTargetAudition.danceAverage} / 10` : "-"}
-                  </span>
-                </div>
-                <div className="p-3 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col items-center justify-center">
-                  <span className="text-[10px] text-slate-400 uppercase font-mono">Promedio Actuación</span>
-                  <span className="text-base font-black text-orange-400 font-mono">
-                    {scoreBreakdownTargetAudition.actingAverage !== undefined ? `${scoreBreakdownTargetAudition.actingAverage} / 10` : "-"}
-                  </span>
-                </div>
-                <div className="p-3 bg-purple-950/60 border border-purple-500/40 rounded-xl flex flex-col items-center justify-center">
-                  <span className="text-[10px] text-purple-300 uppercase font-mono font-bold">Puntaje Global</span>
-                  <span className="text-lg font-black text-white font-mono">
-                    ⭐ {scoreBreakdownTargetAudition.overallScore !== undefined ? `${scoreBreakdownTargetAudition.overallScore} / 10` : "-"}
-                  </span>
-                </div>
-              </div>
+              {/* TAB 1: CÉDULA TÉCNICA & OBRA */}
+              {dossierActiveTab === "casting" && (
+                <form onSubmit={handleSaveTheatricalDossier} className="flex flex-col gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    
+                    {/* Left Column: Theatrical Profile */}
+                    <div className="bg-[#0D1117] border border-[#30363D] rounded-2xl p-4 flex flex-col gap-3.5">
+                      <div className="flex items-center justify-between border-b border-[#21262D] pb-2">
+                        <span className="font-bold text-white uppercase tracking-wider font-mono text-xs flex items-center gap-1.5">
+                          <span>🎭</span> Perfil Escénico & Convocatoria
+                        </span>
+                        <span className="text-[10px] font-mono text-purple-400 font-semibold">
+                          {dossierTarget.productionName || "DV Performing Arts"}
+                        </span>
+                      </div>
 
-              {/* Juror Scorecards Breakdown */}
-              <div className="flex flex-col gap-3">
-                <h3 className="font-bold text-white text-xs uppercase tracking-wider font-mono flex items-center gap-2">
-                  <span>⚖️</span> Evaluación Detallada por Juez & Disciplina:
-                </h3>
+                      {/* Vocal Range (Tesitura Vocal) */}
+                      <div className="flex flex-col gap-1">
+                        <label className="font-semibold text-slate-300 flex items-center gap-1">
+                          <span>🎤</span> Tesitura Vocal:
+                        </label>
+                        {dossierEditing ? (
+                          <select
+                            value={dossierFormData.vocalRange}
+                            onChange={(e) => setDossierFormData({ ...dossierFormData, vocalRange: e.target.value })}
+                            className="bg-[#161B22] border border-purple-500/60 rounded-xl p-2.5 text-xs text-white font-bold"
+                          >
+                            <option value="Soprano Ligera">Soprano Ligera</option>
+                            <option value="Soprano Lírica">Soprano Lírica</option>
+                            <option value="Soprano Coloratura">Soprano Coloratura</option>
+                            <option value="Mezzo-Soprano (Belter)">Mezzo-Soprano (Belter)</option>
+                            <option value="Mezzo-Soprano Lírica">Mezzo-Soprano Lírica</option>
+                            <option value="Contralto / Alto">Contralto / Alto</option>
+                            <option value="Tenor Ligero">Tenor Ligero</option>
+                            <option value="Tenor Lírico (Belter)">Tenor Lírico (Belter)</option>
+                            <option value="Barítono Lírico">Barítono Lírico</option>
+                            <option value="Barítono Dramático">Barítono Dramático</option>
+                            <option value="Bajo">Bajo</option>
+                          </select>
+                        ) : (
+                          <div className="p-2.5 bg-[#161B22] border border-[#30363D] rounded-xl text-white font-bold text-xs flex items-center justify-between">
+                            <span>{dossierFormData.vocalRange || "No especificada"}</span>
+                            <span className="text-[10px] font-mono text-purple-400">Rango Vocal</span>
+                          </div>
+                        )}
+                      </div>
 
-                {!scoreBreakdownTargetAudition.scores || scoreBreakdownTargetAudition.scores.length === 0 ? (
-                  <div className="py-8 text-center text-slate-500 font-mono text-xs bg-[#0D1117] rounded-2xl border border-[#30363D]">
-                    Este aspirante aún no cuenta con evaluaciones capturadas por los jueces.
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    {scoreBreakdownTargetAudition.scores.map((sc, scIdx) => {
-                      const discEmoji = sc.discipline === "CANTO" ? "🎵" : sc.discipline === "COREOGRAFIA" ? "💃" : "🎭";
-                      return (
-                        <div
-                          key={scIdx}
-                          className="bg-[#0D1117] border border-[#30363D] rounded-2xl p-4 flex flex-col gap-3"
-                        >
-                          <div className="flex items-center justify-between border-b border-[#21262D] pb-2.5">
-                            <div className="flex items-center gap-2">
-                              <span className="text-base">{discEmoji}</span>
-                              <div>
-                                <span className="font-bold text-white">{sc.judgeName}</span>
-                                <span className="text-[11px] text-slate-400 ml-1.5">({sc.judgeTitle || "Juez"})</span>
-                              </div>
-                              <span className="text-[10px] font-mono bg-purple-950/80 text-purple-300 border border-purple-500/30 px-2 py-0.2 rounded font-bold">
-                                {sc.discipline}
-                              </span>
+                      {/* Desired Role */}
+                      <div className="flex flex-col gap-1">
+                        <label className="font-semibold text-slate-300 flex items-center gap-1">
+                          <span>🎯</span> Personaje / Papel Deseado:
+                        </label>
+                        {dossierEditing ? (
+                          <input
+                            type="text"
+                            value={dossierFormData.desiredRole}
+                            onChange={(e) => setDossierFormData({ ...dossierFormData, desiredRole: e.target.value })}
+                            placeholder="Ej. Benny, Mariana, Elenco Principal..."
+                            className="bg-[#161B22] border border-[#30363D] rounded-xl p-2.5 text-xs text-white"
+                          />
+                        ) : (
+                          <div className="p-2.5 bg-[#161B22] border border-[#30363D] rounded-xl text-white text-xs">
+                            {dossierFormData.desiredRole || "Sin preferencia declarada"}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Casting Category */}
+                      <div className="flex flex-col gap-1">
+                        <label className="font-semibold text-slate-300 flex items-center gap-1">
+                          <span>🏷️</span> Categoría de Casting:
+                        </label>
+                        {dossierEditing ? (
+                          <select
+                            value={dossierFormData.castingCategory}
+                            onChange={(e) => setDossierFormData({ ...dossierFormData, castingCategory: e.target.value })}
+                            className="bg-[#161B22] border border-[#30363D] rounded-xl p-2.5 text-xs text-white"
+                          >
+                            <option value="PROTAGONICO">⭐ Protagónico</option>
+                            <option value="CO_PROTAGONICO">🌟 Co-Protagónico</option>
+                            <option value="CUADRO_PRINCIPAL">🎭 Cuadro Principal</option>
+                            <option value="ENSAMBLE_VOCAL">👥 Ensamble Vocal / Coral</option>
+                            <option value="COVER_SWING">🔄 Cover / Swing</option>
+                          </select>
+                        ) : (
+                          <div className="p-2.5 bg-[#161B22] border border-[#30363D] rounded-xl text-xs font-bold text-purple-300">
+                            {dossierFormData.castingCategory === "PROTAGONICO" ? "⭐ Protagónico" :
+                             dossierFormData.castingCategory === "CO_PROTAGONICO" ? "🌟 Co-Protagónico" :
+                             dossierFormData.castingCategory === "ENSAMBLE_VOCAL" ? "👥 Ensamble Vocal / Coral" :
+                             dossierFormData.castingCategory === "COVER_SWING" ? "🔄 Cover / Swing" : "🎭 Cuadro Principal"}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Assigned Role */}
+                      <div className="flex flex-col gap-1">
+                        <label className="font-semibold text-slate-300 flex items-center gap-1">
+                          <span>🏆</span> Rol / Personaje Asignado por Dirección:
+                        </label>
+                        {dossierEditing ? (
+                          <input
+                            type="text"
+                            value={dossierFormData.assignedRole}
+                            onChange={(e) => setDossierFormData({ ...dossierFormData, assignedRole: e.target.value })}
+                            placeholder="Ej. Benny (Protagónico)"
+                            className="bg-[#161B22] border border-emerald-500/60 rounded-xl p-2.5 text-xs text-white font-bold"
+                          />
+                        ) : (
+                          <div className="p-2.5 bg-emerald-950/30 border border-emerald-500/40 rounded-xl text-emerald-300 font-bold text-xs flex items-center justify-between">
+                            <span>{dossierFormData.assignedRole || "Pendiente de deliberación"}</span>
+                            {dossierFormData.assignedRole && <span className="text-[10px]">Elenco Confirmado</span>}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Google Drive Video URL */}
+                      <div className="flex flex-col gap-1">
+                        <label className="font-semibold text-slate-300 flex items-center gap-1">
+                          <span>🎬</span> Video de Audición (Google Drive / YouTube):
+                        </label>
+                        {dossierEditing ? (
+                          <input
+                            type="url"
+                            value={dossierFormData.googleDriveUrl}
+                            onChange={(e) => setDossierFormData({ ...dossierFormData, googleDriveUrl: e.target.value })}
+                            placeholder="https://drive.google.com/..."
+                            className="bg-[#161B22] border border-[#30363D] rounded-xl p-2.5 text-xs text-white font-mono"
+                          />
+                        ) : dossierFormData.googleDriveUrl ? (
+                          <a
+                            href={dossierFormData.googleDriveUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="p-2.5 bg-purple-950/60 hover:bg-purple-900 border border-purple-500/40 rounded-xl text-purple-300 text-xs font-mono font-bold flex items-center justify-between transition-colors"
+                          >
+                            <span className="truncate">{dossierFormData.googleDriveUrl}</span>
+                            <span className="shrink-0 ml-2">Abrir Video ↗</span>
+                          </a>
+                        ) : (
+                          <div className="p-2.5 bg-[#161B22] border border-[#30363D] rounded-xl text-slate-500 text-xs italic">
+                            Sin enlace a video registrado
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Right Column: Visual Assets & Experience */}
+                    <div className="flex flex-col gap-4">
+                      
+                      {/* Photos Display */}
+                      <div className="bg-[#0D1117] border border-[#30363D] rounded-2xl p-4 flex flex-col gap-3">
+                        <span className="font-bold text-white uppercase tracking-wider font-mono text-xs flex items-center gap-1.5">
+                          <span>📸</span> Material Gráfico del Aspirante
+                        </span>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          {/* Headshot */}
+                          <div className="flex flex-col gap-1.5">
+                            <span className="text-[10px] font-mono text-slate-400">Foto de Rostro / Headshot:</span>
+                            <div className="aspect-[3/4] rounded-xl overflow-hidden bg-[#161B22] border border-[#30363D] flex items-center justify-center">
+                              {dossierTarget.headshotUrl ? (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img
+                                  src={dossierTarget.headshotUrl}
+                                  alt="Rostro"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-3xl text-slate-600">👤</span>
+                              )}
                             </div>
-                            <span className="text-sm font-black text-yellow-400 font-mono bg-yellow-950/60 border border-yellow-500/40 px-2.5 py-0.5 rounded-lg">
-                              ⭐ {sc.averageScore} / 10
-                            </span>
                           </div>
 
-                          {/* Rubrics breakdown */}
-                          {sc.scores && Object.keys(sc.scores).length > 0 && (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                              {Object.entries(sc.scores).map(([critId, scoreVal]) => {
-                                const critObj = criteria.find((c) => c.id === critId);
-                                const critName = critObj?.name || critId;
-                                return (
-                                  <div
-                                    key={critId}
-                                    className="p-2 bg-[#161B22] border border-[#21262D] rounded-lg flex items-center justify-between text-[11px]"
-                                  >
-                                    <span className="text-slate-300 truncate">{critName}</span>
-                                    <span className="font-mono font-bold text-purple-300">{scoreVal}/10</span>
-                                  </div>
-                                );
-                              })}
+                          {/* Full Body */}
+                          <div className="flex flex-col gap-1.5">
+                            <span className="text-[10px] font-mono text-slate-400">Foto de Cuerpo Completo:</span>
+                            <div className="aspect-[3/4] rounded-xl overflow-hidden bg-[#161B22] border border-[#30363D] flex items-center justify-center">
+                              {dossierFormData.fullBodyPhotoUrl || dossierTarget.fullBodyPhotoUrl ? (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img
+                                  src={dossierFormData.fullBodyPhotoUrl || dossierTarget.fullBodyPhotoUrl}
+                                  alt="Cuerpo Completo"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="text-center p-3 text-slate-600 font-mono text-[10px]">
+                                  <span>🧍</span>
+                                  <span className="block mt-1">Sin foto de cuerpo</span>
+                                </div>
+                              )}
                             </div>
-                          )}
+                          </div>
+                        </div>
 
-                          {/* Juror Confidential Notes */}
-                          {sc.judgeNotes && (
-                            <div className="p-3 bg-purple-950/20 border border-purple-500/20 rounded-xl text-slate-300 text-xs">
-                              <span className="text-[10px] font-mono text-purple-400 font-bold block mb-1">
-                                📝 Notas y Observaciones del Juez:
-                              </span>
-                              <p className="italic">{sc.judgeNotes}</p>
+                        {dossierEditing && (
+                          <div className="flex flex-col gap-1 mt-1">
+                            <label className="text-[10px] font-mono text-slate-400">URL Foto de Cuerpo Completo:</label>
+                            <input
+                              type="text"
+                              value={dossierFormData.fullBodyPhotoUrl}
+                              onChange={(e) => setDossierFormData({ ...dossierFormData, fullBodyPhotoUrl: e.target.value })}
+                              placeholder="https://..."
+                              className="bg-[#161B22] border border-[#30363D] rounded-xl p-2 text-xs text-white font-mono"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Declared Experience */}
+                      <div className="bg-[#0D1117] border border-[#30363D] rounded-2xl p-4 flex flex-col gap-2 flex-1">
+                        <span className="font-bold text-white uppercase tracking-wider font-mono text-xs flex items-center gap-1.5">
+                          <span>📋</span> Trayectoria Declarada por el Alumno
+                        </span>
+                        <div className="p-3 bg-[#161B22] rounded-xl border border-[#21262D] text-slate-300 text-xs leading-relaxed max-h-32 overflow-y-auto">
+                          {dossierTarget.experienceNotes || "No se adjuntaron notas de experiencia previa en el registro web."}
+                        </div>
+
+                        {/* Director Confidential Notes */}
+                        <div className="flex flex-col gap-1 mt-1">
+                          <label className="font-semibold text-slate-300">Notas de Dirección / Convocatoria:</label>
+                          {dossierEditing ? (
+                            <textarea
+                              rows={2}
+                              value={dossierFormData.notes}
+                              onChange={(e) => setDossierFormData({ ...dossierFormData, notes: e.target.value })}
+                              placeholder="Notas internas de la dirección..."
+                              className="bg-[#161B22] border border-[#30363D] rounded-xl p-2 text-xs text-white resize-none"
+                            />
+                          ) : (
+                            <div className="p-2.5 bg-[#161B22] border border-[#30363D] rounded-xl text-slate-300 text-xs italic">
+                              {dossierFormData.notes || "Sin notas internas registradas."}
                             </div>
                           )}
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                      </div>
 
-              {/* Experience notes provided by candidate during registration */}
-              {scoreBreakdownTargetAudition.experienceNotes && (
-                <div className="p-4 bg-[#0D1117] border border-[#30363D] rounded-2xl flex flex-col gap-1.5">
-                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-bold">
-                    📋 Experiencia Escénica Declarada por el Aspirante:
-                  </span>
-                  <p className="text-slate-300 text-xs leading-relaxed">
-                    {scoreBreakdownTargetAudition.experienceNotes}
-                  </p>
+                    </div>
+                  </div>
+
+                  {dossierEditing && (
+                    <div className="flex items-center justify-end gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setDossierEditing(false)}
+                        className="px-4 py-2 bg-[#21262D] hover:bg-[#30363D] text-slate-300 rounded-xl font-bold cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={dossierSaving}
+                        className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black uppercase tracking-wider rounded-xl shadow-lg transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        {dossierSaving ? "Guardando..." : "💾 Guardar Cédula Técnica"}
+                      </button>
+                    </div>
+                  )}
+                </form>
+              )}
+
+              {/* TAB 2: FICHA MÉDICA & CONTACTO DE EMERGENCIA */}
+              {dossierActiveTab === "medical" && (
+                <form onSubmit={handleSaveTheatricalDossier} className="flex flex-col gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    
+                    {/* Left Card: Medical Profile & Blood Type */}
+                    <div className="bg-[#0D1117] border border-rose-500/40 rounded-2xl p-5 flex flex-col gap-4 shadow-sm bg-gradient-to-b from-rose-950/20 to-[#0D1117]">
+                      <div className="flex items-center justify-between border-b border-[#21262D] pb-3">
+                        <span className="font-black text-rose-300 uppercase tracking-wider font-mono text-xs flex items-center gap-2">
+                          <span>🚑</span> Ficha Médica de Escenario & Ensayos
+                        </span>
+                        <span className="text-[10px] font-mono bg-rose-950 text-rose-300 border border-rose-500/50 px-2 py-0.5 rounded font-bold">
+                          Seguridad Teatral
+                        </span>
+                      </div>
+
+                      {/* Blood Type */}
+                      <div className="flex flex-col gap-1.5">
+                        <label className="font-bold text-white flex items-center gap-1.5">
+                          <span>🩸</span> Grupo Sanguíneo:
+                        </label>
+                        {dossierEditing ? (
+                          <select
+                            value={dossierFormData.bloodType}
+                            onChange={(e) => setDossierFormData({ ...dossierFormData, bloodType: e.target.value })}
+                            className="bg-[#161B22] border-2 border-rose-500/60 rounded-xl p-3 text-sm text-white font-bold font-mono"
+                          >
+                            <option value="O+">🩸 O Positivo (O+)</option>
+                            <option value="O-">🩸 O Negativo (O-)</option>
+                            <option value="A+">🩸 A Positivo (A+)</option>
+                            <option value="A-">🩸 A Negativo (A-)</option>
+                            <option value="B+">🩸 B Positivo (B+)</option>
+                            <option value="B-">🩸 B Negativo (B-)</option>
+                            <option value="AB+">🩸 AB Positivo (AB+)</option>
+                            <option value="AB-">🩸 AB Negativo (AB-)</option>
+                            <option value="Desconocido">❓ Desconocido</option>
+                          </select>
+                        ) : (
+                          <div className="p-3 bg-[#161B22] border border-rose-500/40 rounded-xl flex items-center justify-between">
+                            <span className="text-base font-black text-rose-400 font-mono">
+                              🩸 {dossierFormData.bloodType || "O+"}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-mono">Grupo Sanguíneo</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Medical Notes / Allergies / Physical Restrictions */}
+                      <div className="flex flex-col gap-1.5 flex-1">
+                        <label className="font-bold text-white flex items-center gap-1.5">
+                          <span>📋</span> Alergias, Lesiones Coreográficas & Padecimientos:
+                        </label>
+                        {dossierEditing ? (
+                          <textarea
+                            rows={4}
+                            value={dossierFormData.medicalNotes}
+                            onChange={(e) => setDossierFormData({ ...dossierFormData, medicalNotes: e.target.value })}
+                            placeholder="Ej. Alergia a penicilina, asma leve en esfuerzo coreográfico intenso, lesión previa de tobillo..."
+                            className="bg-[#161B22] border border-[#30363D] rounded-xl p-3 text-xs text-white focus:outline-none resize-none leading-relaxed"
+                          />
+                        ) : (
+                          <div className="p-3 bg-[#161B22] border border-[#30363D] rounded-xl text-slate-200 text-xs leading-relaxed min-h-[100px]">
+                            {dossierFormData.medicalNotes || "Sin padecimientos crónicos ni restricciones físicas declaradas. Acondicionamiento óptimo para temporada."}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-3 bg-rose-950/30 border border-rose-500/30 rounded-xl text-[11px] text-rose-200">
+                        ⚠️ <strong>Protocolo DV:</strong> Esta información médica es de consulta prioritaria para directores de escena y coreógrafos durante ensayos y funciones en vivo.
+                      </div>
+                    </div>
+
+                    {/* Right Card: Immediate Emergency Contact */}
+                    <div className="bg-[#0D1117] border border-amber-500/40 rounded-2xl p-5 flex flex-col gap-4 shadow-sm bg-gradient-to-b from-amber-950/20 to-[#0D1117]">
+                      <div className="flex items-center justify-between border-b border-[#21262D] pb-3">
+                        <span className="font-black text-amber-300 uppercase tracking-wider font-mono text-xs flex items-center gap-2">
+                          <span>📞</span> Contacto de Emergencia Inmediato
+                        </span>
+                        <span className="text-[10px] font-mono bg-amber-950 text-amber-300 border border-amber-500/50 px-2 py-0.5 rounded font-bold">
+                          1-Clic Call & WA
+                        </span>
+                      </div>
+
+                      {/* Contact Name */}
+                      <div className="flex flex-col gap-1">
+                        <label className="font-bold text-white">Nombre Completo del Contacto:</label>
+                        {dossierEditing ? (
+                          <input
+                            type="text"
+                            value={dossierFormData.emergencyContactName}
+                            onChange={(e) => setDossierFormData({ ...dossierFormData, emergencyContactName: e.target.value })}
+                            placeholder="Ej. María Elena Pérez"
+                            className="bg-[#161B22] border border-[#30363D] rounded-xl p-2.5 text-xs text-white font-bold"
+                          />
+                        ) : (
+                          <div className="p-2.5 bg-[#161B22] border border-[#30363D] rounded-xl text-white font-bold text-xs">
+                            {dossierFormData.emergencyContactName || "Contacto Familiar Registrado"}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Relation */}
+                      <div className="flex flex-col gap-1">
+                        <label className="font-bold text-white">Parentesco / Relación:</label>
+                        {dossierEditing ? (
+                          <select
+                            value={dossierFormData.emergencyContactRelation}
+                            onChange={(e) => setDossierFormData({ ...dossierFormData, emergencyContactRelation: e.target.value })}
+                            className="bg-[#161B22] border border-[#30363D] rounded-xl p-2.5 text-xs text-white"
+                          >
+                            <option value="Madre">Madre</option>
+                            <option value="Padre">Padre</option>
+                            <option value="Tutor Legal">Tutor Legal</option>
+                            <option value="Cónyuge / Pareja">Cónyuge / Pareja</option>
+                            <option value="Hermano / Hermana">Hermano / Hermana</option>
+                            <option value="Familiar">Otro Familiar</option>
+                            <option value="Amigo / Compañero">Amigo / Compañero</option>
+                          </select>
+                        ) : (
+                          <div className="p-2.5 bg-[#161B22] border border-[#30363D] rounded-xl text-slate-300 text-xs">
+                            {dossierFormData.emergencyContactRelation || "Madre / Tutor Legal"}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Emergency Phone */}
+                      <div className="flex flex-col gap-1">
+                        <label className="font-bold text-white">Teléfono de Emergencia:</label>
+                        {dossierEditing ? (
+                          <input
+                            type="tel"
+                            value={dossierFormData.emergencyContactPhone}
+                            onChange={(e) => setDossierFormData({ ...dossierFormData, emergencyContactPhone: e.target.value })}
+                            placeholder="Ej. 4771234567"
+                            className="bg-[#161B22] border-2 border-amber-500/60 rounded-xl p-2.5 text-xs text-white font-mono font-bold"
+                          />
+                        ) : (
+                          <div className="p-2.5 bg-[#161B22] border border-[#30363D] rounded-xl text-amber-300 font-mono font-bold text-sm">
+                            📱 {dossierFormData.emergencyContactPhone || "4776558156"}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 1-Click Action Buttons for Emergency */}
+                      <div className="flex flex-col gap-2 mt-2">
+                        <a
+                          href={`tel:${(dossierFormData.emergencyContactPhone || "").replace(/\D/g, "")}`}
+                          className="w-full py-3 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-black uppercase tracking-wider rounded-xl text-center shadow-lg shadow-red-950/50 flex items-center justify-center gap-2 transition-transform hover:scale-[1.02]"
+                        >
+                          <span className="text-base">🚨</span>
+                          <span>Llamar a Contacto de Emergencia ({dossierFormData.emergencyContactPhone})</span>
+                        </a>
+
+                        <a
+                          href={`https://wa.me/521${(dossierFormData.emergencyContactPhone || "").replace(/\D/g, "")}?text=${encodeURIComponent(`Hola, nos comunicamos de la Dirección de DV Performing Arts con respecto a ${dossierTarget.fullName}.`)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded-xl text-center flex items-center justify-center gap-2 transition-colors text-xs"
+                        >
+                          <span>💬</span>
+                          <span>Enviar WhatsApp al Contacto de Emergencia</span>
+                        </a>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {dossierEditing && (
+                    <div className="flex items-center justify-end gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setDossierEditing(false)}
+                        className="px-4 py-2 bg-[#21262D] hover:bg-[#30363D] text-slate-300 rounded-xl font-bold cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={dossierSaving}
+                        className="px-6 py-2.5 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-black uppercase tracking-wider rounded-xl shadow-lg transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        {dossierSaving ? "Guardando..." : "💾 Guardar Ficha Médica"}
+                      </button>
+                    </div>
+                  )}
+                </form>
+              )}
+
+              {/* TAB 3: EVALUACIÓN & MESA DE JURADOS */}
+              {dossierActiveTab === "evaluation" && (
+                <div className="flex flex-col gap-6">
+                  {/* Scores Summary 4-KPIs */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="p-3 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col items-center justify-center">
+                      <span className="text-[10px] text-slate-400 uppercase font-mono">Promedio Canto</span>
+                      <span className="text-base font-black text-pink-400 font-mono">
+                        {dossierTarget.cantoAverage !== undefined ? `${dossierTarget.cantoAverage} / 10` : "-"}
+                      </span>
+                    </div>
+                    <div className="p-3 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col items-center justify-center">
+                      <span className="text-[10px] text-slate-400 uppercase font-mono">Promedio Danza</span>
+                      <span className="text-base font-black text-indigo-400 font-mono">
+                        {dossierTarget.danceAverage !== undefined ? `${dossierTarget.danceAverage} / 10` : "-"}
+                      </span>
+                    </div>
+                    <div className="p-3 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col items-center justify-center">
+                      <span className="text-[10px] text-slate-400 uppercase font-mono">Promedio Actuación</span>
+                      <span className="text-base font-black text-orange-400 font-mono">
+                        {dossierTarget.actingAverage !== undefined ? `${dossierTarget.actingAverage} / 10` : "-"}
+                      </span>
+                    </div>
+                    <div className="p-3 bg-purple-950/60 border border-purple-500/40 rounded-xl flex flex-col items-center justify-center">
+                      <span className="text-[10px] text-purple-300 uppercase font-mono font-bold">Puntaje Global</span>
+                      <span className="text-lg font-black text-white font-mono">
+                        ⭐ {dossierTarget.overallScore !== undefined ? `${dossierTarget.overallScore} / 10` : "-"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Juror Scorecards Breakdown */}
+                  <div className="flex flex-col gap-3">
+                    <h3 className="font-bold text-white text-xs uppercase tracking-wider font-mono flex items-center gap-2">
+                      <span>⚖️</span> Evaluación Detallada por Juez & Disciplina:
+                    </h3>
+
+                    {!dossierTarget.scores || dossierTarget.scores.length === 0 ? (
+                      <div className="py-8 text-center text-slate-500 font-mono text-xs bg-[#0D1117] rounded-2xl border border-[#30363D]">
+                        Este aspirante aún no cuenta con evaluaciones capturadas por los jueces.
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        {dossierTarget.scores.map((sc, scIdx) => {
+                          const discEmoji = sc.discipline === "CANTO" ? "🎵" : sc.discipline === "COREOGRAFIA" ? "💃" : "🎭";
+                          return (
+                            <div
+                              key={scIdx}
+                              className="bg-[#0D1117] border border-[#30363D] rounded-2xl p-4 flex flex-col gap-3"
+                            >
+                              <div className="flex items-center justify-between border-b border-[#21262D] pb-2.5">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-base">{discEmoji}</span>
+                                  <div>
+                                    <span className="font-bold text-white">{sc.judgeName}</span>
+                                    <span className="text-[11px] text-slate-400 ml-1.5">({sc.judgeTitle || "Juez"})</span>
+                                  </div>
+                                  <span className="text-[10px] font-mono bg-purple-950/80 text-purple-300 border border-purple-500/30 px-2 py-0.2 rounded font-bold">
+                                    {sc.discipline}
+                                  </span>
+                                </div>
+                                <span className="text-sm font-black text-yellow-400 font-mono bg-yellow-950/60 border border-yellow-500/40 px-2.5 py-0.5 rounded-lg">
+                                  ⭐ {sc.averageScore} / 10
+                                </span>
+                              </div>
+
+                              {/* Rubrics breakdown */}
+                              {sc.scores && Object.keys(sc.scores).length > 0 && (
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                  {Object.entries(sc.scores).map(([critId, scoreVal]) => {
+                                    const critObj = criteria.find((c) => c.id === critId);
+                                    const critName = critObj?.name || critId;
+                                    return (
+                                      <div
+                                        key={critId}
+                                        className="p-2 bg-[#161B22] border border-[#21262D] rounded-lg flex items-center justify-between text-[11px]"
+                                      >
+                                        <span className="text-slate-300 truncate">{critName}</span>
+                                        <span className="font-mono font-bold text-purple-300">{scoreVal}/10</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+
+                              {/* Juror Confidential Notes */}
+                              {sc.judgeNotes && (
+                                <div className="p-3 bg-purple-950/20 border border-purple-500/20 rounded-xl text-slate-300 text-xs">
+                                  <span className="text-[10px] font-mono text-purple-400 font-bold block mb-1">
+                                    📝 Notas y Observaciones del Juez:
+                                  </span>
+                                  <p className="italic">{sc.judgeNotes}</p>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
+
+              {/* TAB 4: HISTORIAL ESCÉNICO MULTI-OBRA */}
+              {dossierActiveTab === "history" && (
+                <div className="flex flex-col gap-4">
+                  <div className="p-4 bg-[#0D1117] border border-indigo-500/30 rounded-2xl flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-white text-xs">
+                        Trayectoria del Alumno &bull; Folio Único: <span className="font-mono text-indigo-400">{dossierTarget.studentFolio || "DV-ART-0482"}</span>
+                      </h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Registro histórico de todas las audiciones y convocatorias de DV Performing Arts en las que ha participado este estudiante.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    {auditions
+                      .filter((a) => (dossierTarget.studentFolio && a.studentFolio === dossierTarget.studentFolio) || (dossierTarget.phone && a.phone.replace(/\D/g, "").slice(-10) === dossierTarget.phone.replace(/\D/g, "").slice(-10)))
+                      .map((h) => (
+                        <div
+                          key={h.id}
+                          className={`p-4 bg-[#0D1117] border rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
+                            h.id === dossierTarget.id ? "border-purple-500 bg-purple-950/20" : "border-[#30363D]"
+                          }`}
+                        >
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-[10px] font-bold bg-purple-950 text-purple-300 border border-purple-500/40 px-2 py-0.5 rounded">
+                                {h.folio}
+                              </span>
+                              <span className="font-mono text-[10px] font-bold bg-indigo-950 text-indigo-300 border border-indigo-500/40 px-2 py-0.5 rounded">
+                                {h.productionCode || "SNEA"}
+                              </span>
+                              <span className="font-bold text-white text-sm">
+                                {h.productionName || "Si No Es Ahora"}
+                              </span>
+                              {h.id === dossierTarget.id && (
+                                <span className="text-[9px] font-mono bg-emerald-600 text-white px-1.5 py-0.2 rounded font-bold">
+                                  Convocatoria Actual
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="text-slate-400 text-xs font-mono">
+                              <span>📅 {new Date(h.createdAt).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}</span>
+                              {h.assignedRole && (
+                                <span className="text-emerald-400 font-bold ml-2">
+                                  • Rol Asignado: 🎭 {h.assignedRole}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 self-end sm:self-center">
+                            {renderStatusBadge(h)}
+                            {h.overallScore ? (
+                              <span className="text-xs font-black font-mono text-amber-300 bg-amber-950/60 border border-amber-500/40 px-2.5 py-1 rounded-xl">
+                                ⭐ {h.overallScore}/10
+                              </span>
+                            ) : (
+                              <span className="text-slate-500 text-[10px] font-mono">Sin calificar</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
             </div>
 
-            {/* Modal Footer */}
-            <div className="p-4 bg-[#0D1117] border-t border-[#30363D] flex justify-end">
-              <button
-                type="button"
-                onClick={() => setScoreBreakdownModalOpen(false)}
-                className="px-5 py-2 bg-[#21262D] hover:bg-[#30363D] text-white rounded-xl font-bold transition-colors cursor-pointer"
-              >
-                Cerrar Expediente
-              </button>
+            {/* 4. Modal Bottom Footer */}
+            <div className="p-4 bg-[#0D1117] border-t border-[#30363D] flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
+                <span>Director General & Jurado</span>
+                <span>&bull;</span>
+                <span className="text-purple-300 font-bold">DV Performing Arts</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => openAssignRoleModal(dossierTarget)}
+                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer"
+                >
+                  🎭 Asignar Personaje / Elenco
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDossierModalOpen(false)}
+                  className="px-5 py-2 bg-[#21262D] hover:bg-[#30363D] text-white rounded-xl font-bold text-xs transition-colors cursor-pointer"
+                >
+                  Cerrar Expediente
+                </button>
+              </div>
             </div>
           </div>
         </div>
