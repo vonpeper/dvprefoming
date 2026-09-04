@@ -112,21 +112,21 @@ export default function ImageUploader({
   };
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-2">
       {/* Label and High-Visibility Dimension Badge Header */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         {label && (
-          <label className="text-xs font-black uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
             <span>📷</span>
             <span>{label}</span>
           </label>
         )}
         
         {derivedSize && (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-black bg-gradient-to-r from-purple-900/90 to-rose-900/90 text-white border-2 border-purple-400 shadow-md shadow-purple-950/50">
-            <span className="text-amber-300 animate-pulse">📐</span>
-            <span className="text-zinc-300 font-normal">Tamaño requerido:</span>
-            <span className="text-white font-black underline decoration-purple-400 decoration-2 underline-offset-2">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-mono font-medium bg-purple-950/80 text-purple-300 border border-purple-500/40">
+            <span className="text-purple-400">📐</span>
+            <span className="text-zinc-400 font-normal">Requerido:</span>
+            <span className="text-white font-semibold">
               {derivedSize}
             </span>
           </span>
@@ -141,10 +141,10 @@ export default function ImageUploader({
         }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
-        className={`relative bg-[#0D1117] border-2 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row gap-5 items-center transition-all ${
+        className={`relative bg-[#0D1117] border rounded-xl p-3.5 sm:p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center transition-all ${
           dragOver
             ? "border-purple-400 bg-purple-950/30 shadow-xl shadow-purple-950/60"
-            : "border-[#30363D] hover:border-purple-500/70"
+            : "border-[#30363D] hover:border-purple-500/50"
         }`}
       >
         {/* Hidden native input */}
@@ -158,18 +158,18 @@ export default function ImageUploader({
 
         {/* Thumbnail Preview Area with Aspect Ratio Sizing & Dimensions Overlay */}
         <div
-          className={`relative bg-black rounded-xl overflow-hidden border-2 border-[#30363D] shrink-0 flex items-center justify-center shadow-inner ${
+          className={`relative bg-black rounded-lg overflow-hidden border border-[#30363D] shrink-0 flex items-center justify-center shadow-inner self-center sm:self-auto ${
             aspectRatio === "3:4"
-              ? "w-28 h-36"
+              ? "w-24 h-32"
               : aspectRatio === "1:1"
-              ? "w-32 h-32"
+              ? "w-28 h-28"
               : aspectRatio === "16:9"
-              ? "w-44 h-28"
+              ? "w-36 h-20"
               : aspectRatio === "3:2"
-              ? "w-40 h-28"
+              ? "w-32 h-22"
               : aspectRatio === "4:3"
-              ? "w-36 h-28"
-              : "w-32 h-32"
+              ? "w-32 h-24"
+              : "w-28 h-28"
           }`}
         >
           {value ? (
@@ -177,74 +177,63 @@ export default function ImageUploader({
             <img src={value} alt="Preview" className="w-full h-full object-cover" />
           ) : (
             <div className="flex flex-col items-center justify-center p-2 text-center text-slate-500 gap-1">
-              <span className="text-2xl">🖼️</span>
+              <span className="text-xl">🖼️</span>
               <span className="text-[10px] font-mono text-zinc-400">Sin imagen</span>
             </div>
           )}
 
           {/* Current resolution badge over image thumbnail */}
           {currentDimensions && (
-            <div className="absolute bottom-0 inset-x-0 bg-black/80 backdrop-blur-xs py-0.5 px-1 text-center font-mono text-[9px] text-emerald-400 font-bold border-t border-emerald-500/30">
+            <div className="absolute bottom-0 inset-x-0 bg-black/85 backdrop-blur-xs py-0.5 px-1 text-center font-mono text-[9px] text-emerald-400 font-bold border-t border-emerald-500/30 truncate">
               {currentDimensions.width} × {currentDimensions.height} px
             </div>
           )}
 
           {uploading && (
             <div className="absolute inset-0 bg-black/85 backdrop-blur-xs flex flex-col items-center justify-center gap-1.5 p-2 text-center">
-              <span className="w-6 h-6 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
-              <span className="text-[10px] font-mono text-purple-300 font-bold">Procesando WebP...</span>
+              <span className="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+              <span className="text-[10px] font-mono text-purple-300 font-bold">Procesando...</span>
             </div>
           )}
         </div>
 
         {/* Controls & Path Input */}
-        <div className="flex-1 flex flex-col justify-between gap-3.5 w-full">
-          <div className="flex flex-col gap-1.5">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <button
-                type="button"
-                disabled={uploading}
-                onClick={() => fileInputRef.current?.click()}
-                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-purple-950/40 cursor-pointer disabled:opacity-50"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-                <span>Subir / Reemplazar Foto</span>
-              </button>
+        <div className="flex-1 flex flex-col gap-2.5 w-full min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => fileInputRef.current?.click()}
+              className="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow cursor-pointer disabled:opacity-50"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              <span>Subir / Reemplazar</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={openGalleryModal}
-                className="px-4 py-2 bg-[#21262D] hover:bg-[#30363D] text-slate-200 border border-[#30363D] rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow"
-              >
-                <span>📁 Galería de Medios</span>
-              </button>
-            </div>
-            
-            {/* Dimension guidance callout inside box */}
-            <div className="p-2.5 bg-[#161B22] border border-purple-500/30 rounded-xl flex items-center justify-between gap-2 mt-1 text-[11px]">
-              <div className="flex items-center gap-1.5 text-zinc-300">
-                <span className="text-purple-400 font-bold">📐 Dimensión requerida:</span>
-                <span className="font-mono font-bold text-white bg-purple-950/80 px-2 py-0.5 rounded border border-purple-500/40">
-                  {derivedSize}
-                </span>
-              </div>
-              <span className="text-[10px] text-zinc-400 font-mono hidden sm:inline">WebP &bull; JPG &bull; PNG</span>
-            </div>
-
-            <p className="text-[11px] text-slate-400 mt-0.5">{description}</p>
+            <button
+              type="button"
+              onClick={openGalleryModal}
+              className="px-3.5 py-1.5 bg-[#21262D] hover:bg-[#30363D] text-slate-200 border border-[#30363D] rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+            >
+              <span>📁 Galería</span>
+            </button>
           </div>
 
+          {description && (
+            <p className="text-[11px] text-slate-400 leading-snug">{description}</p>
+          )}
+
           {/* Direct URL text field */}
-          <div className="flex items-center bg-[#161B22] border border-[#30363D] focus-within:border-purple-500 rounded-xl px-3 py-2 text-xs">
+          <div className="flex items-center bg-[#161B22] border border-[#30363D] focus-within:border-purple-500 rounded-lg px-2.5 py-1.5 text-xs">
             <span className="text-slate-500 font-mono text-[10px] mr-2 shrink-0">Ruta / URL:</span>
             <input
               type="text"
               value={value || ""}
               onChange={(e) => onChange(e.target.value)}
               placeholder="/images/..."
-              className="flex-1 bg-transparent text-slate-200 text-xs font-mono focus:outline-none"
+              className="flex-1 bg-transparent text-slate-200 text-xs font-mono focus:outline-none min-w-0"
             />
           </div>
         </div>

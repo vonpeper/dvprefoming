@@ -354,7 +354,7 @@ export default function WebsiteContentEditorPage() {
               Planta Docente & Maestros ({content.teachers.length})
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {content.teachers.map((teacher, idx) => (
                 <div key={teacher.id} className="p-5 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col gap-4">
                   <div className="flex flex-col gap-1">
@@ -425,7 +425,7 @@ export default function WebsiteContentEditorPage() {
               Cartelera de Obras & Montajes ({content.productions.length})
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {content.productions.map((prod, idx) => (
                 <div key={prod.id} className="p-5 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col gap-4">
                   <div className="flex flex-col gap-1">
