@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
 
-  const { valid, user, role, fullName } = verifySessionToken(sessionCookie);
+  const { valid, user, role, fullName, isJuror, assignedDiscipline } = verifySessionToken(sessionCookie);
 
   if (!valid) {
     return NextResponse.json({ authenticated: false }, { status: 401 });
@@ -20,6 +20,8 @@ export async function GET(req: NextRequest) {
       username: user,
       role: role || "ADMIN",
       fullName: fullName || user,
+      isJuror: Boolean(isJuror),
+      assignedDiscipline: assignedDiscipline,
     },
   });
 }

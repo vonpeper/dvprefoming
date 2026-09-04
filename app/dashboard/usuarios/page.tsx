@@ -297,6 +297,43 @@ export default function UsersSettingsPage() {
     }
   };
 
+  const handleToggleJuror = async (user: UserItem) => {
+    const normRole = getNormalizedRole(user.role);
+    if (normRole === "ALUMNO") {
+      showToast("error", "El rol de Jurado Calificador solo puede asignarse a Maestros o Administradores.");
+      return;
+    }
+
+    const nextIsJuror = !user.isJuror;
+    try {
+      const res = await fetch("/api/users", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: user.id,
+          isJuror: nextIsJuror,
+          assignedDiscipline: user.assignedDiscipline || "CANTO",
+        }),
+      });
+
+      const data = await res.json();
+      if (data?.success) {
+        showToast(
+          "success",
+          nextIsJuror
+            ? `⚖️ ${user.fullName} habilitado(a) como Jurado Calificador.`
+            : `ℹ️ Se ha retirado la etiqueta de Jurado a ${user.fullName}.`
+        );
+        fetchUsers();
+      } else {
+        showToast("error", data?.error || "Error al actualizar jurado.");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("error", "Error de red al alternar estado de jurado.");
+    }
+  };
+
   const handleDeleteUser = async (user: UserItem) => {
     const confirmed = window.confirm(
       `¿Estás seguro de eliminar permanentemente al usuario "${user.fullName}" (${user.username})?`
@@ -640,19 +677,35 @@ export default function UsersSettingsPage() {
                         </div>
                       </td>
 
-                      {/* Jurado Calificador Badge */}
+                      {/* Jurado Calificador Badge / 1-Click Toggle */}
                       <td className="py-3.5 px-4 text-center">
-                        {user.isJuror ? (
+                        {normRole === "ALUMNO" ? (
+                          <span className="text-slate-600 font-mono text-[11px]">—</span>
+                        ) : user.isJuror ? (
                           <div className="flex flex-col items-center gap-1">
                             <span className={`inline-block text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-md border ${discBadge.style}`}>
                               {discBadge.label}
                             </span>
-                            <span className="text-[9px] font-mono text-amber-400 font-bold bg-amber-950/60 px-1.5 py-0.2 rounded border border-amber-500/30">
-                              ⚖️ Jurado Activo
-                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleJuror(user)}
+                              title="Clic para quitar etiqueta de jurado"
+                              className="text-[9px] font-mono text-amber-300 hover:text-rose-300 font-bold bg-amber-950/70 hover:bg-rose-950/60 px-2 py-0.5 rounded border border-amber-500/40 hover:border-rose-500/40 transition-all cursor-pointer flex items-center gap-1"
+                            >
+                              <span>⚖️ Jurado Activo</span>
+                              <span className="opacity-60 text-[8px]">✕</span>
+                            </button>
                           </div>
                         ) : (
-                          <span className="text-slate-600 font-mono text-xs">—</span>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleJuror(user)}
+                            title="Clic para asignar etiqueta de Jurado Calificador"
+                            className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold text-slate-400 hover:text-amber-300 bg-[#21262D] hover:bg-amber-950/50 border border-[#30363D] hover:border-amber-500/40 px-2.5 py-1 rounded-lg transition-all cursor-pointer"
+                          >
+                            <span>➕</span>
+                            <span>Asignar Jurado</span>
+                          </button>
                         )}
                       </td>
 

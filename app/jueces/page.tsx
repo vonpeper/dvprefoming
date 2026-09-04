@@ -37,6 +37,7 @@ export default function JudgesPortalPage() {
 
   // Dynamic Data State
   const [teachers, setTeachers] = useState<(Teacher & { defaultDiscipline?: EvaluationDiscipline })[]>([]);
+  const [activeJurors, setActiveJurors] = useState<any[]>([]);
   const [auditions, setAuditions] = useState<AuditionRegistration[]>([]);
   const [productions, setProductions] = useState<Production[]>([]);
   const [criteria, setCriteria] = useState<EvaluationCriteria[]>([]);
@@ -50,15 +51,16 @@ export default function JudgesPortalPage() {
   const [savingScore, setSavingScore] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  // Load criteria, auditions, productions, and teachers dynamically
+  // Load criteria, auditions, productions, and active jurors dynamically
   const loadData = async () => {
     setLoading(true);
     try {
-      const [critRes, audRes, prodRes, teachRes, meRes] = await Promise.all([
+      const [critRes, audRes, prodRes, teachRes, usersRes, meRes] = await Promise.all([
         fetch("/api/auditions/criteria"),
         fetch("/api/auditions/list"),
         fetch("/api/productions"),
         fetch("/api/teachers"),
+        fetch("/api/users").catch(() => null),
         fetch("/api/auth/me").catch(() => null),
       ]);
 
@@ -66,23 +68,37 @@ export default function JudgesPortalPage() {
       const audData = await audRes.json();
       const prodData = await prodRes.json();
       const teachData = await teachRes.json();
+      const usersData = usersRes ? await usersRes.json() : null;
       const meData = meRes ? await meRes.json() : null;
 
       if (critData?.criteria) setCriteria(critData.criteria);
       if (prodData?.productions) setProductions(prodData.productions);
       if (teachData?.teachers) setTeachers(teachData.teachers);
 
+      if (usersData?.success && Array.isArray(usersData.users)) {
+        const jurors = usersData.users.filter((u: any) => u.isJuror && u.status === "ACTIVE" && u.role !== "ALUMNO");
+        setActiveJurors(jurors);
+      }
+
       if (meData?.authenticated && meData.user) {
+        if (meData.user.role === "ALUMNO") {
+          setLoginError("Los alumnos no tienen acceso al portal de jurado.");
+          setIsLoggedIn(false);
+          return;
+        }
+
+        if (meData.user.role === "MAESTRO" && !meData.user.isJuror) {
+          setLoginError("Acceso Restringido: Tu cuenta de maestro no tiene asignada la etiqueta de Jurado Calificador activa. Solicita al Administrador en el panel de usuarios que active tu rol de Jurado.");
+          setIsLoggedIn(false);
+          return;
+        }
+
         setCurrentUser(meData.user);
         setJudgeName(meData.user.fullName || "Juez");
-        setJudgeTitle(meData.user.title || "Docente Titular");
+        setJudgeTitle(meData.user.title || "Jurado Calificador");
 
-        if (meData.user.role === "MAESTRO" || meData.user.role === "DOCENTE_JUEZ") {
-          const userDiscipline = meData.user.assignedDiscipline || (teachData?.teachers || []).find(
-            (t: any) => t.fullName.toLowerCase() === meData.user.fullName.toLowerCase()
-          )?.defaultDiscipline || "CANTO";
-          setDiscipline(userDiscipline);
-        }
+        const userDiscipline = meData.user.assignedDiscipline === "ALL" ? "CANTO" : (meData.user.assignedDiscipline || "CANTO");
+        setDiscipline(userDiscipline);
         setIsLoggedIn(true);
       }
 
@@ -134,16 +150,28 @@ export default function JudgesPortalPage() {
 
         const data = await res.json();
         if (res.ok && data.success && data.user) {
+          if (data.user.role === "ALUMNO") {
+            setLoginError("Los alumnos no tienen acceso al portal de evaluación de jurados.");
+            setAuthenticating(false);
+            return;
+          }
+
+          if (data.user.role === "MAESTRO" && !data.user.isJuror) {
+            setLoginError("Acceso Restringido: Tu cuenta de maestro no tiene asignada la etiqueta de Jurado Calificador activa. Solicita al Administrador en el panel de usuarios que habilite tu rol de Jurado.");
+            setAuthenticating(false);
+            return;
+          }
+
           setCurrentUser(data.user);
           setJudgeName(data.user.fullName || data.user.username);
-          setJudgeTitle(data.user.title || "Docente Titular");
+          setJudgeTitle(data.user.title || "Jurado Calificador");
 
-          const userDisc = data.user.assignedDiscipline || discipline;
+          const userDisc = data.user.assignedDiscipline === "ALL" ? "CANTO" : (data.user.assignedDiscipline || discipline);
           setDiscipline(userDisc);
 
           const session = {
             name: data.user.fullName,
-            title: data.user.title || "Docente Titular",
+            title: data.user.title || "Jurado Calificador",
             discipline: userDisc,
           };
           localStorage.setItem("dv_judge_session", JSON.stringify(session));
@@ -169,6 +197,15 @@ export default function JudgesPortalPage() {
       return;
     }
 
+    // Direct name validation against active jurors
+    const matchedJuror = activeJurors.find(
+      (j) => j.fullName.toLowerCase() === judgeName.trim().toLowerCase()
+    );
+    if (!matchedJuror && currentUser?.role !== "ADMIN") {
+      setLoginError("Solo los maestros con etiqueta de Jurado Calificador activa pueden ingresar. Solicita al Administrador tu asignación.");
+      return;
+    }
+
     const session = {
       name: judgeName.trim(),
       title: judgeTitle || "Juez Evaluador",
@@ -186,17 +223,13 @@ export default function JudgesPortalPage() {
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
   };
 
-  const selectTeacherPreset = (teacher: Teacher & { defaultDiscipline?: EvaluationDiscipline }) => {
-    setJudgeName(teacher.fullName);
-    setIdentifierInput(teacher.fullName);
+  const selectJurorPreset = (juror: any) => {
+    setJudgeName(juror.fullName);
+    setIdentifierInput(juror.phone || juror.username);
     setPasswordInput("DV@Docente2026");
-    setJudgeTitle(
-      teacher.specialties && teacher.specialties.length > 0
-        ? `Docente de ${teacher.specialties[0]}`
-        : "Docente Titular"
-    );
-    if (teacher.defaultDiscipline) {
-      setDiscipline(teacher.defaultDiscipline);
+    setJudgeTitle(juror.title || "Jurado Calificador");
+    if (juror.assignedDiscipline && juror.assignedDiscipline !== "ALL") {
+      setDiscipline(juror.assignedDiscipline);
     }
   };
 
@@ -426,46 +459,60 @@ export default function JudgesPortalPage() {
               </button>
             </div>
 
-            {/* Alternative: Select Teacher from Active Database */}
+            {/* Active Jurors Presets */}
             <div className="flex flex-col gap-2 pt-2 border-t border-[#202030]">
               <label className="font-semibold text-zinc-300 flex items-center justify-between">
-                <span>👨‍🏫 O selecciona tu perfil directo de docente:</span>
-                <span className="text-[10px] font-mono text-purple-400">{teachers.length} Maestros Activos</span>
+                <span>⚖️ Maestros con Etiqueta de Jurado Activa:</span>
+                <span className="text-[10px] font-mono text-purple-400">{activeJurors.length} Habilitados</span>
               </label>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-48 overflow-y-auto pr-1">
-                {teachers.map((t) => {
-                  const isSelected = judgeName === t.fullName;
-                  const discLabel = t.defaultDiscipline === "CANTO" ? "🎤 Canto" : t.defaultDiscipline === "COREOGRAFIA" ? "💃 Danza" : "🎭 Actuación";
+              {activeJurors.length === 0 ? (
+                <div className="p-3.5 bg-[#13131D] border border-dashed border-[#2E2E44] rounded-xl text-center text-zinc-400 text-xs flex flex-col items-center gap-1.5">
+                  <span className="text-amber-400 font-bold">⚠️ Ningún maestro tiene la etiqueta de Jurado Calificador activa.</span>
+                  <span className="text-[11px] text-zinc-500">
+                    El Administrador General puede habilitar o asignar jurados desde el panel de{" "}
+                    <Link href="/dashboard/usuarios" className="text-purple-400 hover:text-purple-300 underline font-bold">
+                      Usuarios
+                    </Link>.
+                  </span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-48 overflow-y-auto pr-1">
+                  {activeJurors.map((j) => {
+                    const isSelected = judgeName.toLowerCase() === j.fullName.toLowerCase();
+                    const discLabel =
+                      j.assignedDiscipline === "CANTO"
+                        ? "🎤 Canto"
+                        : j.assignedDiscipline === "COREOGRAFIA"
+                        ? "💃 Danza"
+                        : j.assignedDiscipline === "ACTUACION"
+                        ? "🎭 Actuación"
+                        : "👑 Todas las Áreas";
 
-                  return (
-                    <button
-                      key={t.id || t.fullName}
-                      type="button"
-                      onClick={() => selectTeacherPreset(t)}
-                      className={`p-2.5 rounded-2xl border text-left transition-all flex items-center gap-3 cursor-pointer ${
-                        isSelected
-                          ? "bg-purple-950/80 border-purple-500 text-white shadow-md shadow-purple-950/50"
-                          : "bg-[#1A1A26] border-[#2A2A3E] text-zinc-300 hover:border-zinc-500"
-                      }`}
-                    >
-                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-black/60 shrink-0 border border-white/10">
-                        {t.imageUrl ? (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img src={t.imageUrl} alt={t.fullName} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-sm">👨‍🏫</div>
-                        )}
-                      </div>
+                    return (
+                      <button
+                        key={j.id || j.fullName}
+                        type="button"
+                        onClick={() => selectJurorPreset(j)}
+                        className={`p-2.5 rounded-2xl border text-left transition-all flex items-center gap-3 cursor-pointer ${
+                          isSelected
+                            ? "bg-purple-950/80 border-purple-500 text-white shadow-md shadow-purple-950/50"
+                            : "bg-[#1A1A26] border-[#2A2A3E] text-zinc-300 hover:border-zinc-500"
+                        }`}
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-black/60 shrink-0 border border-white/10 flex items-center justify-center text-sm font-bold text-purple-300">
+                          {j.fullName.charAt(0)}
+                        </div>
 
-                      <div className="flex flex-col truncate">
-                        <span className="font-bold text-xs text-white truncate">{t.fullName}</span>
-                        <span className="text-[10px] text-amber-400 font-mono font-semibold">{discLabel}</span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+                        <div className="flex flex-col truncate">
+                          <span className="font-bold text-xs text-white truncate">{j.fullName}</span>
+                          <span className="text-[10px] text-amber-400 font-mono font-semibold">{discLabel}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Discipline Selection */}

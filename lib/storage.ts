@@ -1164,16 +1164,31 @@ export const DEFAULT_USERS: UserAccount[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: "usr_fanny_monroy",
-    username: "fanny@dvperformingarts.com",
-    phone: "4771000001",
-    fullName: "Fanny Monroy",
+    id: "usr_alek_aguilar",
+    username: "alek@dvperformingarts.com",
+    phone: "4772494283",
+    fullName: "Alek Aguilar",
     role: "MAESTRO",
-    isJuror: true,
+    isJuror: false,
     password: "DV@Docente2026",
-    title: "Directora Vocal & Maestra de Canto",
+    title: "Docente de Danza",
+    assignedDiscipline: "COREOGRAFIA",
+    attendanceStatus: "PENDING",
+    status: "ACTIVE",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "usr_alvaro_diaz",
+    username: "alvaro@dvperformingarts.com",
+    phone: "4771681936",
+    fullName: "Alvaro Diaz",
+    role: "MAESTRO",
+    isJuror: false,
+    password: "DV@Docente2026",
+    title: "Docente de Canto",
     assignedDiscipline: "CANTO",
-    attendanceStatus: "CONFIRMED",
+    attendanceStatus: "PENDING",
     status: "ACTIVE",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -1181,14 +1196,29 @@ export const DEFAULT_USERS: UserAccount[] = [
   {
     id: "usr_andres_rodriguez",
     username: "andres@dvperformingarts.com",
-    phone: "4771000002",
+    phone: "4772580501",
     fullName: "Andrés Rodríguez",
     role: "MAESTRO",
-    isJuror: true,
+    isJuror: false,
     password: "DV@Docente2026",
-    title: "Coreógrafo & Director de Danza",
+    title: "Docente de Actuación",
+    assignedDiscipline: "ACTUACION",
+    attendanceStatus: "PENDING",
+    status: "ACTIVE",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "usr_andrea_miranda",
+    username: "andrea.miranda@dvperformingarts.com",
+    phone: "4775198320",
+    fullName: "Andrea Miranda",
+    role: "MAESTRO",
+    isJuror: false,
+    password: "DV@Docente2026",
+    title: "Docente de Danza",
     assignedDiscipline: "COREOGRAFIA",
-    attendanceStatus: "CONFIRMED",
+    attendanceStatus: "PENDING",
     status: "ACTIVE",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -1196,14 +1226,119 @@ export const DEFAULT_USERS: UserAccount[] = [
   {
     id: "usr_angel_piedra",
     username: "angel@dvperformingarts.com",
-    phone: "4771000003",
+    phone: "4772275573",
     fullName: "Angel Piedra",
     role: "MAESTRO",
-    isJuror: true,
+    isJuror: false,
     password: "DV@Docente2026",
-    title: "Docente de Actuación & Texto Teatral",
+    title: "Docente de Actuación",
     assignedDiscipline: "ACTUACION",
-    attendanceStatus: "CONFIRMED",
+    attendanceStatus: "PENDING",
+    status: "ACTIVE",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "usr_camila_velasco",
+    username: "camila@dvperformingarts.com",
+    phone: "4774046134",
+    fullName: "Camila Velasco",
+    role: "MAESTRO",
+    isJuror: false,
+    password: "DV@Docente2026",
+    title: "Docente de Canto, Actuación y Danza",
+    assignedDiscipline: "ALL",
+    attendanceStatus: "PENDING",
+    status: "ACTIVE",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "usr_caro_torres",
+    username: "caro.torres@dvperformingarts.com",
+    phone: "4773929269",
+    fullName: "Caro Torres",
+    role: "MAESTRO",
+    isJuror: false,
+    password: "DV@Docente2026",
+    title: "Docente de Canto",
+    assignedDiscipline: "CANTO",
+    attendanceStatus: "PENDING",
+    status: "ACTIVE",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "usr_fanny_monroy",
+    username: "fanny@dvperformingarts.com",
+    phone: "4761100472",
+    fullName: "Fanny Monroy",
+    role: "MAESTRO",
+    isJuror: false,
+    password: "DV@Docente2026",
+    title: "Docente de Danza",
+    assignedDiscipline: "COREOGRAFIA",
+    attendanceStatus: "PENDING",
+    status: "ACTIVE",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "usr_fernanda_velasco",
+    username: "fernanda.velasco@dvperformingarts.com",
+    phone: "4778274921",
+    fullName: "Fernanda Velasco",
+    role: "MAESTRO",
+    isJuror: false,
+    password: "DV@Docente2026",
+    title: "Docente de Danza",
+    assignedDiscipline: "COREOGRAFIA",
+    attendanceStatus: "PENDING",
+    status: "ACTIVE",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "usr_mario_frausto",
+    username: "mario.frausto@dvperformingarts.com",
+    phone: "4776717680",
+    fullName: "Mario Frausto",
+    role: "MAESTRO",
+    isJuror: false,
+    password: "DV@Docente2026",
+    title: "Docente de Canto",
+    assignedDiscipline: "CANTO",
+    attendanceStatus: "PENDING",
+    status: "ACTIVE",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "usr_mauricio_munoz",
+    username: "mauricio.munoz@dvperformingarts.com",
+    phone: "4771239691",
+    fullName: "Mauricio Muñoz",
+    role: "MAESTRO",
+    isJuror: false,
+    password: "DV@Docente2026",
+    title: "Docente de Actuación",
+    assignedDiscipline: "ACTUACION",
+    attendanceStatus: "PENDING",
+    status: "ACTIVE",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "usr_sofia_jaloma",
+    username: "sofia.jaloma@dvperformingarts.com",
+    phone: "4774039500",
+    fullName: "Sofia Jaloma",
+    role: "MAESTRO",
+    isJuror: false,
+    password: "DV@Docente2026",
+    title: "Docente de Actuación & Canto",
+    assignedDiscipline: "ALL",
+    attendanceStatus: "PENDING",
     status: "ACTIVE",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -1224,7 +1359,7 @@ export function getStoredUsers(): UserAccount[] {
       return DEFAULT_USERS;
     }
 
-    // Auto-migrate legacy roles if present
+    // Auto-migrate legacy roles if present and normalize
     let needsSave = false;
     const normalized: UserAccount[] = parsed.map((u) => {
       let role: UserRole = u.role;
@@ -1238,7 +1373,7 @@ export function getStoredUsers(): UserAccount[] {
         role = "ADMIN";
         needsSave = true;
       } else if (u.role === "MAESTRO" && isJuror === undefined) {
-        isJuror = Boolean(u.assignedDiscipline);
+        isJuror = false;
         needsSave = true;
       } else if (u.role === "ADMIN" && isJuror === undefined) {
         isJuror = u.id === "usr_admin_master" || Boolean(u.assignedDiscipline);
@@ -1252,6 +1387,33 @@ export function getStoredUsers(): UserAccount[] {
         role,
         isJuror: Boolean(isJuror),
       };
+    });
+
+    // Auto-sync / Merge any missing default teachers from DEFAULT_USERS
+    DEFAULT_USERS.forEach((def) => {
+      const match = normalized.find((u) => {
+        const uPhoneDigits = u.phone ? u.phone.replace(/\D/g, "") : "";
+        const defPhoneDigits = def.phone ? def.phone.replace(/\D/g, "") : "";
+        const matchPhone = defPhoneDigits && uPhoneDigits.endsWith(defPhoneDigits);
+        const matchUser = u.username.toLowerCase() === def.username.toLowerCase();
+        const matchName = u.fullName.toLowerCase() === def.fullName.toLowerCase();
+        return matchPhone || matchUser || matchName;
+      });
+
+      if (!match) {
+        normalized.push(def);
+        needsSave = true;
+      } else {
+        // Sync phone if updated in seed
+        if (def.phone && (!match.phone || match.phone !== def.phone)) {
+          match.phone = def.phone;
+          needsSave = true;
+        }
+        if (!match.assignedDiscipline && def.assignedDiscipline) {
+          match.assignedDiscipline = def.assignedDiscipline;
+          needsSave = true;
+        }
+      }
     });
 
     if (needsSave) {

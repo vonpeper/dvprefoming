@@ -101,16 +101,27 @@ function simpleSign(payloadStr: string): string {
  * Create a session token (Edge-compatible)
  */
 export function createSessionToken(
-  userData: { username: string; role?: string; fullName?: string; id?: string } | string
+  userData: {
+    username: string;
+    role?: string;
+    fullName?: string;
+    id?: string;
+    isJuror?: boolean;
+    assignedDiscipline?: string;
+  } | string
 ): string {
   const username = typeof userData === "string" ? userData : userData.username;
   const role = typeof userData === "string" ? "ADMIN" : userData.role || "ADMIN";
   const fullName = typeof userData === "string" ? "Administrador" : userData.fullName || username;
+  const isJuror = typeof userData === "object" ? Boolean(userData.isJuror) : false;
+  const assignedDiscipline = typeof userData === "object" ? userData.assignedDiscipline : undefined;
 
   const payload = JSON.stringify({
     user: username,
     role,
     fullName,
+    isJuror,
+    assignedDiscipline,
     iat: Date.now(),
     exp: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
   });
@@ -124,7 +135,14 @@ export function createSessionToken(
 /**
  * Validate a session token (Edge-compatible)
  */
-export function verifySessionToken(token: string): { valid: boolean; user?: string; role?: string; fullName?: string } {
+export function verifySessionToken(token: string): {
+  valid: boolean;
+  user?: string;
+  role?: string;
+  fullName?: string;
+  isJuror?: boolean;
+  assignedDiscipline?: string;
+} {
   if (!token || !token.includes(".")) return { valid: false };
 
   const [base64Payload, signature] = token.split(".");
@@ -146,6 +164,8 @@ export function verifySessionToken(token: string): { valid: boolean; user?: stri
       user: payload.user,
       role: payload.role,
       fullName: payload.fullName,
+      isJuror: Boolean(payload.isJuror),
+      assignedDiscipline: payload.assignedDiscipline,
     };
   } catch {
     return { valid: false };

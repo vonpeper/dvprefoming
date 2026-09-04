@@ -91,6 +91,8 @@ export async function POST(req: NextRequest) {
         username: authResult.user.username,
         fullName: authResult.user.fullName,
         role: authResult.user.role,
+        isJuror: Boolean(authResult.user.isJuror),
+        assignedDiscipline: authResult.user.assignedDiscipline,
         title: authResult.user.title,
       },
     });

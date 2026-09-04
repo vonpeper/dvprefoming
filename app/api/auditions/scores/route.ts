@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getStoredAuditions, saveAuditionScore } from "@/lib/storage";
+import { getStoredAuditions, getStoredUsers, saveAuditionScore } from "@/lib/storage";
 import { EvaluationDiscipline } from "@/types/mock";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +44,28 @@ export async function POST(req: Request) {
         { success: false, error: "Faltan datos obligatorios para registrar la calificación." },
         { status: 400 }
       );
+    }
+
+    // Validate juror authorization
+    const users = getStoredUsers();
+    const cleanJudgeName = judgeName.trim().toLowerCase();
+    const matchedUser = users.find(
+      (u) => u.fullName.toLowerCase() === cleanJudgeName || u.username.toLowerCase() === cleanJudgeName
+    );
+
+    if (matchedUser) {
+      if (matchedUser.role === "ALUMNO") {
+        return NextResponse.json(
+          { success: false, error: "Los alumnos no pueden emitir calificaciones de jurado." },
+          { status: 403 }
+        );
+      }
+      if (matchedUser.role === "MAESTRO" && !matchedUser.isJuror) {
+        return NextResponse.json(
+          { success: false, error: "Esta cuenta de maestro no cuenta con la etiqueta de Jurado Calificador activa." },
+          { status: 403 }
+        );
+      }
     }
 
     const saved = saveAuditionScore({
