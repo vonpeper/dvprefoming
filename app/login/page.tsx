@@ -1,5 +1,5 @@
 import AdminLoginPage from "@/app/admin/page";
 
-export default function DashboardLoginPage() {
+export default function LoginPage() {
   return <AdminLoginPage />;
 }

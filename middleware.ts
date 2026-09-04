@@ -5,20 +5,25 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const sessionCookie = req.cookies.get("dv_admin_session")?.value;
 
-  // 1. Alias /login -> /admin
-  if (pathname === "/login") {
-    return NextResponse.redirect(new URL("/admin", req.url));
+  // 1. Alias /login and /dashboard/login -> /admin
+  if (pathname === "/login" || pathname === "/dashboard/login") {
+    const redirectParam = req.nextUrl.searchParams.get("redirect");
+    const adminUrl = new URL("/admin", req.url);
+    if (redirectParam) adminUrl.searchParams.set("redirect", redirectParam);
+    return NextResponse.redirect(adminUrl);
   }
 
-  // 2. Admin Login routes (/admin and /dashboard/login)
-  if (pathname === "/admin" || pathname === "/dashboard/login") {
+  // 2. Admin Login page (/admin)
+  if (pathname === "/admin") {
     if (sessionCookie) {
       const { valid, role } = verifySessionToken(sessionCookie);
       if (valid) {
         if (role === "DOCENTE_JUEZ") {
           return NextResponse.redirect(new URL("/jueces", req.url));
         }
-        return NextResponse.redirect(new URL("/dashboard", req.url));
+        const redirectParam = req.nextUrl.searchParams.get("redirect");
+        const destination = redirectParam && redirectParam.startsWith("/") ? redirectParam : "/dashboard";
+        return NextResponse.redirect(new URL(destination, req.url));
       }
     }
     const res = NextResponse.next();
