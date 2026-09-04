@@ -41,11 +41,12 @@ export function getStoredMediaItems(): MediaItem[] {
     }
   }
 
-  // Scan all system images in public/images to build a complete library like WordPress
+  // Scan all system & uploaded images in public/images to build a complete library
   const publicImagesDir = path.join(process.cwd(), "public", "images");
   const systemItems: MediaItem[] = [];
 
-  const folders: Array<"brand" | "hero" | "teachers" | "programs" | "productions"> = [
+  const folders: Array<"uploads" | "brand" | "hero" | "teachers" | "programs" | "productions"> = [
+    "uploads",
     "brand",
     "hero",
     "teachers",
@@ -78,8 +79,18 @@ export function getStoredMediaItems(): MediaItem[] {
     }
   }
 
-  // Combine custom uploads (first) and system images
-  return [...customUploads, ...systemItems];
+  // Combine custom uploads (first) and system images, de-duplicating by URL
+  const seenUrls = new Set<string>();
+  const combined: MediaItem[] = [];
+
+  for (const item of [...customUploads, ...systemItems]) {
+    if (!seenUrls.has(item.url)) {
+      seenUrls.add(item.url);
+      combined.push(item);
+    }
+  }
+
+  return combined;
 }
 
 export function saveCustomUploads(items: MediaItem[]) {

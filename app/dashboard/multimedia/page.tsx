@@ -310,6 +310,10 @@ export default function MediaLibraryPage() {
               <img
                 src={item.url}
                 alt={item.originalName}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "/images/productions/si-no-es-ahora.jpg";
+                }}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
 
@@ -366,7 +370,15 @@ export default function MediaLibraryPage() {
               {/* Preview */}
               <div className="md:col-span-6 w-full h-64 bg-black rounded-xl overflow-hidden border border-[#30363D] flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={selectedItem.url} alt={selectedItem.filename} className="w-full h-full object-contain" />
+                <img
+                  src={selectedItem.url}
+                  alt={selectedItem.filename}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = "/images/productions/si-no-es-ahora.jpg";
+                  }}
+                  className="w-full h-full object-contain"
+                />
               </div>
 
               {/* Info & URL copy */}
