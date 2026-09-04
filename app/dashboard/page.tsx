@@ -40,6 +40,12 @@ export default function DashboardSummaryPage() {
 
         <div className="flex flex-wrap gap-3">
           <Link
+            href="/dashboard/alumnos"
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-2 shadow"
+          >
+            <span>🎓 Padrón Alumnos</span>
+          </Link>
+          <Link
             href="/dashboard/audiciones"
             className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-2 shadow"
           >
