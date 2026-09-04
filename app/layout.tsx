@@ -111,6 +111,14 @@ export const metadata: Metadata = {
     description: "Formación integral en artes escénicas en León, Gto.",
     images: ["/images/hero/hero-stage.jpg"],
   },
+  icons: {
+    icon: [
+      { url: "/images/brand/logo-badge.png", type: "image/png" },
+      { url: "/favicon.ico", type: "image/x-icon" },
+    ],
+    shortcut: "/images/brand/logo-badge.png",
+    apple: "/images/brand/logo-badge.png",
+  },
   robots: {
     index: true,
     follow: true,
@@ -178,6 +186,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       `}
     >
       <head>
+        <link rel="icon" href="/images/brand/logo-badge.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/images/brand/logo-badge.png" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
