@@ -108,7 +108,7 @@ export type CastingCategory =
 export interface AuditionRegistration {
   id: string;
   folio: string; // Folio de Convocatoria / Casting Call específico de la obra (e.g. SNEA-585)
-  studentFolio?: string; // Folio Único de Estudiante / Artista en DV (e.g. DV-ART-0482)
+  studentFolio?: string; // Folio Único de Estudiante / Artista en DV (e.g. DV-0482)
   fullName: string;
   email: string;
   phone: string;

@@ -1194,7 +1194,7 @@ export default function AuditionsDashboardPage() {
                                 </span>
                                 <div className="flex flex-wrap items-center gap-1.5 mt-0.5 font-mono text-[10px] text-slate-400">
                                   <span className="text-purple-300 font-bold bg-purple-950/90 px-1.5 py-0.2 rounded border border-purple-500/40" title="Folio Permanente de Alumno / Artista">
-                                    🎓 {aud.studentFolio || "DV-ART-0482"}
+                                    🎓 {aud.studentFolio || "DV-0482"}
                                   </span>
                                   <span className="text-slate-500">&bull;</span>
                                   <span className="text-purple-400 font-bold bg-[#0D1117] px-1.5 py-0.2 rounded border border-purple-500/30" title="Folio de Convocatoria">
@@ -1545,7 +1545,7 @@ export default function AuditionsDashboardPage() {
                                 </span>
                                 <div className="flex items-center gap-1.5 mt-0.5 font-mono text-[10px]">
                                   <span className="text-purple-300 font-bold bg-purple-950/80 px-1 rounded border border-purple-500/30" title="Folio de Alumno / Artista">
-                                    🎓 {aud.studentFolio || "DV-ART-0482"}
+                                    🎓 {aud.studentFolio || "DV-0482"}
                                   </span>
                                   <span className="text-purple-400 font-bold bg-[#0D1117] px-1 rounded border border-purple-500/30">
                                     🎫 {aud.folio}
@@ -1746,7 +1746,7 @@ export default function AuditionsDashboardPage() {
                         <td className="py-3.5 px-4 font-mono text-xs">
                           <div className="flex flex-col gap-0.5">
                             <span className="font-black text-purple-300 bg-purple-950/80 px-1.5 py-0.2 rounded border border-purple-500/40 text-[10px]" title="Folio de Alumno">
-                              🎓 {castMember.studentFolio || "DV-ART-0482"}
+                              🎓 {castMember.studentFolio || "DV-0482"}
                             </span>
                             <span className="font-bold text-emerald-400 font-mono text-[11px]">
                               🎫 {castMember.folio}
@@ -2217,7 +2217,7 @@ export default function AuditionsDashboardPage() {
 
                           <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-slate-400">
                             <span className="text-purple-300 font-bold bg-purple-950/80 px-1.5 py-0.2 rounded border border-purple-500/30 text-[10px]" title="Folio Permanente de Alumno">
-                              🎓 {c.studentFolio || item.studentFolio || "DV-ART-0482"}
+                              🎓 {c.studentFolio || item.studentFolio || "DV-0482"}
                             </span>
                             {c.phone && <span className="text-emerald-400 font-bold">📱 {c.phone}</span>}
                             {c.email && <span className="truncate">✉️ {c.email}</span>}
@@ -2476,7 +2476,7 @@ export default function AuditionsDashboardPage() {
                   {/* Relational Folios System */}
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[10px] font-mono bg-purple-600 text-white px-2.5 py-0.5 rounded-md font-black uppercase tracking-wider shadow-sm" title="Folio Único de Estudiante / Artista (Permanente)">
-                      🎓 {dossierTarget.studentFolio || "DV-ART-0482"}
+                      🎓 {dossierTarget.studentFolio || "DV-0482"}
                     </span>
                     <span className="text-[10px] font-mono bg-indigo-900 text-indigo-200 border border-indigo-500/40 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider" title="Código de Puesta en Escena">
                       🎭 {dossierTarget.productionCode || (dossierTarget.productionName?.includes("No Es Ahora") ? "SNEA" : "ITW")}
@@ -2600,7 +2600,7 @@ export default function AuditionsDashboardPage() {
                         <span>👤</span> Ficha de Identidad & Datos del Aspirante
                       </span>
                       <span className="text-[10px] font-mono text-indigo-400 font-bold">
-                        {dossierEditing ? "✏️ Editando Ficha General" : `Folio Alumno: ${dossierFormData.studentFolio || dossierTarget.studentFolio || "DV-ART-0482"}`}
+                        {dossierEditing ? "✏️ Editando Ficha General" : `Folio Alumno: ${dossierFormData.studentFolio || dossierTarget.studentFolio || "DV-0482"}`}
                       </span>
                     </div>
 
@@ -2669,12 +2669,12 @@ export default function AuditionsDashboardPage() {
                             type="text"
                             value={dossierFormData.studentFolio}
                             onChange={(e) => setDossierFormData({ ...dossierFormData, studentFolio: e.target.value })}
-                            placeholder="DV-ART-XXXX"
+                            placeholder="DV-XXXX"
                             className="bg-[#161B22] border border-purple-500/50 rounded-xl p-2 text-xs text-purple-300 font-mono font-bold uppercase"
                           />
                         ) : (
                           <div className="p-2 bg-[#161B22] border border-[#21262D] rounded-xl text-purple-300 font-mono font-bold text-xs">
-                            {dossierFormData.studentFolio || dossierTarget.studentFolio || "DV-ART-0482"}
+                            {dossierFormData.studentFolio || dossierTarget.studentFolio || "DV-0482"}
                           </div>
                         )}
                       </div>
@@ -3282,7 +3282,7 @@ export default function AuditionsDashboardPage() {
                   <div className="p-4 bg-[#0D1117] border border-indigo-500/30 rounded-2xl flex items-center justify-between">
                     <div>
                       <h4 className="font-bold text-white text-xs">
-                        Trayectoria del Alumno &bull; Folio Único: <span className="font-mono text-indigo-400">{dossierTarget.studentFolio || "DV-ART-0482"}</span>
+                        Trayectoria del Alumno &bull; Folio Único: <span className="font-mono text-indigo-400">{dossierTarget.studentFolio || "DV-0482"}</span>
                       </h4>
                       <p className="text-[11px] text-slate-400 mt-0.5">
                         Registro histórico de todas las audiciones y convocatorias de DV Performing Arts en las que ha participado este estudiante.

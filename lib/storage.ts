@@ -70,7 +70,12 @@ export function normalizeAuditionRecord(
   // 3. Unique Student Folio (Stable across all auditions/productions for this student)
   const cleanPhoneDigits = aud.phone ? aud.phone.replace(/\D/g, "").slice(-10) : "";
   const studentNum = aud.studentId || cleanPhoneDigits.slice(-4) || "0482";
-  const studentFolio = aud.studentFolio || `DV-ART-${studentNum.padStart(4, "0")}`;
+  let studentFolio = aud.studentFolio;
+  if (studentFolio && studentFolio.startsWith("DV-ART-")) {
+    studentFolio = studentFolio.replace("DV-ART-", "DV-");
+  } else if (!studentFolio) {
+    studentFolio = `DV-${studentNum.padStart(4, "0")}`;
+  }
 
   // 4. Status and Assigned Role consistency
   let status = aud.status || "PENDING_REVIEW";

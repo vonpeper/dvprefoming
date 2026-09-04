@@ -156,7 +156,7 @@ export default function AlumnosDashboardPage() {
 
     auditions.forEach((aud) => {
       const cleanPhone = aud.phone ? aud.phone.replace(/\D/g, "").slice(-10) : "";
-      const studentKey = aud.studentFolio?.trim() || (cleanPhone ? `DV-ART-${cleanPhone.slice(-4)}` : aud.id);
+      const studentKey = aud.studentFolio?.trim() || (cleanPhone ? `DV-${cleanPhone.slice(-4)}` : aud.id);
 
       if (!studentMap.has(studentKey)) {
         studentMap.set(studentKey, []);
@@ -481,7 +481,7 @@ export default function AlumnosDashboardPage() {
       const allTargetAuditionIds = auditions
         .filter((a) => {
           const cleanPhone = a.phone ? a.phone.replace(/\D/g, "").slice(-10) : "";
-          const folio = a.studentFolio || `DV-ART-${cleanPhone.slice(-4)}`;
+          const folio = a.studentFolio || `DV-${cleanPhone.slice(-4)}`;
           return selectedStudentFolios.includes(folio);
         })
         .map((a) => a.id);
@@ -796,7 +796,7 @@ export default function AlumnosDashboardPage() {
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
             <input
               type="text"
-              placeholder="Buscar por nombre, Folio Alumno (DV-ART-XXXX), teléfono, correo, folio casting..."
+              placeholder="Buscar por nombre, Folio Alumno (DV-XXXX), teléfono, correo, folio casting..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-[#0D1117] border border-[#30363D] focus:border-indigo-500 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none font-sans shadow-inner"
@@ -1250,7 +1250,7 @@ export default function AlumnosDashboardPage() {
                 <div className="flex flex-col gap-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[10px] font-mono bg-purple-600 text-white px-2.5 py-0.5 rounded-md font-black uppercase tracking-wider shadow-sm">
-                      🎓 {dossierTarget.studentFolio || "DV-ART-0482"}
+                      🎓 {dossierTarget.studentFolio || "DV-0482"}
                     </span>
                     <span className="text-[10px] font-mono bg-indigo-900 text-indigo-200 border border-indigo-500/40 px-2 py-0.5 rounded-md font-bold uppercase">
                       🎭 {dossierTarget.productionCode || "SNEA"}
@@ -1365,7 +1365,7 @@ export default function AlumnosDashboardPage() {
                         <span>👤</span> Ficha de Identidad & Datos del Aspirante
                       </span>
                       <span className="text-[10px] font-mono text-indigo-400 font-bold">
-                        {dossierEditing ? "✏️ Editando Ficha General" : `Folio Alumno: ${dossierFormData.studentFolio || dossierTarget.studentFolio || "DV-ART-0482"}`}
+                        {dossierEditing ? "✏️ Editando Ficha General" : `Folio Alumno: ${dossierFormData.studentFolio || dossierTarget.studentFolio || "DV-0482"}`}
                       </span>
                     </div>
 
@@ -1430,12 +1430,12 @@ export default function AlumnosDashboardPage() {
                             type="text"
                             value={dossierFormData.studentFolio}
                             onChange={(e) => setDossierFormData({ ...dossierFormData, studentFolio: e.target.value })}
-                            placeholder="DV-ART-XXXX"
+                            placeholder="DV-XXXX"
                             className="bg-[#161B22] border border-purple-500/50 rounded-xl p-2 text-xs text-purple-300 font-mono font-bold uppercase"
                           />
                         ) : (
                           <div className="p-2 bg-[#161B22] border border-[#21262D] rounded-xl text-purple-300 font-mono font-bold text-xs">
-                            {dossierFormData.studentFolio || dossierTarget.studentFolio || "DV-ART-0482"}
+                            {dossierFormData.studentFolio || dossierTarget.studentFolio || "DV-0482"}
                           </div>
                         )}
                       </div>
@@ -1994,7 +1994,7 @@ export default function AlumnosDashboardPage() {
                   <div className="p-4 bg-[#0D1117] border border-indigo-500/30 rounded-2xl flex items-center justify-between">
                     <div>
                       <h4 className="font-bold text-white text-xs">
-                        Historial Multi-Obra &bull; Folio Único: <span className="font-mono text-indigo-400">{dossierTarget.studentFolio || "DV-ART-0482"}</span>
+                        Historial Multi-Obra &bull; Folio Único: <span className="font-mono text-indigo-400">{dossierTarget.studentFolio || "DV-0482"}</span>
                       </h4>
                       <p className="text-[11px] text-slate-400 mt-0.5">
                         Todas las audiciones y producciones de DV Performing Arts en las que ha participado este estudiante.
