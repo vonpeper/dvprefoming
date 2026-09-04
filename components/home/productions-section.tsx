@@ -75,6 +75,10 @@ export default function ProductionsSection() {
                   <img
                     src={production.imageUrl || "/images/productions/si-no-es-ahora.jpg"}
                     alt={production.title}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = "/images/productions/si-no-es-ahora.jpg";
+                    }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
 
@@ -184,6 +188,10 @@ export default function ProductionsSection() {
               <img
                 src={selectedProduction.imageUrl || "/images/productions/si-no-es-ahora.jpg"}
                 alt={selectedProduction.title}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "/images/productions/si-no-es-ahora.jpg";
+                }}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#101016] via-transparent to-black/60" />

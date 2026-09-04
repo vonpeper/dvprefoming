@@ -166,6 +166,10 @@ export default function ProductionsDashboardPage() {
             <img
               src={activeAudition.imageUrl || "/images/productions/si-no-es-ahora.jpg"}
               alt={activeAudition.title}
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = "/images/productions/si-no-es-ahora.jpg";
+              }}
               className="w-20 h-28 object-cover rounded-xl border-2 border-red-500 shadow-md shrink-0"
             />
             <div className="flex flex-col gap-1.5">
@@ -218,6 +222,10 @@ export default function ProductionsDashboardPage() {
                 <img
                   src={prod.imageUrl || "/images/productions/si-no-es-ahora.jpg"}
                   alt={prod.title}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = "/images/productions/si-no-es-ahora.jpg";
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
 

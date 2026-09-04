@@ -652,6 +652,10 @@ export default function AuditionsDashboardPage() {
                     <img
                       src={prod.imageUrl}
                       alt={prod.title}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/images/productions/si-no-es-ahora.jpg";
+                      }}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
