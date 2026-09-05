@@ -34,8 +34,10 @@ export async function GET(req: NextRequest) {
       success: true,
       audition: {
         folio: audition.folio,
+        studentFolio: audition.studentFolio,
         auditionNumber: auditionNum,
         fullName: audition.fullName,
+        headshotUrl: audition.headshotUrl,
         productionName: audition.productionName || prod?.title || "Si No Es Ahora (El Musical)",
         programName: audition.programName || "Teatro Musical",
         status: audition.status,
@@ -102,8 +104,10 @@ export async function POST(req: NextRequest) {
       success: true,
       audition: {
         folio: audition.folio,
+        studentFolio: audition.studentFolio,
         auditionNumber: auditionNum,
         fullName: audition.fullName,
+        headshotUrl: audition.headshotUrl,
         productionName: audition.productionName || prod?.title || "Si No Es Ahora (El Musical)",
         programName: audition.programName || "Teatro Musical",
         status: audition.status,

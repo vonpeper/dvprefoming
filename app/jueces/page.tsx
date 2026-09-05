@@ -51,6 +51,10 @@ export default function JudgesPortalPage() {
   const [savingScore, setSavingScore] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
+  // Zoom Photo Modal & Candidate Ficha Modal
+  const [enlargedPhoto, setEnlargedPhoto] = useState<{ url: string; name: string; folio: string } | null>(null);
+  const [showCandidateFicha, setShowCandidateFicha] = useState(false);
+
   // Load criteria, auditions, productions, and active jurors dynamically
   const loadData = async () => {
     setLoading(true);
@@ -896,40 +900,108 @@ export default function JudgesPortalPage() {
               
               {/* Candidate Info Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-5 border-b border-[#242436]">
-                <div className="flex items-center gap-4">
-                  {/* Candidate Headshot */}
-                  <div className="w-16 h-16 rounded-2xl overflow-hidden bg-zinc-900 border-2 border-purple-500/70 shrink-0 shadow-lg flex items-center justify-center">
+                <div className="flex items-start sm:items-center gap-4">
+                  {/* Candidate Headshot with Zoom Button */}
+                  <div
+                    onClick={() => {
+                      if (currentAudition.headshotUrl) {
+                        setEnlargedPhoto({
+                          url: currentAudition.headshotUrl,
+                          name: currentAudition.fullName,
+                          folio: currentAudition.folio,
+                        });
+                      }
+                    }}
+                    className={`group relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-zinc-900 border-2 border-purple-500/80 shrink-0 shadow-xl flex items-center justify-center ${
+                      currentAudition.headshotUrl ? "cursor-zoom-in" : ""
+                    }`}
+                    title={currentAudition.headshotUrl ? "Click para ampliar fotografía del aspirante" : "Sin fotografía"}
+                  >
                     {currentAudition.headshotUrl ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={currentAudition.headshotUrl}
-                        alt={currentAudition.fullName}
-                        className="w-full h-full object-cover"
-                      />
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={currentAudition.headshotUrl}
+                          alt={currentAudition.fullName}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="text-white text-xs font-bold bg-black/70 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                            <span>🔍</span> Ampliar
+                          </span>
+                        </div>
+                      </>
                     ) : (
-                      <span className="text-3xl">👤</span>
+                      <span className="text-4xl">👤</span>
                     )}
                   </div>
 
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2 font-mono text-xs">
-                      <span className="bg-purple-600 text-white px-2.5 py-0.5 rounded-lg font-black">
-                        {currentAudition.folio}
+                  <div className="flex flex-col gap-1">
+                    <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
+                      <span className="bg-purple-600 text-white px-2.5 py-0.5 rounded-lg font-black shadow-sm" title="Folio de Convocatoria">
+                        🎫 {currentAudition.folio}
                       </span>
-                      <span className="text-zinc-400">&bull;</span>
-                      <span className="text-zinc-300">{currentAudition.phone}</span>
+                      <span className="bg-purple-950/90 text-purple-300 border border-purple-500/40 px-2 py-0.5 rounded-lg font-bold" title="Folio Permanente Alumno">
+                        🎓 {currentAudition.studentFolio || "DV-0482"}
+                      </span>
+                      {currentAudition.bloodType && (
+                        <span className="text-[10px] bg-rose-950/80 text-rose-300 border border-rose-500/40 px-1.5 py-0.2 rounded font-bold">
+                          🩸 {currentAudition.bloodType}
+                        </span>
+                      )}
+                      {currentAudition.vocalRange && (
+                        <span className="text-[10px] bg-indigo-950/80 text-indigo-300 border border-indigo-500/40 px-1.5 py-0.2 rounded font-bold">
+                          🎵 {currentAudition.vocalRange}
+                        </span>
+                      )}
                     </div>
-                    <h2 className="text-2xl font-black text-white mt-1">
+
+                    <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-0.5">
                       {currentAudition.fullName}
                     </h2>
-                    <p className="text-xs text-rose-400 font-bold">
-                      🎭 Obra: {currentAudition.productionName || "Si No Es Ahora (El Musical)"} &bull; {currentAudition.programName}
-                    </p>
+
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-400 font-mono">
+                      <span className="text-rose-400 font-bold">
+                        🎭 {currentAudition.productionName || "Si No Es Ahora"}
+                      </span>
+                      <span>&bull;</span>
+                      <span>{currentAudition.programName || "Teatro Musical"}</span>
+                      {currentAudition.age && (
+                        <>
+                          <span>&bull;</span>
+                          <span className="text-zinc-300 font-bold">{currentAudition.age} años</span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Quick Profile View Button */}
+                    <div className="flex items-center gap-2 mt-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowCandidateFicha(true)}
+                        className="px-3 py-1 bg-[#1E2330] hover:bg-[#2A3142] text-purple-300 hover:text-white border border-purple-500/30 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                      >
+                        <span>📋</span>
+                        <span>Ver Ficha Técnica Completa</span>
+                      </button>
+
+                      {currentAudition.googleDriveUrl && (
+                        <a
+                          href={currentAudition.googleDriveUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-3 py-1 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+                        >
+                          <span>📁</span>
+                          <span>Material / Video ↗</span>
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {/* Live Average Score Display */}
-                <div className={`bg-black/60 border-2 px-5 py-3 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-lg ${
+                <div className={`bg-black/60 border-2 px-5 py-3 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-lg self-end sm:self-center ${
                   Number(liveAverage) >= 8
                     ? "border-emerald-500/60 shadow-emerald-950/40"
                     : Number(liveAverage) >= 5
@@ -981,6 +1053,18 @@ export default function JudgesPortalPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Candidate Experience Notes Quote Box (if provided) */}
+              {currentAudition.experienceNotes && (
+                <div className="p-3.5 bg-[#181824] border border-purple-500/30 rounded-2xl flex flex-col gap-1 text-xs">
+                  <span className="text-[10px] font-mono uppercase font-bold text-purple-300 tracking-wider flex items-center gap-1.5">
+                    <span>🎭</span> Experiencia Artística & Notas del Aspirante:
+                  </span>
+                  <p className="text-zinc-300 italic leading-relaxed">
+                    "{currentAudition.experienceNotes}"
+                  </p>
                 </div>
               )}
 
@@ -1115,6 +1199,168 @@ export default function JudgesPortalPage() {
         </div>
 
       </div>
+
+      {/* ================= MODAL 1: ENLARGED PHOTO ZOOM ================= */}
+      {enlargedPhoto && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="relative max-w-lg w-full bg-[#12121A] border-2 border-purple-500/60 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+            <div className="p-4 bg-[#161B22] border-b border-[#21262D] flex items-center justify-between">
+              <div className="flex items-center gap-2 font-mono text-xs">
+                <span className="bg-purple-600 text-white px-2 py-0.5 rounded font-black">
+                  🎫 {enlargedPhoto.folio}
+                </span>
+                <span className="text-white font-bold">{enlargedPhoto.name}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEnlargedPhoto(null)}
+                className="p-1.5 text-zinc-400 hover:text-white rounded-xl bg-[#21262D] hover:bg-rose-950 text-xs font-bold"
+              >
+                ✕ Cerrar
+              </button>
+            </div>
+
+            <div className="relative aspect-square w-full bg-black flex items-center justify-center p-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={enlargedPhoto.url}
+                alt={enlargedPhoto.name}
+                className="w-full h-full object-contain rounded-2xl"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL 2: DETAILED CANDIDATE FICHA ================= */}
+      {showCandidateFicha && currentAudition && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="relative max-w-2xl w-full bg-[#12121A] border-2 border-purple-500/60 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            
+            {/* Header */}
+            <div className="p-5 bg-gradient-to-r from-purple-950 via-[#161B22] to-indigo-950 border-b border-[#21262D] flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-purple-500/50 overflow-hidden shrink-0 flex items-center justify-center">
+                  {currentAudition.headshotUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={currentAudition.headshotUrl} alt={currentAudition.fullName} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-2xl">👤</span>
+                  )}
+                </div>
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2 font-mono text-[10px]">
+                    <span className="bg-purple-600 text-white px-2 py-0.2 rounded font-black">
+                      🎫 {currentAudition.folio}
+                    </span>
+                    <span className="bg-purple-950 text-purple-300 border border-purple-500/40 px-2 py-0.2 rounded font-bold">
+                      🎓 {currentAudition.studentFolio || "DV-0482"}
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-black text-white mt-0.5">{currentAudition.fullName}</h3>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowCandidateFicha(false)}
+                className="p-2 text-zinc-400 hover:text-white rounded-xl bg-[#21262D] hover:bg-rose-950 text-xs font-bold"
+              >
+                ✕ Cerrar
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 overflow-y-auto flex flex-col gap-4 text-xs">
+              {/* Technical / Casting Specs */}
+              <div className="p-4 bg-[#161B22] border border-[#21262D] rounded-2xl grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-zinc-400 uppercase">Obra:</span>
+                  <span className="font-bold text-rose-300 truncate">{currentAudition.productionName || "Si No Es Ahora"}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-zinc-400 uppercase">Programa:</span>
+                  <span className="font-bold text-white truncate">{currentAudition.programName || "Teatro Musical"}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-zinc-400 uppercase">Turno / Horario:</span>
+                  <span className="font-bold text-zinc-300 truncate">{currentAudition.preferredSchedule || "Vespertino"}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-zinc-400 uppercase">Teléfono / WhatsApp:</span>
+                  <span className="font-bold text-emerald-400">{currentAudition.phone}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-zinc-400 uppercase">Correo:</span>
+                  <span className="font-bold text-slate-300 truncate">{currentAudition.email || "No registrado"}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-zinc-400 uppercase">Edad:</span>
+                  <span className="font-bold text-amber-300">{currentAudition.age ? `${currentAudition.age} años` : "N/A"}</span>
+                </div>
+              </div>
+
+              {/* Medical & Artistic Health */}
+              {(currentAudition.bloodType || currentAudition.vocalRange || currentAudition.emergencyContactName || currentAudition.medicalNotes) && (
+                <div className="p-4 bg-[#161B22] border border-rose-500/30 rounded-2xl flex flex-col gap-2">
+                  <span className="text-[10px] font-mono uppercase font-bold text-rose-300 tracking-wider">
+                    🚑 Ficha Médica & Contacto de Emergencia:
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono text-xs">
+                    {currentAudition.bloodType && (
+                      <div><span className="text-zinc-400 text-[10px]">Tipo de Sangre:</span> <strong className="text-rose-300">{currentAudition.bloodType}</strong></div>
+                    )}
+                    {currentAudition.vocalRange && (
+                      <div><span className="text-zinc-400 text-[10px]">Rango / Tesitura:</span> <strong className="text-purple-300">{currentAudition.vocalRange}</strong></div>
+                    )}
+                    {currentAudition.emergencyContactName && (
+                      <div><span className="text-zinc-400 text-[10px]">Contacto Emergencia:</span> <strong className="text-white">{currentAudition.emergencyContactName} ({currentAudition.emergencyContactPhone || ""})</strong></div>
+                    )}
+                  </div>
+                  {currentAudition.medicalNotes && (
+                    <div className="text-[11px] text-zinc-300 border-t border-[#21262D] pt-1.5">
+                      <span className="text-rose-400 font-bold">Condiciones / Alergias:</span> {currentAudition.medicalNotes}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Experience Notes */}
+              {currentAudition.experienceNotes && (
+                <div className="p-4 bg-[#161B22] border border-indigo-500/30 rounded-2xl flex flex-col gap-1.5">
+                  <span className="text-[10px] font-mono uppercase font-bold text-indigo-300 tracking-wider">
+                    📝 Experiencia Artística Previa & Formación:
+                  </span>
+                  <p className="text-zinc-300 italic leading-relaxed">
+                    "{currentAudition.experienceNotes}"
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-[#0D1117] border-t border-[#21262D] flex items-center justify-between">
+              <a
+                href={`https://wa.me/521${currentAudition.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola ${currentAudition.fullName}, te contactamos del panel de Jurados / Dirección de DV Performing Arts.`)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow"
+              >
+                <span>💬 WhatsApp Directo</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => setShowCandidateFicha(false)}
+                className="px-4 py-2 bg-[#21262D] hover:bg-[#30363D] text-white rounded-xl text-xs font-bold"
+              >
+                Cerrar Ficha
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }

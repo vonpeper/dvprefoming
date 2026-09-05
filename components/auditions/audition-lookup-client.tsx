@@ -8,8 +8,10 @@ import CelebrationConfetti from "@/components/ui/celebration-confetti";
 
 interface AuditionLookupResult {
   folio: string;
+  studentFolio?: string;
   auditionNumber: string | number;
   fullName: string;
+  headshotUrl?: string;
   productionName: string;
   programName: string;
   status: "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "CONFIRMED" | "DRAFT";
@@ -272,41 +274,58 @@ function AuditionLookupContent() {
             )}
 
             {/* Candidate & Production Spec Card */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 bg-[#14141E] border border-[#262638] rounded-2xl">
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-mono uppercase text-rose-400 font-bold tracking-wider">
-                  👤 Aspirante Registrado:
-                </span>
-                <span className="text-sm font-bold text-white">
-                  {result.fullName}
-                </span>
+            <div className="flex flex-col sm:flex-row gap-5 p-5 bg-[#14141E] border border-[#262638] rounded-2xl items-start sm:items-center">
+              {/* Candidate Headshot */}
+              <div className="w-20 h-20 rounded-2xl bg-zinc-900 border-2 border-purple-500/60 overflow-hidden shrink-0 shadow-lg flex items-center justify-center">
+                {result.headshotUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={result.headshotUrl} alt={result.fullName} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-3xl">👤</span>
+                )}
               </div>
 
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-mono uppercase text-rose-400 font-bold tracking-wider">
-                  📋 Folio & Número de Audición:
-                </span>
-                <span className="text-sm font-mono font-bold text-white">
-                  #{result.auditionNumber} <span className="text-xs text-zinc-400">({result.folio})</span>
-                </span>
-              </div>
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-mono uppercase text-rose-400 font-bold tracking-wider">
+                    👤 Aspirante Registrado:
+                  </span>
+                  <span className="text-sm font-bold text-white flex items-center gap-2">
+                    <span>{result.fullName}</span>
+                    {result.studentFolio && (
+                      <span className="text-[10px] font-mono bg-purple-950/80 text-purple-300 border border-purple-500/40 px-1.5 py-0.2 rounded font-bold">
+                        🎓 {result.studentFolio}
+                      </span>
+                    )}
+                  </span>
+                </div>
 
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-mono uppercase text-rose-400 font-bold tracking-wider">
-                  🎭 Obra / Montaje:
-                </span>
-                <span className="text-sm font-semibold text-white">
-                  {result.productionName}
-                </span>
-              </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-mono uppercase text-rose-400 font-bold tracking-wider">
+                    📋 Folio & Número de Audición:
+                  </span>
+                  <span className="text-sm font-mono font-bold text-white">
+                    #{result.auditionNumber} <span className="text-xs text-zinc-400">({result.folio})</span>
+                  </span>
+                </div>
 
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-mono uppercase text-rose-400 font-bold tracking-wider">
-                  🎓 Disciplina / Turno:
-                </span>
-                <span className="text-sm font-semibold text-zinc-300">
-                  {result.programName} &bull; {result.preferredSchedule}
-                </span>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-mono uppercase text-rose-400 font-bold tracking-wider">
+                    🎭 Obra / Montaje:
+                  </span>
+                  <span className="text-sm font-semibold text-white">
+                    {result.productionName}
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-mono uppercase text-rose-400 font-bold tracking-wider">
+                    🎓 Disciplina / Turno:
+                  </span>
+                  <span className="text-sm font-semibold text-zinc-300">
+                    {result.programName} &bull; {result.preferredSchedule}
+                  </span>
+                </div>
               </div>
             </div>
 
