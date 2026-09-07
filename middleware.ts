@@ -19,7 +19,7 @@ export function middleware(req: NextRequest) {
       const { valid, role, isJuror } = verifySessionToken(sessionCookie);
       if (valid) {
         if (role === "MAESTRO" || role === "DOCENTE_JUEZ") {
-          return NextResponse.redirect(new URL(isJuror ? "/jueces" : "/dashboard/audiciones", req.url));
+          return NextResponse.redirect(new URL("/jurado", req.url));
         }
         if (role === "ALUMNO") {
           return NextResponse.redirect(new URL("/", req.url));
@@ -34,7 +34,7 @@ export function middleware(req: NextRequest) {
     return res;
   }
 
-  // 3. Check Dashboard Protected Routes
+  // 3. Check Dashboard Protected Routes (Strictly for ADMIN)
   if (pathname.startsWith("/dashboard")) {
     if (!sessionCookie) {
       const loginUrl = new URL("/admin", req.url);
@@ -52,15 +52,11 @@ export function middleware(req: NextRequest) {
     }
 
     // Role-based restrictions:
-    // Teachers (MAESTRO / DOCENTE_JUEZ) only have access to /dashboard/audiciones and /jueces (if isJuror).
-    if (role === "MAESTRO" || role === "DOCENTE_JUEZ") {
-      if (pathname !== "/dashboard/audiciones") {
-        return NextResponse.redirect(new URL(isJuror ? "/jueces" : "/dashboard/audiciones", req.url));
+    // Teachers / Jurados ONLY have access to /jurado and are blocked from all /dashboard admin options.
+    if (role !== "ADMIN") {
+      if (role === "MAESTRO" || role === "DOCENTE_JUEZ") {
+        return NextResponse.redirect(new URL("/jurado", req.url));
       }
-    }
-
-    // Students (ALUMNO) do not have access to admin dashboard
-    if (role === "ALUMNO") {
       return NextResponse.redirect(new URL("/", req.url));
     }
   }

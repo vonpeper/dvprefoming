@@ -376,31 +376,6 @@ export default function JudgesPortalPage() {
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-rose-600/15 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Top Header Return to Admin Bar */}
-        <div className="max-w-2xl w-full flex items-center justify-between pb-3 z-10">
-          <Link
-            href="/dashboard"
-            className="px-4 py-2.5 bg-gradient-to-r from-red-600 via-rose-600 to-purple-600 hover:from-red-500 hover:to-purple-500 text-white rounded-2xl text-xs font-black shadow-xl shadow-red-950/60 transition-all flex items-center gap-2 border border-red-400/40"
-          >
-            <span>← 🏠</span>
-            <span>Volver al Dashboard de Admin</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/dashboard/audiciones"
-              className="text-xs text-purple-300 hover:text-white font-mono font-bold bg-[#141420] border border-purple-500/30 px-3 py-1.5 rounded-xl transition-colors"
-            >
-              📊 Ranking
-            </Link>
-            <Link
-              href="/dashboard/usuarios"
-              className="text-xs text-slate-300 hover:text-white font-mono bg-[#141420] border border-slate-700 px-3 py-1.5 rounded-xl transition-colors"
-            >
-              👥 Usuarios
-            </Link>
-          </div>
-        </div>
-
         <div className="max-w-2xl w-full bg-[#12121A]/95 backdrop-blur-2xl border-2 border-[#28283C] rounded-3xl p-6 sm:p-10 shadow-2xl relative z-10 flex flex-col gap-6">
           
           <div className="text-center flex flex-col items-center gap-2">
@@ -432,10 +407,10 @@ export default function JudgesPortalPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="font-semibold text-zinc-300">WhatsApp (10 dígitos) o Correo</label>
+                  <label className="font-semibold text-zinc-300">Número de WhatsApp (10 dígitos)</label>
                   <input
                     type="text"
-                    placeholder="Ej. 4771234567 o fanny@..."
+                    placeholder="Ej. 4771234567"
                     value={identifierInput}
                     onChange={(e) => setIdentifierInput(e.target.value)}
                     className="bg-[#101018] border border-[#2E2E44] focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-white font-mono font-bold focus:outline-none"
@@ -474,10 +449,7 @@ export default function JudgesPortalPage() {
                 <div className="p-3.5 bg-[#13131D] border border-dashed border-[#2E2E44] rounded-xl text-center text-zinc-400 text-xs flex flex-col items-center gap-1.5">
                   <span className="text-amber-400 font-bold">⚠️ Ningún maestro tiene la etiqueta de Jurado Calificador activa.</span>
                   <span className="text-[11px] text-zinc-500">
-                    El Administrador General puede habilitar o asignar jurados desde el panel de{" "}
-                    <Link href="/dashboard/usuarios" className="text-purple-400 hover:text-purple-300 underline font-bold">
-                      Usuarios
-                    </Link>.
+                    El Administrador General asignará a los jurados autorizados para esta jornada de audición.
                   </span>
                 </div>
               ) : (
@@ -550,28 +522,10 @@ export default function JudgesPortalPage() {
             {/* Enter Button */}
             <button
               type="submit"
-              className="w-full py-4 bg-gradient-to-r from-purple-600 via-rose-600 to-amber-500 hover:from-purple-500 hover:to-rose-500 text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-rose-950/60 transition-all cursor-pointer mt-1"
+              className="w-full py-4 bg-gradient-to-r from-purple-600 via-rose-600 to-amber-500 hover:from-purple-500 hover:to-rose-500 text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-rose-950/60 transition-all cursor-pointer mt-2"
             >
               🚀 Continuar al Panel de Evaluación
             </button>
-
-            <div className="text-center pt-3 border-t border-[#202030] flex flex-wrap items-center justify-between gap-2">
-              <Link
-                href="/dashboard"
-                className="px-3.5 py-2 bg-[#1F242C] hover:bg-[#2A313C] text-slate-200 hover:text-white border border-[#3A4350] rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
-              >
-                <span>🏠</span>
-                <span>Dashboard Principal</span>
-              </Link>
-
-              <Link
-                href="/dashboard/audiciones"
-                className="px-3.5 py-2 bg-purple-950/80 hover:bg-purple-900 text-purple-200 hover:text-white border border-purple-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
-              >
-                <span>📊</span>
-                <span>Ranking General</span>
-              </Link>
-            </div>
           </form>
         </div>
       </div>
@@ -605,12 +559,14 @@ export default function JudgesPortalPage() {
             >
               🔄 Cerrar Sesión
             </button>
-            <Link
-              href="/dashboard/audiciones"
-              className="px-3 py-1.5 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-bold transition-colors"
-            >
-              📊 Ver Ranking General
-            </Link>
+            {currentUser?.role === "ADMIN" && (
+              <Link
+                href="/dashboard/audiciones"
+                className="px-3 py-1.5 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-bold transition-colors"
+              >
+                📊 Ver Ranking General
+              </Link>
+            )}
           </div>
         </header>
 
@@ -777,12 +733,14 @@ export default function JudgesPortalPage() {
             🔄 {currentUser?.role === "MAESTRO" || currentUser?.role === "DOCENTE_JUEZ" ? "Cerrar Sesión" : "Cambiar Juez"}
           </button>
 
-          <Link
-            href="/dashboard/audiciones"
-            className="px-3.5 py-1.5 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-bold transition-colors"
-          >
-            📊 Ranking
-          </Link>
+          {currentUser?.role === "ADMIN" && (
+            <Link
+              href="/dashboard/audiciones"
+              className="px-3.5 py-1.5 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-bold transition-colors"
+            >
+              📊 Ranking
+            </Link>
+          )}
         </div>
       </header>
 

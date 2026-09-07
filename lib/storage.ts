@@ -1272,7 +1272,7 @@ export const DEFAULT_USERS: UserAccount[] = [
   },
   {
     id: "usr_alek_aguilar",
-    username: "alek@dvperformingarts.com",
+    username: "4772494283",
     phone: "4772494283",
     fullName: "Alek Aguilar",
     role: "MAESTRO",
@@ -1287,7 +1287,7 @@ export const DEFAULT_USERS: UserAccount[] = [
   },
   {
     id: "usr_alvaro_diaz",
-    username: "alvaro@dvperformingarts.com",
+    username: "4771681936",
     phone: "4771681936",
     fullName: "Alvaro Diaz",
     role: "MAESTRO",
@@ -1302,7 +1302,7 @@ export const DEFAULT_USERS: UserAccount[] = [
   },
   {
     id: "usr_andres_rodriguez",
-    username: "andres@dvperformingarts.com",
+    username: "4772580501",
     phone: "4772580501",
     fullName: "Andrés Rodríguez",
     role: "MAESTRO",
@@ -1317,7 +1317,7 @@ export const DEFAULT_USERS: UserAccount[] = [
   },
   {
     id: "usr_andrea_miranda",
-    username: "andrea.miranda@dvperformingarts.com",
+    username: "4775198320",
     phone: "4775198320",
     fullName: "Andrea Miranda",
     role: "MAESTRO",
@@ -1332,7 +1332,7 @@ export const DEFAULT_USERS: UserAccount[] = [
   },
   {
     id: "usr_angel_piedra",
-    username: "angel@dvperformingarts.com",
+    username: "4772275573",
     phone: "4772275573",
     fullName: "Angel Piedra",
     role: "MAESTRO",
@@ -1347,7 +1347,7 @@ export const DEFAULT_USERS: UserAccount[] = [
   },
   {
     id: "usr_camila_velasco",
-    username: "camila@dvperformingarts.com",
+    username: "4774046134",
     phone: "4774046134",
     fullName: "Camila Velasco",
     role: "MAESTRO",
@@ -1362,7 +1362,7 @@ export const DEFAULT_USERS: UserAccount[] = [
   },
   {
     id: "usr_caro_torres",
-    username: "caro.torres@dvperformingarts.com",
+    username: "4773929269",
     phone: "4773929269",
     fullName: "Caro Torres",
     role: "MAESTRO",
@@ -1377,7 +1377,7 @@ export const DEFAULT_USERS: UserAccount[] = [
   },
   {
     id: "usr_fanny_monroy",
-    username: "fanny@dvperformingarts.com",
+    username: "4761100472",
     phone: "4761100472",
     fullName: "Fanny Monroy",
     role: "MAESTRO",
@@ -1392,7 +1392,7 @@ export const DEFAULT_USERS: UserAccount[] = [
   },
   {
     id: "usr_fernanda_velasco",
-    username: "fernanda.velasco@dvperformingarts.com",
+    username: "4778274921",
     phone: "4778274921",
     fullName: "Fernanda Velasco",
     role: "MAESTRO",
@@ -1407,7 +1407,7 @@ export const DEFAULT_USERS: UserAccount[] = [
   },
   {
     id: "usr_mario_frausto",
-    username: "mario.frausto@dvperformingarts.com",
+    username: "4776717680",
     phone: "4776717680",
     fullName: "Mario Frausto",
     role: "MAESTRO",
@@ -1422,7 +1422,7 @@ export const DEFAULT_USERS: UserAccount[] = [
   },
   {
     id: "usr_mauricio_munoz",
-    username: "mauricio.munoz@dvperformingarts.com",
+    username: "4771239691",
     phone: "4771239691",
     fullName: "Mauricio Muñoz",
     role: "MAESTRO",
@@ -1437,7 +1437,7 @@ export const DEFAULT_USERS: UserAccount[] = [
   },
   {
     id: "usr_sofia_jaloma",
-    username: "sofia.jaloma@dvperformingarts.com",
+    username: "4774039500",
     phone: "4774039500",
     fullName: "Sofia Jaloma",
     role: "MAESTRO",
@@ -1460,7 +1460,7 @@ export function getStoredUsers(): UserAccount[] {
   }
   try {
     const raw = fs.readFileSync(USERS_FILE, "utf-8");
-    const parsed: any[] = JSON.parse(raw);
+    const parsed: UserAccount[] = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length === 0) {
       saveStoredUsers(DEFAULT_USERS);
       return DEFAULT_USERS;
@@ -1471,6 +1471,16 @@ export function getStoredUsers(): UserAccount[] {
     const normalized: UserAccount[] = parsed.map((u) => {
       let role: UserRole = u.role;
       let isJuror = u.isJuror;
+      let username = u.username;
+
+      // Migrate any placeholder email to WhatsApp number for non-admin teachers
+      if (role !== "ADMIN" && u.phone) {
+        const cleanPhone = u.phone.replace(/\D/g, "").slice(-10);
+        if (cleanPhone.length === 10 && (username.includes("@") || username !== cleanPhone)) {
+          username = cleanPhone;
+          needsSave = true;
+        }
+      }
 
       if (u.role === "DOCENTE_JUEZ") {
         role = "MAESTRO";
@@ -1491,6 +1501,7 @@ export function getStoredUsers(): UserAccount[] {
 
       return {
         ...u,
+        username,
         role,
         isJuror: Boolean(isJuror),
       };
@@ -1511,9 +1522,13 @@ export function getStoredUsers(): UserAccount[] {
         normalized.push(def);
         needsSave = true;
       } else {
-        // Sync phone if updated in seed
+        // Sync phone and username if updated in seed
         if (def.phone && (!match.phone || match.phone !== def.phone)) {
           match.phone = def.phone;
+          needsSave = true;
+        }
+        if (def.role !== "ADMIN" && match.username !== def.username) {
+          match.username = def.username;
           needsSave = true;
         }
         if (!match.assignedDiscipline && def.assignedDiscipline) {
