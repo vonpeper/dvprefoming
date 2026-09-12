@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { mockPrograms } from "@/data/mock";
 import { Program } from "@/types/mock";
 import SectionHeading from "@/components/ui/section-heading";
@@ -8,12 +8,30 @@ import EditorialLabel from "@/components/ui/editorial-label";
 import MediaPlaceholder from "@/components/ui/media-placeholder";
 import StripeCheckoutModal from "@/components/payments/stripe-checkout-modal";
 
-export default function ProgramsSection() {
+interface ProgramsSectionProps {
+  initialPrograms?: Program[];
+}
+
+export default function ProgramsSection({ initialPrograms }: ProgramsSectionProps = {}) {
+  const [programs, setPrograms] = useState<Program[]>(
+    initialPrograms && initialPrograms.length > 0 ? initialPrograms : mockPrograms
+  );
   const [activeFilter, setActiveFilter] = useState<"ALL" | "TEATRO" | "CANTO" | "DANZA">("ALL");
   const [selectedProgramForCheckout, setSelectedProgramForCheckout] = useState<Program | null>(null);
 
+  useEffect(() => {
+    fetch("/api/pages")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.content?.programs && Array.isArray(data.content.programs) && data.content.programs.length > 0) {
+          setPrograms(data.content.programs);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Filter programs based on state
-  const filteredPrograms = mockPrograms.filter((program) => {
+  const filteredPrograms = programs.filter((program) => {
     if (activeFilter === "ALL") return true;
     if (activeFilter === "TEATRO") return program.name.toLowerCase().includes("teatro") || program.name.toLowerCase().includes("actuación");
     if (activeFilter === "CANTO") return program.name.toLowerCase().includes("canto");

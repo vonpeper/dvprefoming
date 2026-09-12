@@ -41,9 +41,24 @@ const DEFAULT_CONTACT: ContactData = {
   hoursSaturday: "Sábados 10:00 - 15:00",
 };
 
-export default function SiteFooter() {
-  const [footer, setFooter] = useState<FooterData>(DEFAULT_FOOTER);
-  const [contact, setContact] = useState<ContactData>(DEFAULT_CONTACT);
+interface SiteFooterProps {
+  initialFooter?: FooterData;
+  initialContact?: ContactData;
+}
+
+export default function SiteFooter({ initialFooter, initialContact }: SiteFooterProps = {}) {
+  const [footer, setFooter] = useState<FooterData>(() => ({
+    ...DEFAULT_FOOTER,
+    ...(initialFooter || {}),
+    socialLinks: {
+      ...DEFAULT_FOOTER.socialLinks,
+      ...(initialFooter?.socialLinks || {}),
+    },
+  }));
+  const [contact, setContact] = useState<ContactData>(() => ({
+    ...DEFAULT_CONTACT,
+    ...(initialContact || {}),
+  }));
 
   useEffect(() => {
     fetch("/api/pages")

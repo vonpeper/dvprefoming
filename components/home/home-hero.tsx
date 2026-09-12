@@ -1,8 +1,32 @@
 import React from "react";
 import ButtonLink from "@/components/ui/button-link";
 import MediaPlaceholder from "@/components/ui/media-placeholder";
+import { WebsiteContent } from "@/lib/storage";
 
-export default function HomeHero() {
+interface HomeHeroProps {
+  content?: WebsiteContent["hero"];
+}
+
+const DEFAULT_HERO: WebsiteContent["hero"] = {
+  badgeText: "[ESTUDIO DE ENTRENAMIENTO] • ACTO I",
+  headline: "DISCIPLINA\nESCENARIO\nMOVIMIENTO.",
+  subtitle: "Academia de formación integral en Teatro Musical en León, Gto. Desarrollamos el talento escénico a través de canto, danza y actuación con rigor técnico, pasión y compromiso artístico.",
+  primaryCtaText: "Ver Programas",
+  secondaryCtaText: "Audiciones Abiertas",
+  heroImage: "/images/hero/hero-stage.jpg",
+  auditionNotice: "Audiciones abiertas para el musical “Si no es ahora”. Inicia tu registro oficial.",
+};
+
+export default function HomeHero({ content }: HomeHeroProps) {
+  const heroData = {
+    ...DEFAULT_HERO,
+    ...(content || {}),
+  };
+
+  // Process headline lines for condensed theatrical typography
+  const rawHeadline = heroData.headline || DEFAULT_HERO.headline;
+  const headlineLines = rawHeadline.split("\n").filter((l) => l.trim().length > 0);
+
   return (
     <section className="relative w-full py-16 md:py-24 px-6 bg-transparent overflow-hidden border-b-4 border-border-editorial" aria-label="Introducción principal">
       {/* Background signal coords text */}
@@ -16,32 +40,48 @@ export default function HomeHero() {
           
           <div className="flex flex-col gap-2">
             <div className="inline-flex items-center gap-2.5 font-mono text-[10px] tracking-[0.25em] text-accent-red uppercase">
-              <span>[ESTUDIO DE ENTRENAMIENTO]</span>
-              <span className="w-1 h-1 bg-accent-red" />
-              <span>ACTO I</span>
+              <span>{heroData.badgeText || "[ESTUDIO DE ENTRENAMIENTO] • ACTO I"}</span>
             </div>
 
             {/* Giant, tall condensed display title */}
             <h1 className="font-display text-5xl sm:text-7xl md:text-8xl lg:text-[7.2rem] font-extrabold uppercase tracking-tighter text-text-main leading-[0.78] select-none">
-              DISCIPLINA
-              <br />
-              <span className="text-accent-red">ESCENARIO</span>
-              <br />
-              MOVIMIENTO.
+              {headlineLines.length > 0 ? (
+                headlineLines.map((line, idx) => {
+                  const isAccent = idx === 1 || (headlineLines.length === 1 && line.includes("ESCENARIO"));
+                  return (
+                    <React.Fragment key={idx}>
+                      {isAccent ? (
+                        <span className="text-accent-red">{line}</span>
+                      ) : (
+                        line
+                      )}
+                      {idx < headlineLines.length - 1 && <br />}
+                    </React.Fragment>
+                  );
+                })
+              ) : (
+                <>
+                  DISCIPLINA
+                  <br />
+                  <span className="text-accent-red">ESCENARIO</span>
+                  <br />
+                  MOVIMIENTO.
+                </>
+              )}
             </h1>
           </div>
 
           <div className="flex flex-col gap-6 max-w-lg">
-            <p className="text-base sm:text-lg text-zinc-300 leading-relaxed font-sans font-normal">
-              Academia de formación integral en Teatro Musical en León, Gto. Desarrollamos el talento escénico a través de canto, danza y actuación con rigor técnico, pasión y compromiso artístico.
+            <p className="text-base sm:text-lg text-zinc-300 leading-relaxed font-sans font-normal whitespace-pre-line">
+              {heroData.subtitle}
             </p>
 
             <div className="flex flex-wrap gap-4 pt-1">
               <ButtonLink href="#programas" variant="primary">
-                Ver Programas
+                {heroData.primaryCtaText || "Ver Programas"}
               </ButtonLink>
               <ButtonLink href="#audiciones" variant="secondary">
-                Audiciones Abiertas
+                {heroData.secondaryCtaText || "Audiciones Abiertas"}
               </ButtonLink>
             </div>
           </div>
@@ -52,7 +92,7 @@ export default function HomeHero() {
           {/* Main Large Visual Block */}
           <div className="w-full relative z-0 md:pl-8 lg:pl-0">
             <MediaPlaceholder
-              src="/images/hero/hero-stage.jpg"
+              src={heroData.heroImage || "/images/hero/hero-stage.jpg"}
               aspectRatio="3:4"
               title="DV PERFORMING ARTS"
               description="ACADEMIA DE TEATRO MUSICAL & ARTES ESCÉNICAS"
@@ -61,10 +101,12 @@ export default function HomeHero() {
             />
             
             {/* Superimposed label card */}
-            <div className="absolute -bottom-4 -left-2 md:left-2 bg-[#0A0A0C] border-2 border-border-editorial-light p-4 z-10 font-mono text-[9px] uppercase tracking-widest text-text-main max-w-[220px]">
-              <span className="text-accent-red block font-bold mb-1">CONVOCATORIA ACTIVA</span>
-              <span className="text-zinc-300 font-normal leading-tight block">Audiciones abiertas para el musical &ldquo;Si no es ahora&rdquo;. Inicia tu registro oficial.</span>
-            </div>
+            {heroData.auditionNotice && (
+              <div className="absolute -bottom-4 -left-2 md:left-2 bg-[#0A0A0C] border-2 border-border-editorial-light p-4 z-10 font-mono text-[9px] uppercase tracking-widest text-text-main max-w-[220px]">
+                <span className="text-accent-red block font-bold mb-1">CONVOCATORIA ACTIVA</span>
+                <span className="text-zinc-300 font-normal leading-tight block">{heroData.auditionNotice}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

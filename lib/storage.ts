@@ -327,16 +327,25 @@ const ARTICLES_FILE = path.join(DATA_DIR, "articles.json");
 
 export function getStoredArticles(): Article[] {
   ensureDirectoryExists();
+  let articles: Article[] = [];
   if (!fs.existsSync(ARTICLES_FILE)) {
     saveStoredArticles(mockArticles);
-    return mockArticles;
+    articles = [...mockArticles];
+  } else {
+    try {
+      const raw = fs.readFileSync(ARTICLES_FILE, "utf-8");
+      articles = JSON.parse(raw);
+    } catch {
+      articles = [...mockArticles];
+    }
   }
-  try {
-    const raw = fs.readFileSync(ARTICLES_FILE, "utf-8");
-    return JSON.parse(raw);
-  } catch {
-    return mockArticles;
-  }
+
+  // Always return articles sorted by date descending (newest to oldest)
+  return articles.sort((a, b) => {
+    const timeA = new Date(a.publishedAt || a.createdAt || 0).getTime();
+    const timeB = new Date(b.publishedAt || b.createdAt || 0).getTime();
+    return timeB - timeA;
+  });
 }
 
 export function saveStoredArticles(articles: Article[]) {
@@ -551,6 +560,20 @@ export function getStoredWebsiteContent(): WebsiteContent {
 export function saveStoredWebsiteContent(content: WebsiteContent) {
   ensureDirectoryExists();
   fs.writeFileSync(PAGES_FILE, JSON.stringify(content, null, 2), "utf-8");
+}
+
+// ---------------------------------------------------------------------------
+// Programs Storage (Connected to Web & Payments)
+// ---------------------------------------------------------------------------
+export function getStoredPrograms(): Program[] {
+  const content = getStoredWebsiteContent();
+  return content.programs && content.programs.length > 0 ? content.programs : mockPrograms;
+}
+
+export function saveStoredPrograms(programs: Program[]) {
+  const content = getStoredWebsiteContent();
+  content.programs = programs;
+  saveStoredWebsiteContent(content);
 }
 
 // ---------------------------------------------------------------------------

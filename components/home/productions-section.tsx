@@ -6,8 +6,14 @@ import { Production } from "@/types/mock";
 import SectionHeading from "@/components/ui/section-heading";
 import ButtonLink from "@/components/ui/button-link";
 
-export default function ProductionsSection() {
-  const [productions, setProductions] = useState<Production[]>(mockProductions);
+interface ProductionsSectionProps {
+  initialProductions?: Production[];
+}
+
+export default function ProductionsSection({ initialProductions }: ProductionsSectionProps = {}) {
+  const [productions, setProductions] = useState<Production[]>(
+    initialProductions && initialProductions.length > 0 ? initialProductions : mockProductions
+  );
   const [selectedProduction, setSelectedProduction] = useState<Production | null>(null);
 
   useEffect(() => {

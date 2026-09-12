@@ -18,7 +18,7 @@ import TeachersSection from "@/components/home/teachers-section";
 import NewsSection from "@/components/home/news-section";
 import FinalCta from "@/components/home/final-cta";
 import { getLatestArticles } from "@/features/editorial/services/manifiesto";
-import { getStoredTeachers } from "@/lib/storage";
+import { getStoredWebsiteContent } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -29,8 +29,8 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const articles = await getLatestArticles();
-  const teachers = getStoredTeachers();
+  const content = getStoredWebsiteContent();
+  const articles = await getLatestArticles(5);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#07070A] text-text-main font-sans selection:bg-accent-red selection:text-text-main relative overflow-x-hidden">
@@ -44,19 +44,19 @@ export default async function HomePage() {
       <main id="main-content" className="flex-1 flex flex-col focus:outline-none relative z-10">
         
         {/* Hero Section */}
-        <HomeHero />
+        <HomeHero content={content.hero} />
 
         {/* Scrolling Disciplines Marquee */}
         <EditorialMarquee />
 
         {/* Vision & Manifesto Section */}
-        <ManifestoSection />
+        <ManifestoSection content={content.manifesto} />
 
         {/* Program / Class Cards Section */}
-        <ProgramsSection />
+        <ProgramsSection initialPrograms={content.programs} />
 
         {/* Shows / Production Billboard Section (Movie Poster Style) */}
-        <ProductionsSection />
+        <ProductionsSection initialProductions={content.productions} />
 
         {/* Convocatorias / Audition Call Section */}
         <AuditionFeature />
@@ -65,18 +65,18 @@ export default async function HomePage() {
         <ShowreelSection />
 
         {/* Staff / Teacher Roster Section */}
-        <TeachersSection initialTeachers={teachers} />
+        <TeachersSection initialTeachers={content.teachers} />
 
-        {/* Noticias & Novedades Section */}
+        {/* Noticias & Novedades Section (5 latest articles, newest to oldest) */}
         <NewsSection initialArticles={articles} />
 
         {/* Call to Action Section */}
-        <FinalCta />
+        <FinalCta contact={content.contact} />
 
       </main>
 
       {/* Footnote & Contact info */}
-      <SiteFooter />
+      <SiteFooter initialFooter={content.footer} initialContact={content.contact} />
     </div>
   );
 }

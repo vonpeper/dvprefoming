@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import SiteHeader from "@/components/layout/site-header";
 import SiteFooter from "@/components/layout/site-footer";
@@ -10,7 +10,19 @@ import { Program } from "@/types/mock";
 import StripeCheckoutModal from "@/components/payments/stripe-checkout-modal";
 
 export default function PaymentsPortalPage() {
+  const [programs, setPrograms] = useState<Program[]>(mockPrograms);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+
+  useEffect(() => {
+    fetch("/api/pages")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.content?.programs && Array.isArray(data.content.programs) && data.content.programs.length > 0) {
+          setPrograms(data.content.programs);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#07070A] text-text-main font-sans selection:bg-accent-red selection:text-text-main relative overflow-x-hidden">
@@ -43,7 +55,7 @@ export default function PaymentsPortalPage() {
 
         {/* Programs Pricing Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-          {mockPrograms.map((prog) => {
+          {programs.map((prog) => {
             const price = prog.monthlyPrice || 2400;
 
             return (
