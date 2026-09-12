@@ -4,7 +4,7 @@ import { getAuditionByFolioOrContact, getStoredProductions } from "@/lib/storage
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const folio = searchParams.get("folio") || searchParams.get("q") || "";
+    const folio = searchParams.get("folio") || searchParams.get("q") || searchParams.get("query") || "";
 
     if (!folio.trim()) {
       return NextResponse.json(
