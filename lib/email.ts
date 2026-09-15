@@ -21,6 +21,69 @@ export interface AuditionEmailData {
 }
 
 /**
+ * Retrieves the Google Workspace App Password from settings or environment
+ */
+export function getSmtpPassword(): string {
+  const settings = getNotificationSettings();
+  const raw =
+    settings.smtpPassword ||
+    process.env.SMTP_PASSWORD ||
+    process.env.GOOGLE_WORKSPACE_APP_PASSWORD ||
+    "";
+  return raw.replace(/\s+/g, ""); // Google displays app passwords in 4-character chunks with spaces
+}
+
+/**
+ * Verifies live connectivity and authentication with Google Workspace SMTP
+ */
+export async function verifySmtpConnection(customConfig?: {
+  host?: string;
+  port?: number;
+  user?: string;
+  pass?: string;
+}): Promise<{ success: boolean; message: string; error?: string }> {
+  const settings = getNotificationSettings();
+  const host = customConfig?.host || settings.smtpHost || process.env.SMTP_HOST || "smtp.gmail.com";
+  const port = Number(customConfig?.port || settings.smtpPort || process.env.SMTP_PORT || 465);
+  const user = customConfig?.user || settings.smtpUser || process.env.SMTP_USER || "contacto@dvperformingarts.com";
+  const pass = customConfig?.pass !== undefined ? customConfig.pass.replace(/\s+/g, "") : getSmtpPassword();
+
+  if (!pass || !pass.trim()) {
+    return {
+      success: false,
+      message: "No se ha ingresado una contraseña de aplicación para Google Workspace.",
+      error: "MISSING_PASSWORD",
+    };
+  }
+
+  const transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: {
+      user,
+      pass,
+    },
+  });
+
+  try {
+    await transporter.verify();
+    return {
+      success: true,
+      message: `¡Conexión exitosa con Google Workspace (${user})! El servidor SMTP está listo para enviar correos corporativos en vivo.`,
+    };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error("[SMTP VERIFY ERROR]", errorMsg);
+    return {
+      success: false,
+      message: "Google Workspace rechazó la autenticación. Verifica que la contraseña de aplicación de 16 caracteres sea correcta y que la verificación en dos pasos esté activa.",
+      error: errorMsg,
+    };
+  }
+}
+
+/**
  * Creates Nodemailer Transporter using Google Workspace SMTP or environment variables
  */
 export function getEmailTransporter() {
@@ -30,7 +93,7 @@ export function getEmailTransporter() {
   const port = Number(settings.smtpPort || process.env.SMTP_PORT || 465);
   const secure = port === 465;
   const user = settings.smtpUser || process.env.SMTP_USER || "contacto@dvperformingarts.com";
-  const pass = process.env.SMTP_PASSWORD || process.env.GOOGLE_WORKSPACE_APP_PASSWORD || "";
+  const pass = getSmtpPassword();
 
   return nodemailer.createTransport({
     host,
@@ -59,7 +122,7 @@ export async function sendAuditionRegistrationEmail(data: AuditionEmailData): Pr
   const fromAddress = settings.smtpFrom || process.env.SMTP_FROM || '"DV Performing Arts" <contacto@dvperformingarts.com>';
 
   // Check if SMTP password is provided, otherwise log simulated delivery in development
-  const pass = process.env.SMTP_PASSWORD || process.env.GOOGLE_WORKSPACE_APP_PASSWORD;
+  const pass = getSmtpPassword();
   if (!pass) {
     console.log(`[EMAIL SIMULATED - NO SMTP_PASSWORD] Sending audition confirmation to: ${data.email}`);
     return { success: true, messageId: `sim_mail_${Date.now()}`, simulated: true };
@@ -260,7 +323,7 @@ export async function sendAuditionApprovalEmail(data: AuditionEmailData): Promis
   const auditionNum = data.auditionNumber || data.folio.replace(/\D/g, "").slice(-4) || "585";
   const fromAddress = settings.smtpFrom || process.env.SMTP_FROM || '"DV Performing Arts" <contacto@dvperformingarts.com>';
 
-  const pass = process.env.SMTP_PASSWORD || process.env.GOOGLE_WORKSPACE_APP_PASSWORD;
+  const pass = getSmtpPassword();
   if (!pass) {
     console.log(`[EMAIL SIMULATED - NO SMTP_PASSWORD] Sending audition approval to: ${data.email}`);
     return { success: true, messageId: `sim_appr_${Date.now()}`, simulated: true };
@@ -454,7 +517,7 @@ export async function sendAuditionMorningReminderEmail(data: AuditionEmailData):
 
   const auditionNum = data.auditionNumber || data.folio.replace(/\D/g, "").slice(-4) || "585";
   const fromAddress = settings.smtpFrom || process.env.SMTP_FROM || '"DV Performing Arts" <contacto@dvperformingarts.com>';
-  const pass = process.env.SMTP_PASSWORD || process.env.GOOGLE_WORKSPACE_APP_PASSWORD;
+  const pass = getSmtpPassword();
 
   if (!pass) {
     console.log(`[EMAIL SIMULATED - NO SMTP_PASSWORD] Sending morning reminder to: ${data.email}`);
@@ -545,7 +608,7 @@ export async function sendSecondChanceVideoEmail(
 
   const auditionNum = data.auditionNumber || data.folio.replace(/\D/g, "").slice(-4) || "585";
   const fromAddress = settings.smtpFrom || process.env.SMTP_FROM || '"DV Performing Arts" <contacto@dvperformingarts.com>';
-  const pass = process.env.SMTP_PASSWORD || process.env.GOOGLE_WORKSPACE_APP_PASSWORD;
+  const pass = getSmtpPassword();
 
   if (!pass) {
     console.log(`[EMAIL SIMULATED - NO SMTP_PASSWORD] Sending second chance email to: ${data.email}`);
@@ -636,7 +699,7 @@ export async function sendJurorInvitationEmail(data: {
   if (!settings.emailNotificationsEnabled) return { success: true, simulated: true };
 
   const fromAddress = settings.smtpFrom || process.env.SMTP_FROM || '"DV Performing Arts" <contacto@dvperformingarts.com>';
-  const pass = process.env.SMTP_PASSWORD || process.env.GOOGLE_WORKSPACE_APP_PASSWORD;
+  const pass = getSmtpPassword();
 
   if (!pass) {
     console.log(`[EMAIL SIMULATED - NO SMTP_PASSWORD] Sending juror invite to: ${data.email}`);
@@ -719,7 +782,7 @@ export async function sendNewProductionBroadcastEmail(data: {
   if (!settings.emailNotificationsEnabled) return { success: true, simulated: true };
 
   const fromAddress = settings.smtpFrom || process.env.SMTP_FROM || '"DV Performing Arts" <contacto@dvperformingarts.com>';
-  const pass = process.env.SMTP_PASSWORD || process.env.GOOGLE_WORKSPACE_APP_PASSWORD;
+  const pass = getSmtpPassword();
 
   if (!pass) {
     console.log(`[EMAIL SIMULATED - NO SMTP_PASSWORD] Broadcasting new show to: ${data.email}`);

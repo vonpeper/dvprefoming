@@ -31,6 +31,11 @@ export default function MessagingDashboardPage() {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSendResult, setEmailSendResult] = useState<{ success: boolean; messageId?: string; error?: string } | null>(null);
 
+  // SMTP Verification
+  const [verifyingSmtp, setVerifyingSmtp] = useState(false);
+  const [showSmtpPassword, setShowSmtpPassword] = useState(false);
+  const [smtpVerifyResult, setSmtpVerifyResult] = useState<{ success: boolean; message: string; error?: string } | null>(null);
+
   // Settings & Templates State
   const [settings, setSettings] = useState<NotificationSettings | null>(null);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -193,6 +198,40 @@ export default function MessagingDashboardPage() {
       });
     } finally {
       setSendingEmail(false);
+    }
+  };
+
+  const handleVerifySmtp = async () => {
+    if (!settings) return;
+    setVerifyingSmtp(true);
+    setSmtpVerifyResult(null);
+
+    try {
+      const res = await fetch("/api/messaging/email/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          smtpHost: settings.smtpHost,
+          smtpPort: settings.smtpPort,
+          smtpUser: settings.smtpUser,
+          smtpPassword: settings.smtpPassword,
+        }),
+      });
+
+      const data = await res.json();
+      setSmtpVerifyResult({
+        success: Boolean(data?.success),
+        message: data?.message || (data?.success ? "Conexión exitosa con Google Workspace." : "Error al conectar."),
+        error: data?.error,
+      });
+    } catch (err: unknown) {
+      setSmtpVerifyResult({
+        success: false,
+        message: "Error de red al conectar con el servidor SMTP.",
+        error: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setVerifyingSmtp(false);
     }
   };
 
@@ -567,16 +606,75 @@ export default function MessagingDashboardPage() {
               />
             </div>
 
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-slate-300">
+                Contraseña de Aplicación de Google Workspace (16 caracteres)
+              </label>
+              <div className="relative flex items-center">
+                <input
+                  type={showSmtpPassword ? "text" : "password"}
+                  value={settings.smtpPassword || ""}
+                  onChange={(e) => setSettings({ ...settings, smtpPassword: e.target.value })}
+                  placeholder="ej. abcd efgh ijkl mnop"
+                  className="w-full bg-[#0D1117] border border-[#30363D] rounded-xl pl-3.5 pr-20 py-2 text-xs text-white focus:outline-none font-mono tracking-wider"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSmtpPassword(!showSmtpPassword)}
+                  className="absolute right-2 px-2 py-1 text-[11px] font-semibold text-slate-400 hover:text-slate-200 bg-[#21262D] rounded-lg cursor-pointer"
+                >
+                  {showSmtpPassword ? "Ocultar" : "Mostrar"}
+                </button>
+              </div>
+              <span className="text-[10px] text-slate-400">
+                Clave generada en Google Workspace con 2FA activo (Seguridad &gt; Contraseñas de aplicaciones). Los espacios se eliminan automáticamente.
+              </span>
+            </div>
+
+            {/* Test Connection Button */}
+            <div className="flex flex-col gap-3 pt-1">
+              <button
+                type="button"
+                onClick={handleVerifySmtp}
+                disabled={verifyingSmtp}
+                className="py-2.5 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow"
+              >
+                <span>{verifyingSmtp ? "🔄" : "⚡"}</span>
+                <span>{verifyingSmtp ? "Probando conexión con Google..." : "Probar Conexión con Google Workspace"}</span>
+              </button>
+
+              {smtpVerifyResult && (
+                <div
+                  className={`p-3 rounded-xl border text-xs font-mono flex flex-col gap-1 ${
+                    smtpVerifyResult.success
+                      ? "bg-emerald-950/40 border-emerald-500 text-emerald-300"
+                      : "bg-rose-950/40 border-rose-500 text-rose-300"
+                  }`}
+                >
+                  <span className="font-bold flex items-center gap-1.5">
+                    <span>{smtpVerifyResult.success ? "✓" : "✕"}</span>
+                    <span>{smtpVerifyResult.message}</span>
+                  </span>
+                  {smtpVerifyResult.error && (
+                    <span className="text-[10px] text-rose-300/80 break-all">
+                      Detalle técnico: {smtpVerifyResult.error}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Quick Tutorial Callout */}
             <div className="p-4 bg-[#0D1117] border border-purple-500/30 rounded-xl flex flex-col gap-2">
               <span className="text-xs font-bold text-purple-300 flex items-center gap-1.5">
-                <span>💡</span> ¿Cómo conectar tu cuenta de Google Workspace?
+                <span>💡</span> ¿Cómo obtener tu Contraseña de Aplicación?
               </span>
-              <ol className="text-[11px] text-slate-300 list-decimal list-inside flex flex-col gap-1">
-                <li>Ve a <strong>myaccount.google.com/security</strong> con tu cuenta institucional.</li>
-                <li>Activa la <strong>Verificación en dos pasos (2FA)</strong>.</li>
-                <li>Busca <strong>"Contraseñas de aplicaciones"</strong> y crea una llamada <code className="text-purple-300">DV Platform</code>.</li>
-                <li>Copia la clave de 16 caracteres y asígnala en la variable de entorno <code className="text-purple-300">SMTP_PASS</code> en el servidor.</li>
+              <ol className="text-[11px] text-slate-300 list-decimal list-inside flex flex-col gap-1.5 leading-relaxed">
+                <li>Inicia sesión en <strong className="text-white">myaccount.google.com</strong> con tu cuenta institucional (<code className="text-purple-300">contacto@dvperformingarts.com</code>).</li>
+                <li>Ve a la pestaña <strong className="text-white">Seguridad</strong> y asegúrate de tener activada la <strong className="text-emerald-400">Verificación en dos pasos (2FA)</strong>.</li>
+                <li>En la barra de búsqueda de Google Account escribe <strong className="text-white">"Contraseñas de aplicaciones"</strong> o accede directo al enlace.</li>
+                <li>Crea una nueva contraseña de aplicación llamada <code className="text-purple-300">DV Platform</code>.</li>
+                <li>Pega el código de 16 letras resultante aquí arriba, haz clic en <strong className="text-purple-300">"Probar Conexión"</strong> y luego en <strong className="text-purple-300">"Guardar Cambios"</strong>.</li>
               </ol>
             </div>
           </div>

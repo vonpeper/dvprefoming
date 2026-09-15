@@ -270,6 +270,7 @@ export interface NotificationSettings {
   smtpHost?: string;
   smtpPort?: number;
   smtpUser?: string;
+  smtpPassword?: string;
   smtpFrom?: string;
   googleDriveMaterialUrl: string;
   directorSignatureName: string;
@@ -290,6 +291,7 @@ export function getNotificationSettings(): NotificationSettings {
     smtpHost: "smtp.gmail.com",
     smtpPort: 465,
     smtpUser: "contacto@dvperformingarts.com",
+    smtpPassword: "",
     smtpFrom: '"DV Performing Arts" <contacto@dvperformingarts.com>',
     googleDriveMaterialUrl: "https://drive.google.com/drive/folders/1qadnY5yaF1ZXprIXP5NY1cmAJkvQU08C?usp=drive_link",
     directorSignatureName: "Diego Vieyra",
