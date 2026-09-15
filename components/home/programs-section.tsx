@@ -132,6 +132,11 @@ export default function ProgramsSection({ initialPrograms }: ProgramsSectionProp
                         <span className="px-3 py-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/40 text-emerald-300 font-bold text-xs font-mono rounded-full">
                           ${price.toLocaleString("es-MX")} MXN / mes
                         </span>
+                        {program.registrationFee ? (
+                          <span className="hidden sm:inline-block px-2.5 py-1 bg-white/5 border border-white/10 text-zinc-400 text-[10px] font-mono rounded-full">
+                            Inscripción: ${program.registrationFee.toLocaleString("es-MX")}
+                          </span>
+                        ) : null}
                         <EditorialLabel status={program.status} className="scale-90" />
                       </div>
                     </div>
@@ -157,15 +162,28 @@ export default function ProgramsSection({ initialPrograms }: ProgramsSectionProp
                     )}
 
                     {/* Schedules & Age Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-[#20202A] pt-4 font-mono text-[11px] text-zinc-300">
+                    <div className={`grid grid-cols-1 ${program.days && program.hours ? "sm:grid-cols-3" : "sm:grid-cols-2"} gap-3 border-t border-[#20202A] pt-4 font-mono text-[11px] text-zinc-300`}>
                       <div>
                         <span className="block text-rose-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">RANGO DE EDAD</span>
-                        <span className="font-medium text-white">{program.ageGroup}</span>
+                        <span className="font-medium text-white">{program.ageGroup || "Todas las edades"}</span>
                       </div>
-                      <div>
-                        <span className="block text-rose-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">HORARIOS</span>
-                        <span className="font-medium text-white">{program.scheduleDescription}</span>
-                      </div>
+                      {program.days && program.hours ? (
+                        <>
+                          <div>
+                            <span className="block text-rose-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">DÍAS</span>
+                            <span className="font-medium text-white">{program.days}</span>
+                          </div>
+                          <div>
+                            <span className="block text-rose-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">HORARIOS</span>
+                            <span className="font-medium text-white">{program.hours}</span>
+                          </div>
+                        </>
+                      ) : (
+                        <div>
+                          <span className="block text-rose-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">DÍAS Y HORARIOS</span>
+                          <span className="font-medium text-white">{program.scheduleDescription || program.days || program.hours || "Por definir"}</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Action Bar (Stripe Checkout + WhatsApp) */}

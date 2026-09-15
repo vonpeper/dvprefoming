@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { WebsiteContent } from "@/lib/storage";
-import { Teacher } from "@/types/mock";
+import { Teacher, Program } from "@/types/mock";
 import ImageUploader from "@/components/ui/image-uploader";
 
 export default function WebsiteContentEditorPage() {
@@ -42,6 +42,57 @@ export default function WebsiteContentEditorPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleAddProgram = () => {
+    if (!content) return;
+    const newId = `prog_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const newProgram: Program = {
+      id: newId,
+      slug: `programa-${Date.now()}`,
+      name: "Nuevo Programa Académico",
+      category: "Teatro Musical",
+      description: "Entrenamiento integral y desarrollo artístico en artes escénicas.",
+      ageGroup: "Infantil, Juvenil y Adultos",
+      days: "Lunes a Viernes",
+      hours: "16:00 - 20:00",
+      scheduleDescription: "Lunes a Viernes 16:00 - 20:00",
+      imageUrl: "",
+      monthlyPrice: 2400,
+      registrationFee: 500,
+      features: [
+        "Clases presenciales especializadas",
+        "Participación en montajes escénicos",
+        "Seguimiento personalizado continuo",
+      ],
+      status: "PUBLISHED",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    setContent({
+      ...content,
+      programs: [newProgram, ...content.programs],
+    });
+  };
+
+  const handleDeleteProgram = (idx: number) => {
+    if (!content) return;
+    const prog = content.programs[idx];
+    if (window.confirm(`¿Estás seguro de eliminar el programa "${prog.name || "este programa"}" de la oferta académica?`)) {
+      const updated = content.programs.filter((_, i) => i !== idx);
+      setContent({ ...content, programs: updated });
+    }
+  };
+
+  const handleMoveProgram = (idx: number, direction: "up" | "down") => {
+    if (!content) return;
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= content.programs.length) return;
+    const updated = [...content.programs];
+    const temp = updated[idx];
+    updated[idx] = updated[targetIdx];
+    updated[targetIdx] = temp;
+    setContent({ ...content, programs: updated });
   };
 
   const handleAddTeacher = () => {
@@ -330,62 +381,479 @@ export default function WebsiteContentEditorPage() {
         {/* ================= PROGRAMS TAB ================= */}
         {activeTab === "programs" && (
           <div className="flex flex-col gap-6">
-            <h2 className="text-lg font-bold text-white border-b border-[#30363D] pb-3">
-              Oferta Académica & Talleres ({content.programs.length})
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {content.programs.map((prog, idx) => (
-                <div key={prog.id} className="p-5 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col gap-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-mono text-xs text-purple-400 font-bold uppercase">{prog.id}</span>
-                    <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded font-mono">{prog.category || "Taller"}</span>
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold text-slate-300">Nombre del Programa</label>
-                    <input
-                      type="text"
-                      value={prog.name}
-                      onChange={(e) => {
-                        const updated = [...content.programs];
-                        updated[idx].name = e.target.value;
-                        setContent({ ...content, programs: updated });
-                      }}
-                      className="bg-[#161B22] border border-[#30363D] rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none font-bold"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold text-slate-300">Descripción</label>
-                    <textarea
-                      rows={3}
-                      value={prog.description}
-                      onChange={(e) => {
-                        const updated = [...content.programs];
-                        updated[idx].description = e.target.value;
-                        setContent({ ...content, programs: updated });
-                      }}
-                      className="bg-[#161B22] border border-[#30363D] rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none resize-none"
-                    />
-                  </div>
-
-                  {/* Reusable Image Uploader for Program */}
-                  <ImageUploader
-                    label="Póster / Portada del Taller"
-                    value={prog.imageUrl || ""}
-                    aspectRatio="16:9"
-                    recommendedSize="1200 × 675 px (o 800 × 450 px • 16:9)"
-                    description="Fotografía horizontal representativa de la clase (canto, danza o teatro integral)."
-                    onChange={(newUrl) => {
-                      const updated = [...content.programs];
-                      updated[idx].imageUrl = newUrl;
-                      setContent({ ...content, programs: updated });
-                    }}
-                  />
+            {/* Tab Header & Add Button */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#30363D] pb-3">
+              <div className="flex flex-col gap-0.5">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-white">
+                    Oferta Académica & Talleres
+                  </h2>
+                  <span className="bg-purple-950 text-purple-300 border border-purple-500/40 text-[11px] font-mono font-bold px-2 py-0.5 rounded-full">
+                    {content.programs.length} Programas
+                  </span>
                 </div>
-              ))}
+                <p className="text-xs text-slate-400">
+                  Edita la oferta académica: rango de edades, costo mensual e inscripción, días, horarios de clase, viñetas y póster oficial.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleAddProgram}
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-purple-950/50 transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>➕</span>
+                <span>Agregar Nuevo Programa</span>
+              </button>
             </div>
+
+            {/* Empty State */}
+            {content.programs.length === 0 ? (
+              <div className="p-12 bg-[#0D1117] border-2 border-dashed border-[#30363D] rounded-2xl flex flex-col items-center justify-center gap-4 text-center">
+                <span className="text-4xl">🎓</span>
+                <div className="flex flex-col gap-1">
+                  <h3 className="font-bold text-white text-sm">No hay programas académicos registrados</h3>
+                  <p className="text-xs text-slate-400">Comienza agregando el primer taller o programa de la academia.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddProgram}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>➕</span>
+                  <span>Agregar Primer Programa</span>
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {content.programs.map((prog, idx) => {
+                  const currentPrice = prog.monthlyPrice !== undefined ? prog.monthlyPrice : 2400;
+
+                  return (
+                    <div
+                      key={prog.id || idx}
+                      className="p-5 bg-[#0D1117] border border-[#30363D] hover:border-purple-500/40 rounded-2xl flex flex-col gap-5 shadow-sm transition-colors"
+                    >
+                      {/* Card Top Action Bar */}
+                      <div className="flex items-center justify-between pb-3 border-b border-[#30363D]/60">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="w-6 h-6 rounded-full bg-purple-950 text-purple-300 border border-purple-500/40 flex items-center justify-center font-mono font-bold text-[11px]">
+                            #{idx + 1}
+                          </span>
+                          <span className="font-bold text-white text-xs truncate max-w-[150px] sm:max-w-[190px]">
+                            {prog.name || "Nuevo Programa"}
+                          </span>
+                          <span className="text-[10px] bg-purple-950 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded font-mono font-bold">
+                            {prog.category || "Taller"}
+                          </span>
+                          <span className="text-[10px] bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded font-mono font-bold">
+                            ${currentPrice.toLocaleString("es-MX")} MXN/mes
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {/* Move Up */}
+                          <button
+                            type="button"
+                            onClick={() => handleMoveProgram(idx, "up")}
+                            disabled={idx === 0}
+                            title="Mover arriba en el orden de la web"
+                            className="p-1.5 bg-[#161B22] hover:bg-[#21262D] text-slate-400 hover:text-white border border-[#30363D] rounded-lg text-xs disabled:opacity-30 cursor-pointer"
+                          >
+                            ⬆️
+                          </button>
+                          {/* Move Down */}
+                          <button
+                            type="button"
+                            onClick={() => handleMoveProgram(idx, "down")}
+                            disabled={idx === content.programs.length - 1}
+                            title="Mover abajo en el orden de la web"
+                            className="p-1.5 bg-[#161B22] hover:bg-[#21262D] text-slate-400 hover:text-white border border-[#30363D] rounded-lg text-xs disabled:opacity-30 cursor-pointer"
+                          >
+                            ⬇️
+                          </button>
+                          {/* Delete Program */}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteProgram(idx)}
+                            title="Eliminar programa académico de la web"
+                            className="p-1.5 bg-red-950/40 hover:bg-red-900 text-red-300 border border-red-500/30 rounded-lg text-xs transition-colors cursor-pointer"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Main Program Fields */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="sm:col-span-2 flex flex-col gap-1">
+                          <label className="text-xs font-semibold text-slate-300">Nombre del Programa *</label>
+                          <input
+                            type="text"
+                            placeholder="Ej. Teatro Musical Integral"
+                            value={prog.name}
+                            onChange={(e) => {
+                              const updated = [...content.programs];
+                              updated[idx].name = e.target.value;
+                              setContent({ ...content, programs: updated });
+                            }}
+                            className="w-full bg-[#161B22] border border-[#30363D] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white font-bold focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-semibold text-slate-300">Categoría / Disciplina</label>
+                          <input
+                            type="text"
+                            placeholder="Ej. Teatro Musical"
+                            value={prog.category || ""}
+                            onChange={(e) => {
+                              const updated = [...content.programs];
+                              updated[idx].category = e.target.value;
+                              setContent({ ...content, programs: updated });
+                            }}
+                            className="w-full bg-[#161B22] border border-[#30363D] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-purple-300 font-mono focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs font-semibold text-slate-300">Descripción del Programa & Metodología</label>
+                        <textarea
+                          rows={3}
+                          placeholder="Describe el enfoque, entrenamiento y objetivos artísticos del taller..."
+                          value={prog.description}
+                          onChange={(e) => {
+                            const updated = [...content.programs];
+                            updated[idx].description = e.target.value;
+                            setContent({ ...content, programs: updated });
+                          }}
+                          className="bg-[#161B22] border border-[#30363D] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none resize-none leading-relaxed"
+                        />
+                      </div>
+
+                      {/* SECTION 1: RANGO DE EDADES & COSTOS */}
+                      <div className="bg-[#161B22]/70 p-4 rounded-xl border border-[#30363D] flex flex-col gap-3">
+                        <div className="text-[11px] font-mono uppercase tracking-wider font-bold text-rose-400 flex items-center justify-between">
+                          <span className="flex items-center gap-1.5">
+                            <span>🎯</span> Rango de Edades & Costos
+                          </span>
+                          <span className="text-[10px] text-emerald-400 font-mono">
+                            ${currentPrice.toLocaleString("es-MX")} MXN/mes
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          {/* Rango de Edades */}
+                          <div className="sm:col-span-1 flex flex-col gap-1.5">
+                            <label className="text-xs font-semibold text-slate-300">Rango de Edades *</label>
+                            <input
+                              type="text"
+                              placeholder="Ej. Infantil, Juvenil y Adultos"
+                              value={prog.ageGroup || ""}
+                              onChange={(e) => {
+                                const updated = [...content.programs];
+                                updated[idx].ageGroup = e.target.value;
+                                setContent({ ...content, programs: updated });
+                              }}
+                              className="bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-lg px-3 py-1.5 text-xs text-white font-medium focus:outline-none"
+                            />
+                            {/* Preset chips for age group */}
+                            <div className="flex flex-wrap gap-1">
+                              {[
+                                "Infantil (6 a 12 años)",
+                                "Juvenil (13 a 17)",
+                                "Adultos (18+)",
+                                "Todas las edades",
+                              ].map((preset) => (
+                                <button
+                                  key={preset}
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = [...content.programs];
+                                    updated[idx].ageGroup = preset;
+                                    setContent({ ...content, programs: updated });
+                                  }}
+                                  className="text-[9px] bg-[#21262D] hover:bg-purple-900/50 text-slate-300 hover:text-purple-200 px-1.5 py-0.5 rounded border border-[#30363D] transition-colors"
+                                >
+                                  + {preset}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Costo Mensual */}
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-semibold text-slate-300">Costo Mensual ($ MXN) *</label>
+                            <div className="relative">
+                              <span className="absolute left-2.5 top-1.5 text-xs text-slate-400 font-mono">$</span>
+                              <input
+                                type="number"
+                                min="0"
+                                step="50"
+                                placeholder="2400"
+                                value={prog.monthlyPrice !== undefined ? prog.monthlyPrice : ""}
+                                onChange={(e) => {
+                                  const updated = [...content.programs];
+                                  updated[idx].monthlyPrice = Number(e.target.value) || 0;
+                                  setContent({ ...content, programs: updated });
+                                }}
+                                className="w-full bg-[#0D1117] border border-[#30363D] focus:border-emerald-500 rounded-lg pl-6 pr-2.5 py-1.5 text-xs text-emerald-300 font-mono font-bold focus:outline-none"
+                              />
+                            </div>
+                            <span className="text-[10px] text-slate-500 font-mono">
+                              Colegiatura mensual
+                            </span>
+                          </div>
+
+                          {/* Cuota de Inscripción */}
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-semibold text-slate-300">Cuota Inscripción ($ MXN)</label>
+                            <div className="relative">
+                              <span className="absolute left-2.5 top-1.5 text-xs text-slate-400 font-mono">$</span>
+                              <input
+                                type="number"
+                                min="0"
+                                step="50"
+                                placeholder="500"
+                                value={prog.registrationFee !== undefined ? prog.registrationFee : ""}
+                                onChange={(e) => {
+                                  const updated = [...content.programs];
+                                  updated[idx].registrationFee = Number(e.target.value) || 0;
+                                  setContent({ ...content, programs: updated });
+                                }}
+                                className="w-full bg-[#0D1117] border border-[#30363D] focus:border-emerald-500 rounded-lg pl-6 pr-2.5 py-1.5 text-xs text-emerald-300 font-mono font-bold focus:outline-none"
+                              />
+                            </div>
+                            <span className="text-[10px] text-slate-500 font-mono">
+                              Inscripción única de ciclo
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* SECTION 2: DÍAS Y HORARIOS */}
+                      <div className="bg-[#161B22]/70 p-4 rounded-xl border border-[#30363D] flex flex-col gap-3">
+                        <div className="text-[11px] font-mono uppercase tracking-wider font-bold text-rose-400 flex items-center justify-between">
+                          <span className="flex items-center gap-1.5">
+                            <span>🗓️</span> Días & Horarios de Clases
+                          </span>
+                          <span className="text-[10px] text-zinc-400 font-mono truncate max-w-[200px]">
+                            {prog.scheduleDescription || "Por definir"}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {/* Días */}
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-semibold text-slate-300">Días de Clase *</label>
+                            <input
+                              type="text"
+                              placeholder="Ej. Lunes a Viernes"
+                              value={prog.days || ""}
+                              onChange={(e) => {
+                                const updated = [...content.programs];
+                                const newDays = e.target.value;
+                                updated[idx].days = newDays;
+                                if (updated[idx].hours) {
+                                  updated[idx].scheduleDescription = `${newDays} ${updated[idx].hours}`;
+                                } else if (!updated[idx].scheduleDescription) {
+                                  updated[idx].scheduleDescription = newDays;
+                                }
+                                setContent({ ...content, programs: updated });
+                              }}
+                              className="bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-lg px-3 py-1.5 text-xs text-white font-medium focus:outline-none"
+                            />
+                            {/* Preset chips for days */}
+                            <div className="flex flex-wrap gap-1">
+                              {[
+                                "Lunes a Viernes",
+                                "Lunes a Jueves",
+                                "Lunes, Miércoles y Viernes",
+                                "Martes y Jueves",
+                                "Sábados",
+                              ].map((preset) => (
+                                <button
+                                  key={preset}
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = [...content.programs];
+                                    updated[idx].days = preset;
+                                    if (updated[idx].hours) {
+                                      updated[idx].scheduleDescription = `${preset} ${updated[idx].hours}`;
+                                    } else if (!updated[idx].scheduleDescription) {
+                                      updated[idx].scheduleDescription = preset;
+                                    }
+                                    setContent({ ...content, programs: updated });
+                                  }}
+                                  className="text-[9px] bg-[#21262D] hover:bg-purple-900/50 text-slate-300 hover:text-purple-200 px-1.5 py-0.5 rounded border border-[#30363D] transition-colors"
+                                >
+                                  + {preset}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Horarios */}
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-semibold text-slate-300">Horario de Clase *</label>
+                            <input
+                              type="text"
+                              placeholder="Ej. 16:00 - 20:00"
+                              value={prog.hours || ""}
+                              onChange={(e) => {
+                                const updated = [...content.programs];
+                                const newHours = e.target.value;
+                                updated[idx].hours = newHours;
+                                if (updated[idx].days) {
+                                  updated[idx].scheduleDescription = `${updated[idx].days} ${newHours}`;
+                                } else if (!updated[idx].scheduleDescription) {
+                                  updated[idx].scheduleDescription = newHours;
+                                }
+                                setContent({ ...content, programs: updated });
+                              }}
+                              className="bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-lg px-3 py-1.5 text-xs text-white font-medium focus:outline-none"
+                            />
+                            {/* Preset chips for hours */}
+                            <div className="flex flex-wrap gap-1">
+                              {[
+                                "16:00 - 20:00",
+                                "16:00 - 19:30",
+                                "16:30 - 19:30",
+                                "17:00 - 20:00",
+                                "10:00 - 15:00",
+                              ].map((preset) => (
+                                <button
+                                  key={preset}
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = [...content.programs];
+                                    updated[idx].hours = preset;
+                                    if (updated[idx].days) {
+                                      updated[idx].scheduleDescription = `${updated[idx].days} ${preset}`;
+                                    } else if (!updated[idx].scheduleDescription) {
+                                      updated[idx].scheduleDescription = preset;
+                                    }
+                                    setContent({ ...content, programs: updated });
+                                  }}
+                                  className="text-[9px] bg-[#21262D] hover:bg-purple-900/50 text-slate-300 hover:text-purple-200 px-1.5 py-0.5 rounded border border-[#30363D] transition-colors"
+                                >
+                                  + {preset}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Schedule Description (Full Text) */}
+                        <div className="flex flex-col gap-1 pt-2 border-t border-[#30363D]/60">
+                          <div className="flex justify-between items-center">
+                            <label className="text-xs font-semibold text-slate-300">
+                              Texto de Días y Horarios Completo (Visible en web)
+                            </label>
+                            <span className="text-[10px] text-purple-400 font-mono">
+                              Sincronizado automáticamente
+                            </span>
+                          </div>
+                          <input
+                            type="text"
+                            placeholder="Ej. Lunes a Viernes 16:00 - 20:00 / Sábados 10:00 - 15:00"
+                            value={prog.scheduleDescription || ""}
+                            onChange={(e) => {
+                              const updated = [...content.programs];
+                              updated[idx].scheduleDescription = e.target.value;
+                              setContent({ ...content, programs: updated });
+                            }}
+                            className="bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-lg px-3 py-1.5 text-xs text-amber-300 font-mono focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      {/* SECTION 3: BENEFICIOS & VIÑETAS */}
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-slate-300">
+                          Beneficios & Viñetas Destacadas (separadas por comas)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ej. Clases de Canto y Danza, Montajes de Temporada, Masterclasses"
+                          value={Array.isArray(prog.features) ? prog.features.join(", ") : (prog.features || "")}
+                          onChange={(e) => {
+                            const updated = [...content.programs];
+                            const raw = e.target.value;
+                            updated[idx].features = raw.split(",").map((s) => s.trim()).filter(Boolean);
+                            setContent({ ...content, programs: updated });
+                          }}
+                          className="w-full bg-[#161B22] border border-[#30363D] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-emerald-300 font-mono focus:outline-none"
+                        />
+                        {Array.isArray(prog.features) && prog.features.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {prog.features.map((feat, fIdx) => (
+                              <span
+                                key={fIdx}
+                                className="bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono px-2 py-0.5 rounded flex items-center gap-1"
+                              >
+                                <span>✓</span> {feat}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* SECTION 4: ESTADO & PÓSTER */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-semibold text-slate-300">Estado de Publicación</label>
+                          <select
+                            value={prog.status || "PUBLISHED"}
+                            onChange={(e) => {
+                              const updated = [...content.programs];
+                              updated[idx].status = e.target.value as any;
+                              setContent({ ...content, programs: updated });
+                            }}
+                            className="bg-[#161B22] border border-[#30363D] focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer"
+                          >
+                            <option value="PUBLISHED">🟢 Publicado en la Web</option>
+                            <option value="DRAFT">⚪ Borrador (Oculto)</option>
+                          </select>
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <ImageUploader
+                            label="Póster / Portada del Taller"
+                            value={prog.imageUrl || ""}
+                            aspectRatio="16:9"
+                            recommendedSize="1200 × 675 px (o 800 × 450 px • 16:9)"
+                            description="Fotografía horizontal representativa de la clase (canto, danza o teatro integral)."
+                            onChange={(newUrl) => {
+                              const updated = [...content.programs];
+                              updated[idx].imageUrl = newUrl;
+                              setContent({ ...content, programs: updated });
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Bottom Add Program Card */}
+                <button
+                  type="button"
+                  onClick={handleAddProgram}
+                  className="p-8 border-2 border-dashed border-[#30363D] hover:border-purple-500/60 rounded-2xl bg-[#0D1117]/50 hover:bg-purple-950/10 text-slate-400 hover:text-purple-300 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer group min-h-[220px]"
+                >
+                  <span className="text-3xl group-hover:scale-110 transition-transform">➕</span>
+                  <span className="font-bold text-xs text-white group-hover:text-purple-300">
+                    Agregar Otro Programa a la Oferta Académica
+                  </span>
+                  <span className="text-[11px] text-slate-500 text-center max-w-xs">
+                    Crea una nueva tarjeta de taller con edades, costos, días, horarios y afiche oficial
+                  </span>
+                </button>
+              </div>
+            )}
           </div>
         )}
 

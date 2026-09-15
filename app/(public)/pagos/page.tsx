@@ -77,16 +77,35 @@ export default function PaymentsPortalPage() {
                     {prog.name}
                   </h3>
 
-                  <div className="flex items-baseline gap-2 pt-1 border-b border-[#20202A] pb-4">
-                    <span className="text-3xl sm:text-4xl font-black text-white font-display">
-                      ${price.toLocaleString("es-MX")}
-                    </span>
-                    <span className="text-xs text-zinc-400 font-mono">MXN / mes</span>
+                  <div className="flex flex-wrap items-baseline justify-between gap-2 pt-1 border-b border-[#20202A] pb-4">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl sm:text-4xl font-black text-white font-display">
+                        ${price.toLocaleString("es-MX")}
+                      </span>
+                      <span className="text-xs text-zinc-400 font-mono">MXN / mes</span>
+                    </div>
+                    {prog.registrationFee ? (
+                      <span className="text-[11px] text-zinc-400 font-mono bg-white/5 border border-white/10 px-2 py-0.5 rounded">
+                        Inscripción: ${prog.registrationFee.toLocaleString("es-MX")} MXN
+                      </span>
+                    ) : null}
                   </div>
 
                   <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
                     {prog.description}
                   </p>
+
+                  {/* Schedule & Days Info */}
+                  {(prog.days || prog.hours || prog.scheduleDescription) && (
+                    <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#14141D] border border-[#20202E] text-xs font-mono text-zinc-300">
+                      <span className="text-rose-400">🗓️</span>
+                      <span>
+                        {prog.days && prog.hours
+                          ? `${prog.days} • ${prog.hours}`
+                          : prog.scheduleDescription || prog.days || prog.hours}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Features */}
                   {prog.features && (

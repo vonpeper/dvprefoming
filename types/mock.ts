@@ -13,6 +13,8 @@ export interface Program {
   description: string;
   ageGroup: string; // e.g. "Niños", "Jóvenes", "Adultos"
   scheduleDescription: string; // e.g. "Lunes y Miércoles 17:00 - 19:00"
+  days?: string; // e.g. "Lunes a Viernes" o "Martes y Jueves"
+  hours?: string; // e.g. "16:00 - 20:00" o "17:00 - 19:30"
   imageUrl?: string;
   monthlyPrice?: number; // Mensualidad en MXN (ej. 2400)
   registrationFee?: number; // Cuota de inscripción
