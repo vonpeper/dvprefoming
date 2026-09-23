@@ -10,7 +10,7 @@ export default function WebsiteContentEditorPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
-  const [activeTab, setActiveTab] = useState<"hero" | "manifesto" | "programs" | "teachers" | "productions" | "contact" | "footer">("hero");
+  const [activeTab, setActiveTab] = useState<"hero" | "manifesto" | "showreel" | "programs" | "teachers" | "productions" | "contact" | "footer">("hero");
 
   useEffect(() => {
     fetch("/api/pages")
@@ -147,6 +147,7 @@ export default function WebsiteContentEditorPage() {
   const tabs = [
     { id: "hero", label: "🌟 Hero & Portada" },
     { id: "manifesto", label: "📜 Manifiesto & Misión" },
+    { id: "showreel", label: "🎬 Video / Experiencia Escénica" },
     { id: "programs", label: "🎓 Programas & Clases" },
     { id: "teachers", label: "👨‍🏫 Planta Docente" },
     { id: "productions", label: "🎭 Cartelera & Obras" },
@@ -212,6 +213,9 @@ export default function WebsiteContentEditorPage() {
           </span>
           <span className="bg-[#0D1117] border border-[#30363D] px-2.5 py-1 rounded text-slate-300">
             <strong className="text-purple-400">Manifiesto:</strong> 800×800 px (1:1)
+          </span>
+          <span className="bg-[#0D1117] border border-[#30363D] px-2.5 py-1 rounded text-slate-300">
+            <strong className="text-purple-400">Video Portada:</strong> 1200×675 px (16:9)
           </span>
           <span className="bg-[#0D1117] border border-[#30363D] px-2.5 py-1 rounded text-slate-300">
             <strong className="text-purple-400">Talleres:</strong> 1200×675 px (16:9)
@@ -375,6 +379,192 @@ export default function WebsiteContentEditorPage() {
                 setContent({ ...content, manifesto: { ...content.manifesto, image: newUrl } })
               }
             />
+          </div>
+        )}
+
+        {/* ================= SHOWREEL / VIDEO TAB ================= */}
+        {activeTab === "showreel" && (
+          <div className="flex flex-col gap-6 max-w-3xl">
+            <div className="border-b border-[#30363D] pb-3">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <span>🎬</span> Sección Registro Audiovisual &bull; Experiencia Escénica
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Configura el video interactivo (Showreel) y la portada que se muestra en la sección 04 de la página principal.
+              </p>
+            </div>
+
+            {/* Video URL */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-slate-300">
+                Enlace del Video (YouTube, Vimeo o URL directa MP4/WebM) *
+              </label>
+              <input
+                type="text"
+                placeholder="https://www.youtube.com/watch?v=... o https://youtu.be/... o enlace .mp4"
+                value={content.showreel?.videoUrl || ""}
+                onChange={(e) =>
+                  setContent({
+                    ...content,
+                    showreel: {
+                      ...(content.showreel || {}),
+                      videoUrl: e.target.value,
+                    },
+                  })
+                }
+                className="bg-[#0D1117] border border-[#30363D] rounded-lg px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none font-mono"
+              />
+              <span className="text-[11px] text-slate-400">
+                💡 Soporta enlaces normales de YouTube (ej. <code className="text-purple-300">https://youtube.com/watch?v=xyz</code>), enlaces cortos (<code className="text-purple-300">https://youtu.be/xyz</code>), Vimeo o archivos de video directos (<code className="text-purple-300">.mp4</code>).
+              </span>
+            </div>
+
+            {/* Poster / Thumbnail Image Uploader */}
+            <ImageUploader
+              label="Foto de Portada / Miniatura del Video (Poster 16:9)"
+              value={content.showreel?.posterImage || "/images/productions/galeria-show.jpg"}
+              aspectRatio="16:9"
+              recommendedSize="1200 × 675 px (o 1920 × 1080 px • 16:9 Horizontal)"
+              description="Fotografía de portada para el reproductor interactivo antes de que el usuario haga clic para reproducir."
+              onChange={(newUrl) =>
+                setContent({
+                  ...content,
+                  showreel: {
+                    ...(content.showreel || {}),
+                    posterImage: newUrl,
+                  },
+                })
+              }
+            />
+
+            {/* Section Heading Titles */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300">Título Principal</label>
+                <input
+                  type="text"
+                  value={content.showreel?.title ?? "Experiencia Escénica"}
+                  onChange={(e) =>
+                    setContent({
+                      ...content,
+                      showreel: {
+                        ...(content.showreel || {}),
+                        title: e.target.value,
+                      },
+                    })
+                  }
+                  className="bg-[#0D1117] border border-[#30363D] rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none font-bold"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300">Etiqueta Superior (Tag)</label>
+                <input
+                  type="text"
+                  value={content.showreel?.tag ?? "04 • REGISTRO AUDIOVISUAL"}
+                  onChange={(e) =>
+                    setContent({
+                      ...content,
+                      showreel: {
+                        ...(content.showreel || {}),
+                        tag: e.target.value,
+                      },
+                    })
+                  }
+                  className="bg-[#0D1117] border border-[#30363D] rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300">Subtítulo sobre la Portada (Badge)</label>
+                <input
+                  type="text"
+                  value={content.showreel?.subtitle ?? "SHOWREEL OFICIAL"}
+                  onChange={(e) =>
+                    setContent({
+                      ...content,
+                      showreel: {
+                        ...(content.showreel || {}),
+                        subtitle: e.target.value,
+                      },
+                    })
+                  }
+                  className="bg-[#0D1117] border border-[#30363D] rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none uppercase font-mono"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300">Descripción de Ayuda</label>
+                <input
+                  type="text"
+                  value={content.showreel?.description ?? "REPRODUCTOR DE VÍDEO INTERACTIVO - CLIC PARA REPRODUCIR"}
+                  onChange={(e) =>
+                    setContent({
+                      ...content,
+                      showreel: {
+                        ...(content.showreel || {}),
+                        description: e.target.value,
+                      },
+                    })
+                  }
+                  className="bg-[#0D1117] border border-[#30363D] rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Live Video Preview Box */}
+            <div className="p-4 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <span>👁️</span> Vista Previa del Video:
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono">16:9 Aspect Ratio</span>
+              </div>
+              <div className="w-full aspect-video rounded-lg overflow-hidden border border-[#30363D] bg-black">
+                {(() => {
+                  const url = content.showreel?.videoUrl?.trim();
+                  if (!url) {
+                    return (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 text-xs">
+                        <span>Sin video asignado. Pega un enlace arriba.</span>
+                      </div>
+                    );
+                  }
+                  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/i);
+                  if (ytMatch && ytMatch[1]) {
+                    return (
+                      <iframe
+                        src={`https://www.youtube-nocookie.com/embed/${ytMatch[1]}`}
+                        title="Preview"
+                        className="w-full h-full border-0"
+                        allowFullScreen
+                      />
+                    );
+                  }
+                  const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+                  if (vimeoMatch && vimeoMatch[1]) {
+                    return (
+                      <iframe
+                        src={`https://player.vimeo.com/video/${vimeoMatch[1]}`}
+                        title="Preview"
+                        className="w-full h-full border-0"
+                        allowFullScreen
+                      />
+                    );
+                  }
+                  if (url.match(/\.(mp4|webm|mov|ogg)($|\?)/i) || url.startsWith("/images/uploads/") || url.startsWith("/videos/")) {
+                    return (
+                      <video src={url} controls className="w-full h-full object-contain" />
+                    );
+                  }
+                  return (
+                    <iframe src={url} title="Preview" className="w-full h-full border-0" allowFullScreen />
+                  );
+                })()}
+              </div>
+            </div>
           </div>
         )}
 

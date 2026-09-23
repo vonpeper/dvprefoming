@@ -440,6 +440,14 @@ export interface WebsiteContent {
     description: string;
     image: string;
   };
+  showreel?: {
+    tag?: string;
+    title?: string;
+    subtitle?: string;
+    description?: string;
+    posterImage?: string;
+    videoUrl?: string;
+  };
   contact: {
     address: string;
     phone: string;
@@ -474,6 +482,15 @@ export function getStoredWebsiteContent(): WebsiteContent {
     },
   };
 
+  const defaultShowreel = {
+    tag: "04 • REGISTRO AUDIOVISUAL",
+    title: "Experiencia Escénica",
+    subtitle: "SHOWREEL OFICIAL",
+    description: "REPRODUCTOR DE VÍDEO INTERACTIVO - CLIC PARA REPRODUCIR",
+    posterImage: "/images/productions/galeria-show.jpg",
+    videoUrl: "https://www.youtube-nocookie.com/embed/NEImqBBcx1o?autoplay=1&rel=0",
+  };
+
   if (!fs.existsSync(PAGES_FILE)) {
     const initialContent: WebsiteContent = {
       hero: {
@@ -492,6 +509,7 @@ export function getStoredWebsiteContent(): WebsiteContent {
         description: "Enseñamos a nuestros estudiantes que la disciplina, el compromiso y la pasión son los sellos distintivos de una formación escénica exitosa, rigurosa y con propósito en León, Guanajuato.",
         image: "/images/hero/manifesto-rehearsal.jpg",
       },
+      showreel: defaultShowreel,
       contact: {
         address: "Paseo de los Insurgentes #1506, Col. Jardines del Moral, CP 37160, León, Gto.",
         phone: "477 655 8156",
@@ -514,6 +532,7 @@ export function getStoredWebsiteContent(): WebsiteContent {
     const parsed = JSON.parse(raw);
     return {
       ...parsed,
+      showreel: parsed.showreel ? { ...defaultShowreel, ...parsed.showreel } : defaultShowreel,
       footer: parsed.footer
         ? {
             ...defaultFooter,
@@ -543,6 +562,7 @@ export function getStoredWebsiteContent(): WebsiteContent {
         description: "Disciplina, compromiso y pasión.",
         image: "/images/hero/manifesto-rehearsal.jpg",
       },
+      showreel: defaultShowreel,
       contact: {
         address: "Paseo de los Insurgentes #1506, Col. Jardines del Moral, León, Gto.",
         phone: "477 655 8156",

@@ -4,8 +4,72 @@ import React, { useState, useEffect } from "react";
 import SectionHeading from "@/components/ui/section-heading";
 import MediaPlaceholder from "@/components/ui/media-placeholder";
 
-export default function ShowreelSection() {
+export interface ShowreelContent {
+  tag?: string;
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  posterImage?: string;
+  videoUrl?: string;
+}
+
+export interface ShowreelSectionProps {
+  content?: ShowreelContent;
+}
+
+export function parseVideoSource(rawUrl?: string): { type: "youtube" | "vimeo" | "video"; embedUrl: string } {
+  const url = (rawUrl || "").trim();
+  if (!url) {
+    return {
+      type: "youtube",
+      embedUrl: "https://www.youtube-nocookie.com/embed/NEImqBBcx1o?autoplay=1&rel=0",
+    };
+  }
+
+  // YouTube match: watch?v=ID, youtu.be/ID, embed/ID, shorts/ID
+  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/i);
+  if (ytMatch && ytMatch[1]) {
+    return {
+      type: "youtube",
+      embedUrl: `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&rel=0`,
+    };
+  }
+
+  // Vimeo match: vimeo.com/ID
+  const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+  if (vimeoMatch && vimeoMatch[1]) {
+    return {
+      type: "vimeo",
+      embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`,
+    };
+  }
+
+  // Direct video file (mp4, webm, mov, ogg, or local /images/uploads/...)
+  if (url.match(/\.(mp4|webm|mov|ogg)($|\?)/i) || url.startsWith("/images/uploads/") || url.startsWith("/videos/")) {
+    return {
+      type: "video",
+      embedUrl: url,
+    };
+  }
+
+  // Fallback iframe
+  return {
+    type: "youtube",
+    embedUrl: url.includes("autoplay=1") ? url : `${url}${url.includes("?") ? "&" : "?"}autoplay=1`,
+  };
+}
+
+export default function ShowreelSection({ content }: ShowreelSectionProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+
+  const title = content?.title || "Experiencia Escénica";
+  const rawTag = content?.tag || "04 • REGISTRO AUDIOVISUAL";
+  const tagNumber = rawTag.match(/^\d+/)?.[0] || "04";
+  const tagLabel = rawTag.replace(/^\d+\s*[•·-]?\s*/, "") || "Registro Audiovisual";
+  const subtitle = content?.subtitle || "SHOWREEL OFICIAL";
+  const description = content?.description || "REPRODUCTOR DE VÍDEO INTERACTIVO - CLIC PARA REPRODUCIR";
+  const posterImage = content?.posterImage || "/images/productions/galeria-show.jpg";
+  const videoData = parseVideoSource(content?.videoUrl);
 
   // Manage body scroll locking when modal video is active
   useEffect(() => {
@@ -25,9 +89,9 @@ export default function ShowreelSection() {
         
         {/* Section Title */}
         <SectionHeading
-          number="04"
-          label="Registro Audiovisual"
-          title="Experiencia Escénica"
+          number={tagNumber}
+          label={tagLabel}
+          title={title}
         />
 
         {/* Video Box Wrapper */}
@@ -36,13 +100,13 @@ export default function ShowreelSection() {
             onClick={() => setIsPlaying(true)}
             className="relative group border-4 border-text-main overflow-hidden shadow-lg cursor-pointer"
           >
-            {/* Aspect Video Placeholder */}
+            {/* Aspect Video Placeholder / Poster Image */}
             <MediaPlaceholder
-              src="/images/productions/galeria-show.jpg"
-              alt="Muestra escénica DV Performing Arts"
+              src={posterImage}
+              alt={title}
               aspectRatio="16:9"
-              title="SHOWREEL OFICIAL"
-              description="REPRODUCTOR DE VÍDEO INTERACTIVO - CLIC PARA REPRODUCIR"
+              title={subtitle}
+              description={description}
               variant="dark"
               className="w-full transition-transform duration-500 group-hover:scale-105"
             />
@@ -69,7 +133,7 @@ export default function ShowreelSection() {
 
           {/* Technical Specs list */}
           <div className="mt-4 text-[9px] font-mono text-text-muted uppercase tracking-widest flex flex-wrap justify-between items-center gap-2">
-            <span>Video sugerido: MP4/WebM 4K H.264</span>
+            <span>Video sugerido: MP4/WebM 4K H.264 o YouTube</span>
             <span>Relación de aspecto: 16:9 Horizontal</span>
             <span>Duración máxima: 120 segundos</span>
           </div>
@@ -106,18 +170,28 @@ export default function ShowreelSection() {
 
             {/* Video Player Box */}
             <div className="w-full aspect-video bg-black flex items-center justify-center relative">
-              <iframe
-                src="https://www.youtube-nocookie.com/embed/NEImqBBcx1o?autoplay=1&rel=0"
-                title="DV Performing Arts Showreel"
-                className="w-full h-full border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
+              {videoData.type === "video" ? (
+                <video
+                  src={videoData.embedUrl}
+                  controls
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-contain bg-black"
+                />
+              ) : (
+                <iframe
+                  src={videoData.embedUrl}
+                  title="DV Performing Arts Showreel"
+                  className="w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              )}
             </div>
 
             {/* Bottom details */}
             <div className="p-4 border-t border-border-editorial font-mono text-[8px] sm:text-[9px] text-text-muted uppercase flex justify-between items-center">
-              <span>DV PERFORMING ARTS &bull; EXPERIENCIA ESCÉNICA</span>
+              <span>DV PERFORMING ARTS &bull; {title.toUpperCase()}</span>
               <span>LEÓN, GUANAJUATO</span>
             </div>
           </div>

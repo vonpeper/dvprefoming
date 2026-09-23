@@ -62,7 +62,7 @@ export default async function HomePage() {
         <AuditionFeature />
 
         {/* Video / Scenic Showreel Section */}
-        <ShowreelSection />
+        <ShowreelSection content={content.showreel} />
 
         {/* Staff / Teacher Roster Section */}
         <TeachersSection initialTeachers={content.teachers} />

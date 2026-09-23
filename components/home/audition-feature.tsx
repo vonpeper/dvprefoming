@@ -122,7 +122,9 @@ export default function AuditionFeature() {
 
   const scheduleOptions = [
     "Turno Vespertino (Lunes a Viernes 16:00 - 20:00)",
-    "Turno Sabatino (Sábados 10:00 - 15:00)",
+    "Sabatino: 9:00 am a 1:00 pm",
+    "Sabatino: 2:00 pm a 6:00 pm",
+    "Domingo: 9:00 am a 2:00 pm",
     "Horario Flexible / Por Asignar en Cita",
   ];
 
@@ -526,32 +528,7 @@ export default function AuditionFeature() {
                   />
                 </div>
 
-                {/* 5. Taller / Disciplina Principal */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-800">
-                    Taller o Disciplina de Interés *
-                  </label>
-                  <select
-                    value={formData.programId}
-                    onChange={(e) => {
-                      const selectedProg = programOptions.find((p) => p.id === e.target.value);
-                      setFormData({
-                        ...formData,
-                        programId: e.target.value,
-                        programName: selectedProg ? selectedProg.name : "Teatro Musical Integral",
-                      });
-                    }}
-                    className="w-full bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-medium focus:outline-none cursor-pointer transition-all"
-                  >
-                    {programOptions.map((prog) => (
-                      <option key={prog.id} value={prog.id} className="bg-white text-slate-900">
-                        {prog.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* 6. Horario Preferido */}
+                {/* 5. Horario Preferido */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold text-slate-800">
                     Disponibilidad de Horario *
@@ -569,7 +546,7 @@ export default function AuditionFeature() {
                   </select>
                 </div>
 
-                {/* 7. Experiencia previa (opcional) */}
+                {/* 6. Experiencia previa (opcional) */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold text-slate-600">
                     Experiencia previa o notas (opcional)
