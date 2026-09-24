@@ -39,7 +39,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "No hay aspirantes en la base de datos histórica." }, { status: 400 });
     }
 
-    const registrationUrl = "https://prev.dvperformingarts.com/#audiciones";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com";
+    const registrationUrl = `${siteUrl}/#audiciones`;
     let sentCount = 0;
 
     for (const cand of candidateList) {

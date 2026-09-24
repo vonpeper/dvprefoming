@@ -21,7 +21,8 @@ export async function POST(req: NextRequest) {
     const productions = getStoredProductions();
     const activeProd = productions.find((p) => p.isAuditionActive) || productions[0];
 
-    const confirmationUrl = `https://prev.dvperformingarts.com/jurado/confirmar?id=${encodeURIComponent(juror.id)}`;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com";
+    const confirmationUrl = `${siteUrl}/jurado/confirmar?id=${encodeURIComponent(juror.id)}`;
     const disciplineLabels: Record<string, string> = {
       CANTO: "Canto & Técnica Vocal",
       COREOGRAFIA: "Danza, Coreografía & Expresión Corporal",

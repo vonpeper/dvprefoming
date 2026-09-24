@@ -63,7 +63,7 @@ const permanentMarker = Permanent_Marker({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prev.dvperformingarts.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://dvperformingarts.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

@@ -96,8 +96,9 @@ export async function sendWhatsAppMessage(payload: MessagePayload): Promise<Send
 export async function sendAuditionConfirmation(data: AuditionNotificationData): Promise<SendMessageResult> {
   const settings = getNotificationSettings();
   const auditionNum = data.folio.replace(/\D/g, "").slice(-4) || "585";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com";
   const driveLink = data.googleDriveUrl || settings.googleDriveMaterialUrl || "https://drive.google.com/drive/folders/1qadnY5yaF1ZXprIXP5NY1cmAJkvQU08C?usp=drive_link";
-  const lookupUrl = `https://prev.dvperformingarts.com/audiciones/consulta?folio=${encodeURIComponent(data.folio)}`;
+  const lookupUrl = `${baseUrl}/audiciones/consulta?folio=${encodeURIComponent(data.folio)}`;
   const directorSign = `${settings.directorSignatureName} — ${settings.directorSignatureTitle}`;
 
   let messageBody = settings.templates?.registrationWhatsappText;
@@ -221,7 +222,7 @@ La Dirección General te ha designado como **Jurado Oficial Evaluador** para la 
 👉 ${data.confirmationUrl}
 
 Podrás ingresar a tu panel de calificación usando tu número de WhatsApp y tu contraseña en:
-https://prev.dvperformingarts.com/jurado
+${process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com"}/jurado
 
 ¡Agradecemos tu invaluable criterio artístico!
 *Diego Vieyra — Director General*`;
@@ -270,7 +271,8 @@ ${data.synopsis ? `📖 *Sinopsis:* ${data.synopsis}\n` : ""}
  */
 export async function sendAuditionApprovalWhatsApp(data: AuditionNotificationData): Promise<SendMessageResult> {
   const settings = getNotificationSettings();
-  const lookupUrl = `https://prev.dvperformingarts.com/audiciones/consulta?folio=${encodeURIComponent(data.folio)}`;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com";
+  const lookupUrl = `${baseUrl}/audiciones/consulta?folio=${encodeURIComponent(data.folio)}`;
   const directorSign = `${settings.directorSignatureName} — ${settings.directorSignatureTitle}`;
 
   let messageBody = settings.templates?.approvalWhatsappText;

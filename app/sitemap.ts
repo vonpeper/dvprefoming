@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prev.dvperformingarts.com";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://dvperformingarts.com";
   const now = new Date();
 
   // Static core routes

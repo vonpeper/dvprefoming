@@ -1,0 +1,52 @@
+[Unit]
+Description=DV Performing Arts Production Environment (Next.js Standalone)
+After=network-online.target traefik.service
+Wants=network-online.target
+
+[Container]
+ContainerName=dvperformingarts
+Image=ghcr.io/vonpeper/dvprefoming:latest
+Network=prosuite.network
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=NEXT_PUBLIC_SITE_URL=https://dvperformingarts.com
+Environment=ADMIN_USER=admin@dvperformingarts.com
+Environment=EVOLUTION_API_URL=http://evolution-api-v2:8080
+Environment=EVOLUTION_INSTANCE=dvp
+EnvironmentFile=/etc/containers/env/dvperformingarts.env
+
+# Persistent storage for CMS content, auditions, criteria and uploaded photos
+Volume=/opt/stacks/dvp/data:/app/.data:Z
+Volume=/opt/stacks/dvp/uploads:/app/public/images/uploads:Z
+
+# Traefik v3.3 Routing & Let's Encrypt SSL
+Label=traefik.enable=true
+Label=traefik.docker.network=prosuite
+Label=traefik.http.services.dvp.loadbalancer.server.port=3000
+
+# Apex domain: dvperformingarts.com
+Label=traefik.http.routers.dvp-apex.rule=Host(`dvperformingarts.com`)
+Label=traefik.http.routers.dvp-apex.entrypoints=websecure
+Label=traefik.http.routers.dvp-apex.tls.certresolver=letsencrypt-dns
+Label=traefik.http.routers.dvp-apex.service=dvp
+
+# WWW subdomain: www.dvperformingarts.com
+Label=traefik.http.routers.dvp-www.rule=Host(`www.dvperformingarts.com`)
+Label=traefik.http.routers.dvp-www.entrypoints=websecure
+Label=traefik.http.routers.dvp-www.tls.certresolver=letsencrypt-dns
+Label=traefik.http.routers.dvp-www.service=dvp
+
+# Backward compatibility / Preview: prev.dvperformingarts.com
+Label=traefik.http.routers.dvp-prev.rule=Host(`prev.dvperformingarts.com`)
+Label=traefik.http.routers.dvp-prev.entrypoints=websecure
+Label=traefik.http.routers.dvp-prev.tls.certresolver=letsencrypt-dns
+Label=traefik.http.routers.dvp-prev.service=dvp
+
+Label=org.prosuite.stack=dvperformingarts
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target default.target

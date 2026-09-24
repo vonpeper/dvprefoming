@@ -234,7 +234,7 @@ export async function sendAuditionRegistrationEmail(data: AuditionEmailData): Pr
               <!-- Online Status Check Link -->
               <p style="text-align: center; margin: 15px 0 30px 0; font-size: 12px; color: #A1A1AA;">
                 ¿Deseas consultar o recordar el estado de tu folio? 
-                <a href="https://prev.dvperformingarts.com/audiciones/consulta?folio=${data.folio}" target="_blank" style="color: #F43F5E; text-decoration: underline;">
+                <a href="${(process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com")}/audiciones/consulta?folio=${data.folio}" target="_blank" style="color: #F43F5E; text-decoration: underline;">
                   Revisa tu audición en línea aquí
                 </a>
               </p>
@@ -415,7 +415,7 @@ export async function sendAuditionApprovalEmail(data: AuditionEmailData): Promis
               <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 25px 0; text-align: center;">
                 <tr>
                   <td align="center">
-                    <a href="https://prev.dvperformingarts.com/audiciones/consulta?folio=${encodeURIComponent(data.folio)}" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #9333EA 0%, #E11D48 100%); color: #FFFFFF; font-size: 15px; font-weight: 900; text-decoration: none; padding: 18px 36px; border-radius: 16px; box-shadow: 0 10px 30px rgba(225,29,72,0.5); text-transform: uppercase; letter-spacing: 1px;">
+                    <a href="${(process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com")}/audiciones/consulta?folio=${encodeURIComponent(data.folio)}" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #9333EA 0%, #E11D48 100%); color: #FFFFFF; font-size: 15px; font-weight: 900; text-decoration: none; padding: 18px 36px; border-radius: 16px; box-shadow: 0 10px 30px rgba(225,29,72,0.5); text-transform: uppercase; letter-spacing: 1px;">
                       🔍 Consultar mi Estatus & Libreto en la Web ↗
                     </a>
                   </td>
@@ -754,7 +754,7 @@ export async function sendJurorInvitationEmail(data: {
             </div>
             <p style="font-size:12px;color:#94A3B8;text-align:center;">
               Podrás acceder al panel de calificación con tu número de WhatsApp y contraseña en:<br>
-              <a href="https://prev.dvperformingarts.com/jurado" style="color:#60A5FA;">https://prev.dvperformingarts.com/jurado</a>
+              <a href="${(process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com")}/jurado" style="color:#60A5FA;">${(process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com")}/jurado</a>
             </p>
           </td>
         </tr>

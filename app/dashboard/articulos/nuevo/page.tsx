@@ -840,7 +840,7 @@ function ArticleEditorContent() {
 
                 <div className="p-4 bg-[#0D1117] border border-[#30363D] rounded-xl flex flex-col gap-1.5 font-sans">
                   <div className="text-[11px] text-slate-400 font-mono">
-                    https://prev.dvperformingarts.com &rsaquo; noticias &rsaquo; {slug || "noticia"}
+                    https://dvperformingarts.com &rsaquo; noticias &rsaquo; {slug || "noticia"}
                   </div>
                   <div className="text-base text-blue-400 font-semibold hover:underline cursor-pointer line-clamp-1">
                     {seoTitle || title || "Título de la Noticia en Google"}
@@ -895,7 +895,7 @@ function ArticleEditorContent() {
                     </div>
                     {/* Caption */}
                     <div className="p-3 flex flex-col gap-1 bg-[#111B21]">
-                      <span className="text-[10px] text-slate-400 font-mono">prev.dvperformingarts.com</span>
+                      <span className="text-[10px] text-slate-400 font-mono">dvperformingarts.com</span>
                       <h4 className="text-xs font-bold text-white leading-snug line-clamp-2">
                         {seoTitle || title || "Título de la Noticia"}
                       </h4>
