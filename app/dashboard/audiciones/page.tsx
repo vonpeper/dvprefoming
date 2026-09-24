@@ -1060,15 +1060,27 @@ export default function AuditionsDashboardPage() {
           </button>
         </div>
 
-        {/* Quick Search */}
-        <div className="flex-1 max-w-xs">
-          <input
-            type="text"
-            placeholder="Buscar por folio, nombre o teléfono..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none font-sans"
-          />
+        {/* Quick Search & Excel Export */}
+        <div className="flex items-center gap-2.5">
+          <div className="w-56 sm:w-64">
+            <input
+              type="text"
+              placeholder="Buscar por folio, nombre o teléfono..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-[#0D1117] border border-[#30363D] focus:border-purple-500 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none font-sans"
+            />
+          </div>
+
+          <a
+            href={`/api/auditions/export?productionId=${selectedProductionId}&status=${statusFilter}&q=${encodeURIComponent(searchTerm)}`}
+            download
+            className="px-3.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 hover:text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-bold font-mono transition-all flex items-center gap-1.5 shadow-sm whitespace-nowrap"
+            title="Descargar datos filtrados en formato Excel / CSV compatible con UTF-8"
+          >
+            <span>📥</span>
+            <span>Descargar Excel</span>
+          </a>
         </div>
       </div>
 
@@ -1980,6 +1992,55 @@ export default function AuditionsDashboardPage() {
               <span className="text-xl font-black font-mono text-amber-400 bg-amber-950/60 border border-amber-500/40 px-3 py-1 rounded-xl">
                 {stats.averageScores.acting > 0 ? `${stats.averageScores.acting}/10` : "-"}
               </span>
+            </div>
+          </div>
+
+          {/* Export to Excel Section */}
+          <div className="bg-gradient-to-r from-[#161B22] to-[#1c232d] border border-emerald-500/40 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-2xl shrink-0">
+                📊
+              </div>
+              <div className="flex flex-col">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <span>Descargar Base de Datos a Excel</span>
+                  <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-[10px] rounded font-mono font-bold">.CSV / EXCEL COMPATIBLE</span>
+                </h3>
+                <p className="text-xs text-slate-300 mt-1 max-w-xl">
+                  Descarga el reporte completo con folios, datos de contacto, obra, calificaciones de los jurados (Canto, Danza, Actuación), contacto de emergencia, notas médicas y estatus del elenco.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2.5 shrink-0">
+              <a
+                href="/api/auditions/export?productionId=ALL&status=ALL"
+                download
+                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-emerald-950/40 cursor-pointer"
+              >
+                <span>📥</span>
+                <span>Exportar Todos ({stats.totalAuditions})</span>
+              </a>
+
+              <a
+                href="/api/auditions/export?productionId=ALL&status=APPROVED"
+                download
+                className="px-4 py-2.5 bg-[#21262D] hover:bg-[#30363D] text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <span>⭐</span>
+                <span>Solo Elenco Aprobado ({stats.approvedCount})</span>
+              </a>
+
+              {selectedProductionId !== "ALL" && (
+                <a
+                  href={`/api/auditions/export?productionId=${selectedProductionId}&status=ALL`}
+                  download
+                  className="px-4 py-2.5 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <span>🎭</span>
+                  <span>Solo Obra Seleccionada</span>
+                </a>
+              )}
             </div>
           </div>
         </div>
