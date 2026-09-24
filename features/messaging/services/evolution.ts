@@ -1,4 +1,5 @@
 import { MessagePayload, SendMessageResult, AuditionNotificationData, EvolutionInstanceStatus } from "../types";
+import { getNotificationSettings } from "@/lib/storage";
 
 /**
  * Format phone number to international E.164 without leading plus
@@ -93,30 +94,25 @@ export async function sendWhatsAppMessage(payload: MessagePayload): Promise<Send
  * Builds and sends the official Audition Confirmation WhatsApp message
  */
 export async function sendAuditionConfirmation(data: AuditionNotificationData): Promise<SendMessageResult> {
+  const settings = getNotificationSettings();
   const auditionNum = data.folio.replace(/\D/g, "").slice(-4) || "585";
-  const driveLink = data.googleDriveUrl || "https://prev.dvperformingarts.com/audiciones/consulta?folio=" + data.folio;
+  const driveLink = data.googleDriveUrl || settings.googleDriveMaterialUrl || "https://drive.google.com/drive/folders/1qadnY5yaF1ZXprIXP5NY1cmAJkvQU08C?usp=drive_link";
+  const lookupUrl = `https://prev.dvperformingarts.com/audiciones/consulta?folio=${encodeURIComponent(data.folio)}`;
+  const directorSign = `${settings.directorSignatureName} — ${settings.directorSignatureTitle}`;
 
-  const messageBody = `🎭 *¡HOLA ${data.fullName.trim().toUpperCase()}, YA DISTE EL PRIMER PASO!* 🎭
-
-Es hora de preparar la canción que te ayudará a obtener el papel de tus sueños.
-
-📋 *Tu número de audición para "${data.productionName || "DV Performing Arts"}" es:*
-*${auditionNum}* (Folio: \`${data.folio}\`)
-
-💡 *Consejos para el día de la audición:*
-• *Canción:* Prepara una canción de teatro musical o contemporánea (1 minuto de duración).
-• *Pista musical:* Trae tu pista preparada. Puedes reproducirla desde tu celular.
-• *Vestimenta:* Usa ropa cómoda. Después del canto, hay una audición de baile. *NO tienes que preparar ninguna coreografía previa*.
-• *Hidratación:* Lleva una botella de agua. Mantente hidratadx con pequeños sorbos.
-• *Enfoque:* Si estás nerviosx, respira profundo y recuerda que estás haciendo algo que amas.
-• *Acompañantes:* No podrás entrar acompañado, pero te podrán esperar afuera de las instalaciones.
-
-${data.googleDriveUrl ? `📁 *Encuentra el material para realizar tu audición en este enlace:*\n${data.googleDriveUrl}\n\n` : ""}🔍 *Consulta o recuerda tus datos de audición en línea:*
-https://prev.dvperformingarts.com/audiciones/consulta?folio=${data.folio}
-
-Todo lo mejor,
-*Diego Vieyra — Director Artístico*
-*DV Performing Arts*`;
+  let messageBody = settings.templates?.registrationWhatsappText;
+  if (messageBody) {
+    messageBody = messageBody
+      .replace(/\{nombre\}/gi, data.fullName.trim().toUpperCase())
+      .replace(/\{obra\}/gi, data.productionName || "DV Performing Arts")
+      .replace(/\{folio\}/gi, data.folio)
+      .replace(/\{numero_audicion\}/gi, auditionNum)
+      .replace(/\{drive_link\}/gi, driveLink)
+      .replace(/\{enlace_consulta\}/gi, lookupUrl)
+      .replace(/\{director_firma\}/gi, directorSign);
+  } else {
+    messageBody = `🎭 *¡HOLA ${data.fullName.trim().toUpperCase()}, YA DISTE EL PRIMER PASO!* 🎭\n\nEs hora de preparar la canción que te ayudará a obtener el papel de tus sueños.\n\n📋 *Tu número de audición para "${data.productionName || "DV Performing Arts"}" es:*\n*${auditionNum}* (Folio: \`${data.folio}\`)\n\n💡 *Consejos para el día de la audición:*\n• Prepara una canción de teatro musical o contemporánea (1 minuto de duración).\n• Trae tu pista preparada. Puedes reproducirla desde tu celular.\n• Usa ropa cómoda. Después del canto, hay una audición de baile. *NO tienes que preparar ninguna coreografía previa*.\n• Lleva una botella de agua. Mantente hidratadx con pequeños sorbos.\n• Si estás nerviosx, respira profundo y recuerda que estás haciendo algo que amas.\n• No podrás entrar acompañado, pero te podrán esperar afuera de las instalaciones.\n\n${driveLink ? `📁 *Encuentra el material para realizar tu audición en este enlace:*\n${driveLink}\n\n` : ""}🔍 *Consulta o recuerda tus datos de audición en línea:*\n${lookupUrl}\n\nTodo lo mejor,\n*${directorSign}*\n*DV Performing Arts*`;
+  }
 
   return sendWhatsAppMessage({
     to: data.phone,
@@ -273,23 +269,22 @@ ${data.synopsis ? `📖 *Sinopsis:* ${data.synopsis}\n` : ""}
  * Builds and sends the Audition Results Published WhatsApp message inviting candidate to check their verdict on the site
  */
 export async function sendAuditionApprovalWhatsApp(data: AuditionNotificationData): Promise<SendMessageResult> {
+  const settings = getNotificationSettings();
   const lookupUrl = `https://prev.dvperformingarts.com/audiciones/consulta?folio=${encodeURIComponent(data.folio)}`;
+  const directorSign = `${settings.directorSignatureName} — ${settings.directorSignatureTitle}`;
 
-  const messageBody = `🎭 *RESULTADOS DE CASTING PUBLICADOS • DV PERFORMING ARTS* 🎭
-
-Hola *${data.fullName.trim().toUpperCase()}*, te informamos que la Dirección General y el Panel de Jueces han concluido la evaluación de las audiciones para la producción:
-🎬 *"${data.productionName || "Si No Es Ahora (El Musical)"}"*
-
-📋 *Tu Folio de Consulta:* \`${data.folio}\`
-
-📲 *Consulta tu estatus oficial y resultado de casting en la plataforma:*
-👉 ${lookupUrl}
-
-Ingresa al enlace desde tu celular o computadora para conocer tu resolución oficial, personaje asignado, observaciones del jurado y próximos pasos.
-
-¡Gracias por tu pasión y entrega en el escenario!
-*Diego Vieyra — Dirección General & Artística*
-*DV Performing Arts*`;
+  let messageBody = settings.templates?.approvalWhatsappText;
+  if (messageBody) {
+    messageBody = messageBody
+      .replace(/\{nombre\}/gi, data.fullName.trim().toUpperCase())
+      .replace(/\{obra\}/gi, data.productionName || "Si No Es Ahora (El Musical)")
+      .replace(/\{folio\}/gi, data.folio)
+      .replace(/\{personaje\}/gi, data.assignedRole || "elenco")
+      .replace(/\{enlace_consulta\}/gi, lookupUrl)
+      .replace(/\{director_firma\}/gi, directorSign);
+  } else {
+    messageBody = `🎭 *RESULTADOS DE CASTING PUBLICADOS • DV PERFORMING ARTS* 🎭\n\nHola *${data.fullName.trim().toUpperCase()}*, te informamos que la Dirección General y el Panel de Jueces han concluido la evaluación de las audiciones para la producción:\n🎬 *"${data.productionName || "Si No Es Ahora (El Musical)"}"*\n\n📋 *Tu Folio de Consulta:* \`${data.folio}\`\n\n📲 *Consulta tu estatus oficial y resultado de casting en la plataforma:*\n👉 ${lookupUrl}\n\nIngresa al enlace desde tu celular o computadora para conocer tu resolución oficial, personaje asignado, observaciones del jurado y próximos pasos.\n\n¡Gracias por tu pasión y entrega en el escenario!\n*${directorSign}*\n*DV Performing Arts*`;
+  }
 
   return sendWhatsAppMessage({
     to: data.phone,

@@ -313,6 +313,7 @@ export interface NotificationSettings {
     registrationWhatsappText: string;
     approvalEmailSubject: string;
     approvalWhatsappText: string;
+    studentConfirmationWhatsappText?: string;
   };
 }
 
@@ -333,7 +334,8 @@ export function getNotificationSettings(): NotificationSettings {
       registrationEmailSubject: "🎭 Confirmación de Registro a Audición • Folio #{folio} | DV Performing Arts",
       registrationWhatsappText: `🎭 *¡HOLA {nombre}, YA DISTE EL PRIMER PASO!* 🎭\n\nEs hora de preparar la canción que te ayudará a obtener el papel de tus sueños.\n\n📋 *Tu número de audición para "{obra}" es:* \n*{folio}*\n\n💡 *Consejos para el día de la audición:*\n• Prepara una canción de teatro musical o contemporánea (1 minuto de duración).\n• Trae tu pista preparada. Puedes reproducirla desde tu celular.\n• Usa ropa cómoda. Después del canto, hay una audición de baile. *NO tienes que preparar ninguna coreografía previa*.\n• Lleva una botella de agua. Mantente hidratadx con pequeños sorbos.\n• Si estás nerviosx, respira profundo y recuerda que estás haciendo algo que amas.\n• No podrás entrar acompañado, pero te podrán esperar afuera de las instalaciones.\n\n📁 *Encuentra el material para realizar tu audición en este enlace:*\n{drive_link}\n\n🔍 *Consulta tu folio en línea:*\nhttps://prev.dvperformingarts.com/audiciones/consulta?folio={folio}\n\nTodo lo mejor,\n*Director Diego Vieyra*\n*DV Performing Arts*`,
       approvalEmailSubject: "🎉 ¡Audición Exitosa! Has sido Aprobado(a) para \"{obra}\" | DV Performing Arts",
-      approvalWhatsappText: `🌟 *¡MUCHAS FELICIDADES {nombre}! TU AUDICIÓN FUE EXITOSA* 🌟\n\nNos complace informarte que has sido *APROBADO(A)* para formar parte del elenco de *"{obra}"* (Folio: *{folio}*).\n\n📋 *Siguientes pasos:*\n1. El equipo de dirección te enviará el llamado para la primera lectura y entrega de libreto.\n2. Inicia tu proceso de enrolamiento en la academia.\n\n💬 Si tienes dudas, contáctanos directamente a este WhatsApp.\n\n¡Bienvenidx a la compañía!\n*Diego Vieyra — Director Artístico*\n*DV Performing Arts*`,
+      approvalWhatsappText: `🎭 *RESULTADOS DE CASTING PUBLICADOS • DV PERFORMING ARTS* 🎭\n\nHola *{nombre}*, te informamos que la Dirección General y el Panel de Jueces han concluido la evaluación de las audiciones para la producción:\n🎬 *"{obra}"*\n\n📋 *Tu Folio de Consulta:* \`{folio}\`\n\n📲 *Consulta tu estatus oficial y resultado de casting en la plataforma:*\n👉 {enlace_consulta}\n\nIngresa al enlace desde tu celular o computadora para conocer tu resolución oficial, personaje asignado, observaciones del jurado y próximos pasos.\n\n¡Gracias por tu pasión y entrega en el escenario!\n*{director_firma}*\n*DV Performing Arts*`,
+      studentConfirmationWhatsappText: `Hola DV Performing Arts, consulto mi resultado de audición para {obra} (Folio: {folio}) y confirmo mi participación para el personaje de {personaje}.`,
     },
   };
 
@@ -344,7 +346,15 @@ export function getNotificationSettings(): NotificationSettings {
 
   try {
     const raw = fs.readFileSync(NOTIFICATION_SETTINGS_FILE, "utf-8");
-    return { ...defaultSettings, ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw);
+    return {
+      ...defaultSettings,
+      ...parsed,
+      templates: {
+        ...defaultSettings.templates,
+        ...(parsed.templates || {}),
+      },
+    };
   } catch {
     return defaultSettings;
   }

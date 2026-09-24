@@ -463,19 +463,25 @@ export default function MessagingDashboardPage() {
                 <span>📝</span> Edición de Plantillas de Mensajes Automáticos
               </h2>
               <p className="text-xs text-slate-400 mt-1">
-                Personaliza los textos que reciben los aspirantes. Puedes utilizar las variables dinámicas:{" "}
+                Personaliza los textos que reciben los aspirantes y los mensajes de confirmación. Puedes utilizar las variables dinámicas:{" "}
                 <code className="text-rose-400 font-mono font-bold">{"{nombre}"}</code>,{" "}
                 <code className="text-rose-400 font-mono font-bold">{"{folio}"}</code>,{" "}
                 <code className="text-rose-400 font-mono font-bold">{"{obra}"}</code>,{" "}
-                <code className="text-rose-400 font-mono font-bold">{"{drive_link}"}</code>.
+                <code className="text-rose-400 font-mono font-bold">{"{personaje}"}</code>,{" "}
+                <code className="text-rose-400 font-mono font-bold">{"{enlace_consulta}"}</code>,{" "}
+                <code className="text-rose-400 font-mono font-bold">{"{drive_link}"}</code>,{" "}
+                <code className="text-rose-400 font-mono font-bold">{"{director_firma}"}</code>.
               </p>
             </div>
 
             {/* 1. Registration Notification Template */}
             <div className="flex flex-col gap-4 border-t border-[#30363D] pt-5">
               <h3 className="text-sm font-bold text-purple-300 flex items-center gap-2">
-                <span>1️⃣</span> Mensaje de Bienvenida / Registro a Audición
+                <span>1️⃣</span> Mensaje de Bienvenida / Registro a Audición (Enviado al Aspirante)
               </h3>
+              <p className="text-xs text-slate-400 -mt-2">
+                Este mensaje se envía de forma inmediata al aspirante en cuanto completa su registro en la página de audiciones.
+              </p>
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-slate-300">Asunto del Correo Electrónico</label>
@@ -511,8 +517,11 @@ export default function MessagingDashboardPage() {
             {/* 2. Approval Notification Template */}
             <div className="flex flex-col gap-4 border-t border-[#30363D] pt-5">
               <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
-                <span>2️⃣</span> Mensaje de Aprobación de Audición / Noticia Exitosa
+                <span>2️⃣</span> Notificación de Resultados Publicados / Estatus (Enviado por DV al Aspirante)
               </h3>
+              <p className="text-xs text-slate-400 -mt-2">
+                Este mensaje se envía al alumno por WhatsApp invitándolo a consultar su estatus oficial en el portal web (burbuja verde de WhatsApp).
+              </p>
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-slate-300">Asunto del Correo Electrónico</label>
@@ -532,7 +541,7 @@ export default function MessagingDashboardPage() {
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-slate-300">Texto para WhatsApp (Formato Markdown)</label>
                 <textarea
-                  rows={6}
+                  rows={8}
                   value={settings.templates.approvalWhatsappText}
                   onChange={(e) =>
                     setSettings({
@@ -542,6 +551,43 @@ export default function MessagingDashboardPage() {
                   }
                   className="bg-[#0D1117] border border-[#30363D] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-mono text-[11px] leading-relaxed resize-y"
                 />
+              </div>
+            </div>
+
+            {/* 3. Student Confirmation Template */}
+            <div className="flex flex-col gap-4 border-t border-[#30363D] pt-5">
+              <h3 className="text-sm font-bold text-cyan-300 flex items-center gap-2">
+                <span>3️⃣</span> Texto de Confirmación del Alumno (Botón verde "Confirmar por WhatsApp" en Consulta Web)
+              </h3>
+              <p className="text-xs text-slate-400 -mt-2">
+                Este es el mensaje pre-redactado que se le abre al alumno en WhatsApp cuando consulta su resultado aprobado en la página web y da clic en <strong>"💬 Confirmar por WhatsApp"</strong>. Al darle Enviar, DV Performing Arts recibe la confirmación del papel asignado (burbuja blanca en WhatsApp).
+              </p>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-300">
+                  Mensaje que envía el alumno a DV Performing Arts
+                </label>
+                <textarea
+                  rows={3}
+                  value={
+                    settings.templates.studentConfirmationWhatsappText ||
+                    "Hola DV Performing Arts, consulto mi resultado de audición para {obra} (Folio: {folio}) y confirmo mi participación para el personaje de {personaje}."
+                  }
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      templates: {
+                        ...settings.templates,
+                        studentConfirmationWhatsappText: e.target.value,
+                      },
+                    })
+                  }
+                  className="bg-[#0D1117] border border-[#30363D] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none font-mono text-[11px] leading-relaxed resize-y"
+                  placeholder="Hola DV Performing Arts, consulto mi resultado de audición para {obra} (Folio: {folio}) y confirmo mi participación para el personaje de {personaje}."
+                />
+                <span className="text-[11px] text-slate-500">
+                  Variables disponibles para esta respuesta: <code className="text-cyan-400 font-mono">{"{nombre}"}</code>, <code className="text-cyan-400 font-mono">{"{obra}"}</code>, <code className="text-cyan-400 font-mono">{"{folio}"}</code>, <code className="text-cyan-400 font-mono">{"{personaje}"}</code>.
+                </span>
               </div>
             </div>
 

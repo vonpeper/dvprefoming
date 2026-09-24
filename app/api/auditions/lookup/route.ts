@@ -1,15 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllAuditionsByFolioOrContact, getStoredProductions } from "@/lib/storage";
+import { getAllAuditionsByFolioOrContact, getStoredProductions, getNotificationSettings } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-function formatAuditionForLookup(audition: any, productions: any[]) {
+function formatAuditionForLookup(audition: any, productions: any[], settings: any) {
   const prod = productions.find(
     (p) => p.id === audition.productionId || p.title === audition.productionName
   ) || productions[0];
 
   const auditionNum = audition.folio ? audition.folio.replace(/\D/g, "").slice(-4) : "585";
+  const prodName = audition.productionName || prod?.title || "Si No Es Ahora (El Musical)";
+  const roleName = audition.assignedRole || "elenco";
+
+  const studentConfirmationTemplate = settings?.templates?.studentConfirmationWhatsappText ||
+    "Hola DV Performing Arts, consulto mi resultado de audición para {obra} (Folio: {folio}) y confirmo mi participación para el personaje de {personaje}.";
+
+  const confirmationMessage = studentConfirmationTemplate
+    .replace(/\{nombre\}/gi, audition.fullName || "")
+    .replace(/\{obra\}/gi, prodName)
+    .replace(/\{folio\}/gi, audition.folio || "")
+    .replace(/\{personaje\}/gi, roleName);
 
   return {
     id: audition.id,
@@ -19,7 +30,7 @@ function formatAuditionForLookup(audition: any, productions: any[]) {
     fullName: audition.fullName,
     headshotUrl: audition.headshotUrl,
     productionId: audition.productionId,
-    productionName: audition.productionName || prod?.title || "Si No Es Ahora (El Musical)",
+    productionName: prodName,
     programName: audition.programName || "Teatro Musical",
     status: audition.status,
     assignedRole: audition.assignedRole,
@@ -34,7 +45,8 @@ function formatAuditionForLookup(audition: any, productions: any[]) {
       address: prod?.venueAddress || "Pio XII 335, San Jeronimo II, León, Gto.",
       mapsUrl: prod?.venueMapsUrl || "https://maps.app.goo.gl/swd5UQsA5ALzEh2i6",
     },
-    driveMaterialUrl: "https://drive.google.com/drive/folders/1qadnY5yaF1ZXprIXP5NY1cmAJkvQU08C?usp=drive_link",
+    driveMaterialUrl: audition.googleDriveUrl || prod?.driveFolderUrl || settings?.googleDriveMaterialUrl || "https://drive.google.com/drive/folders/1qadnY5yaF1ZXprIXP5NY1cmAJkvQU08C?usp=drive_link",
+    confirmationMessage,
     tips: [
       "Prepara una canción de teatro musical o contemporánea (1 minuto de duración).",
       "Trae tu pista preparada en tu celular.",
@@ -67,7 +79,8 @@ export async function GET(req: NextRequest) {
     }
 
     const productions = getStoredProductions();
-    const formattedList = matches.map((a) => formatAuditionForLookup(a, productions));
+    const settings = getNotificationSettings();
+    const formattedList = matches.map((a) => formatAuditionForLookup(a, productions, settings));
 
     return NextResponse.json({
       success: true,
@@ -106,7 +119,8 @@ export async function POST(req: NextRequest) {
     }
 
     const productions = getStoredProductions();
-    const formattedList = matches.map((a) => formatAuditionForLookup(a, productions));
+    const settings = getNotificationSettings();
+    const formattedList = matches.map((a) => formatAuditionForLookup(a, productions, settings));
 
     return NextResponse.json({
       success: true,

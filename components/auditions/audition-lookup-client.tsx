@@ -28,6 +28,7 @@ interface AuditionLookupResult {
     mapsUrl: string;
   };
   driveMaterialUrl: string;
+  confirmationMessage?: string;
   tips: string[];
 }
 
@@ -434,7 +435,7 @@ function AuditionLookupContent() {
                   </a>
 
                   <a
-                    href={`https://wa.me/524776558156?text=${encodeURIComponent(`Hola DV Performing Arts, consulto mi resultado de audición para ${result.productionName} (Folio: ${result.folio}) y confirmo mi participación para el personaje de ${result.assignedRole || "elenco"}.`)}`}
+                    href={`https://wa.me/524776558156?text=${encodeURIComponent(result.confirmationMessage || `Hola DV Performing Arts, consulto mi resultado de audición para ${result.productionName} (Folio: ${result.folio}) y confirmo mi participación para el personaje de ${result.assignedRole || "elenco"}.`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-colors flex items-center gap-1.5"

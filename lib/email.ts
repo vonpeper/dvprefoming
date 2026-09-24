@@ -287,10 +287,17 @@ export async function sendAuditionRegistrationEmail(data: AuditionEmailData): Pr
 
   try {
     const transporter = getEmailTransporter();
+    const emailSubject = settings.templates?.registrationEmailSubject
+      ? settings.templates.registrationEmailSubject
+          .replace(/\{folio\}/gi, String(data.folio || auditionNum))
+          .replace(/\{obra\}/gi, data.productionName || "DV Performing Arts")
+          .replace(/\{nombre\}/gi, data.fullName)
+      : `🎭 Confirmación de Registro a Audición • Folio #${auditionNum} | "${data.productionName}"`;
+
     const info = await transporter.sendMail({
       from: fromAddress,
       to: data.email,
-      subject: `🎭 Confirmación de Registro a Audición • Folio #${auditionNum} | "${data.productionName}"`,
+      subject: emailSubject,
       html: htmlContent,
     });
 
@@ -486,10 +493,17 @@ export async function sendAuditionApprovalEmail(data: AuditionEmailData): Promis
 
   try {
     const transporter = getEmailTransporter();
+    const emailSubject = settings.templates?.approvalEmailSubject
+      ? settings.templates.approvalEmailSubject
+          .replace(/\{folio\}/gi, String(data.folio || auditionNum))
+          .replace(/\{obra\}/gi, data.productionName || "DV Performing Arts")
+          .replace(/\{nombre\}/gi, data.fullName)
+      : `🎉 ¡Audición Exitosa! Has sido Aprobado(a) para "${data.productionName}" | Folio #${auditionNum}`;
+
     const info = await transporter.sendMail({
       from: fromAddress,
       to: data.email,
-      subject: `🎉 ¡Audición Exitosa! Has sido Aprobado(a) para "${data.productionName}" | Folio #${auditionNum}`,
+      subject: emailSubject,
       html: htmlContent,
     });
 
