@@ -36,6 +36,8 @@ function AuditionLookupContent() {
   const initialFolio = searchParams.get("folio") || searchParams.get("q") || "";
   const [query, setQuery] = useState(initialFolio);
   const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<AuditionLookupResult[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [result, setResult] = useState<AuditionLookupResult | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -48,15 +50,29 @@ function AuditionLookupContent() {
     setLoading(true);
     setErrorMsg("");
     setResult(null);
+    setResults([]);
 
     try {
       const res = await fetch(`/api/auditions/lookup?folio=${encodeURIComponent(folioToSearch.trim())}`);
       const data = await res.json();
 
-      if (res.ok && data.success && data.audition) {
-        setResult(data.audition);
+      if (res.ok && data.success) {
+        const list: AuditionLookupResult[] =
+          data.auditions && Array.isArray(data.auditions) && data.auditions.length > 0
+            ? data.auditions
+            : data.audition
+            ? [data.audition]
+            : [];
+
+        if (list.length > 0) {
+          setResults(list);
+          setSelectedIndex(0);
+          setResult(list[0]);
+        } else {
+          setErrorMsg("No se encontró ningún registro activo con esos datos.");
+        }
       } else {
-        setErrorMsg(data.error || "No se encontró ningún registro con esos datos. Revisa tu folio e intenta de nuevo.");
+        setErrorMsg(data.error || "No se encontró ningún registro con esos datos. Revisa tu folio o teléfono e intenta de nuevo.");
       }
     } catch (err) {
       console.error(err);
@@ -118,7 +134,7 @@ function AuditionLookupContent() {
             Consulta de Folio & Estatus de Audición
           </h1>
           <p className="text-sm sm:text-base text-zinc-400 max-w-2xl">
-            Ingresa tu número de folio corto (ej. <code className="text-rose-400 font-mono font-bold">DV-585</code> o simplemente <code className="text-rose-400 font-mono font-bold">585</code>) o tu teléfono para consultar tu resultado de casting.
+            Ingresa tu número de folio (ej. <code className="text-rose-400 font-mono font-bold">DV-2562</code>) o los <code className="text-rose-400 font-mono font-bold">10 dígitos</code> de tu teléfono registrado para consultar tu resultado de casting.
           </p>
         </div>
 
@@ -127,7 +143,7 @@ function AuditionLookupContent() {
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder="Ej. DV-585, 585 o 4771234567..."
+              placeholder="Ej. DV-2562 o tu teléfono de 10 dígitos..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="w-full bg-[#12121A]/90 border-2 border-[#2A2A3E] focus:border-rose-500 rounded-2xl px-5 py-4 text-sm sm:text-base text-white placeholder-zinc-500 focus:outline-none transition-all shadow-inner font-mono font-bold"
@@ -158,6 +174,43 @@ function AuditionLookupContent() {
             <div className="flex flex-col">
               <span className="font-bold">Registro no encontrado</span>
               <span className="text-zinc-400 mt-0.5">{errorMsg}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Multi-Play Selector Tabs if candidate registered for multiple productions */}
+        {results.length > 1 && (
+          <div className="max-w-xl w-full mx-auto bg-[#12121A]/90 border border-purple-500/40 rounded-2xl p-4 flex flex-col gap-3 shadow-xl">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-mono text-purple-300 font-bold uppercase tracking-wider flex items-center gap-2">
+                <span>🎭</span>
+                <span>Tienes {results.length} convocatorias registradas:</span>
+              </span>
+              <span className="text-[10px] font-mono text-zinc-400">Selecciona una obra para ver tu estatus</span>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {results.map((item, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    setSelectedIndex(idx);
+                    setResult(item);
+                  }}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                    selectedIndex === idx
+                      ? "bg-gradient-to-r from-purple-600 to-rose-600 text-white shadow-lg shadow-purple-950/50 scale-[1.02]"
+                      : "bg-[#1C1C28] text-zinc-300 hover:text-white hover:bg-[#252538] border border-[#2D2D42]"
+                  }`}
+                >
+                  <span>🎭</span>
+                  <span className="truncate max-w-[180px]">{item.productionName}</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/50 text-rose-300 font-bold">
+                    {item.folio}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
         )}

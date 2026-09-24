@@ -177,18 +177,32 @@ export function createAudition(data: Omit<AuditionRegistration, "id" | "folio" |
     (p) => p.id === data.productionId || p.title === data.productionName || p.isAuditionActive
   ) || productions[0];
 
-  const nextNum = 500 + auditions.length + 1;
-  const folio = `DV-${nextNum}`;
+  const cleanPhoneDigits = data.phone ? data.phone.replace(/\D/g, "") : "";
+  const last4 = cleanPhoneDigits.length >= 4 
+    ? cleanPhoneDigits.slice(-4) 
+    : String(500 + auditions.length + 1).padStart(4, "0");
 
-  const cleanPhoneDigits = data.phone ? data.phone.replace(/\D/g, "").slice(-10) : "";
+  let baseFolio = `DV-${last4}`;
+  let finalFolio = baseFolio;
+  let counter = 2;
+
+  // Disambiguate if exact folio already exists in database
+  while (auditions.some((a) => (a.folio || "").toUpperCase() === finalFolio.toUpperCase())) {
+    finalFolio = `${baseFolio}-${counter}`;
+    counter++;
+  }
+
+  const folio = finalFolio;
+  const auditionNumber = last4;
 
   const newRecord: AuditionRegistration = {
     id: `aud_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
     folio,
-    auditionNumber: String(nextNum),
+    studentFolio: `DV-${last4}`,
+    auditionNumber,
     headshotUrl: data.headshotUrl || "",
     googleDriveUrl: data.googleDriveUrl || matchedProd?.driveFolderUrl || "",
-    studentId: data.studentId || cleanPhoneDigits || undefined,
+    studentId: data.studentId || cleanPhoneDigits.slice(-10) || undefined,
     ...data,
     productionId: matchedProd?.id || "prod_si_no_es_ahora",
     productionName: matchedProd?.title || "Si No Es Ahora (El Musical)",
@@ -227,36 +241,55 @@ export function updateAuditionStatus(
   return auditions[index];
 }
 
-export function getAuditionByFolioOrContact(query: string): AuditionRegistration | null {
-  if (!query) return null;
+export function getAllAuditionsByFolioOrContact(query: string): AuditionRegistration[] {
+  if (!query) return [];
   const auditions = getStoredAuditions();
-  const cleanQuery = query.trim().toLowerCase().replace(/[^a-z0-9]/g, ""); // e.g. "dv585" or "585"
+  const cleanQuery = query.trim().toLowerCase().replace(/[^a-z0-9]/g, ""); // e.g. "dv2562" or "2562"
   const numericOnly = query.replace(/\D/g, "");
 
-  return (
-    auditions.find((a) => {
-      if (!a) return false;
-      const cleanFolio = (a.folio || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-      
-      // Direct or normalized match (e.g. "DV-585", "dv585", "585")
-      if (cleanFolio && (cleanFolio === cleanQuery || cleanFolio.includes(cleanQuery) || cleanQuery.includes(cleanFolio))) {
+  return auditions.filter((a) => {
+    if (!a) return false;
+    const cleanFolio = (a.folio || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const cleanStudentFolio = (a.studentFolio || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+    // 1. Direct or normalized Folio match (e.g. "DV-2562", "dv2562", "DV-2562-2", "DV-501")
+    if (cleanFolio && (cleanFolio === cleanQuery || cleanFolio.startsWith(cleanQuery))) {
+      return true;
+    }
+    if (cleanStudentFolio && (cleanStudentFolio === cleanQuery || cleanStudentFolio.startsWith(cleanQuery))) {
+      return true;
+    }
+
+    // 2. Numeric matching (last 4 digits of phone, full 10-digit phone, or audition number)
+    if (numericOnly) {
+      if (cleanFolio.includes(numericOnly) || String(a.auditionNumber || "").includes(numericOnly)) {
         return true;
       }
-      // Numeric matching (e.g. typing "585" matches "DV-585" or "AUD-2026-DV-0585")
-      if (numericOnly && (cleanFolio.includes(numericOnly) || String(a.auditionNumber || "").includes(numericOnly))) {
-        return true;
+      const phoneDigits = (a.phone || "").replace(/\D/g, "");
+      if (phoneDigits) {
+        if (
+          phoneDigits === numericOnly ||
+          phoneDigits.endsWith(numericOnly) ||
+          phoneDigits.includes(numericOnly) ||
+          numericOnly.includes(phoneDigits)
+        ) {
+          return true;
+        }
       }
-      // Email match
-      if (a.email && a.email.toLowerCase().includes(query.trim().toLowerCase())) {
-        return true;
-      }
-      // Phone match
-      if (numericOnly && a.phone && a.phone.replace(/\D/g, "").includes(numericOnly)) {
-        return true;
-      }
-      return false;
-    }) || null
-  );
+    }
+
+    // 3. Email match
+    if (a.email && a.email.toLowerCase().trim() === query.trim().toLowerCase()) {
+      return true;
+    }
+
+    return false;
+  });
+}
+
+export function getAuditionByFolioOrContact(query: string): AuditionRegistration | null {
+  const matches = getAllAuditionsByFolioOrContact(query);
+  return matches.length > 0 ? matches[0] : null;
 }
 
 // ---------------------------------------------------------------------------
