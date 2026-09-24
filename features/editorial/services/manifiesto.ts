@@ -8,11 +8,25 @@ import { ManifiestoArticlePayload, adaptManifiestoArticle } from "../types";
  * strict chronological sorting (newest to oldest).
  */
 export async function getLatestArticles(limit = 5): Promise<Article[]> {
+  // Local CMS Storage (.data/articles.json) takes priority
+  const localArticles = getStoredArticles();
+  const published = localArticles.filter((a) => (a.status || "PUBLISHED") === "PUBLISHED");
+
+  if (published.length > 0) {
+    return published
+      .sort((a, b) => {
+        const timeA = new Date(a.publishedAt || a.createdAt || 0).getTime();
+        const timeB = new Date(b.publishedAt || b.createdAt || 0).getTime();
+        return timeB - timeA;
+      })
+      .slice(0, limit);
+  }
+
   const apiUrl = process.env.MANIFIESTO21_API_URL;
   const apiKey = process.env.MANIFIESTO21_API_KEY;
   const tenantId = process.env.MANIFIESTO21_TENANT_ID;
 
-  // If external API is configured, attempt to fetch from external Manifiesto API
+  // If external API is configured, attempt to fetch from external Manifiesto API as fallback
   if (apiUrl && !apiUrl.includes("example.com") && apiKey && tenantId) {
     try {
       const url = `${apiUrl}/articles?tenant=${tenantId}`;
@@ -24,7 +38,7 @@ export async function getLatestArticles(limit = 5): Promise<Article[]> {
         },
         next: {
           tags: ["editorial"],
-          revalidate: 60,
+          revalidate: 0,
         },
       });
 
@@ -47,15 +61,5 @@ export async function getLatestArticles(limit = 5): Promise<Article[]> {
     }
   }
 
-  // Local CMS Storage (.data/articles.json)
-  const localArticles = getStoredArticles();
-  const published = localArticles.filter((a) => (a.status || "PUBLISHED") === "PUBLISHED");
-
-  return published
-    .sort((a, b) => {
-      const timeA = new Date(a.publishedAt || a.createdAt || 0).getTime();
-      const timeB = new Date(b.publishedAt || b.createdAt || 0).getTime();
-      return timeB - timeA;
-    })
-    .slice(0, limit);
+  return [];
 }

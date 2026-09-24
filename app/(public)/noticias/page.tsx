@@ -7,6 +7,9 @@ import SiteFooter from "@/components/layout/site-footer";
 import TheatricalAuroraBackground from "@/components/ui/theatrical-aurora-background";
 import SectionHeading from "@/components/ui/section-heading";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Noticias & Novedades | DV Performing Arts",
   description: "Explora todas las noticias, crónicas de ensayos, convocatorias y vida estudiantil de DV Performing Arts.",

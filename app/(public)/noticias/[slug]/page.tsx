@@ -8,6 +8,10 @@ import SiteFooter from "@/components/layout/site-footer";
 import TheatricalAuroraBackground from "@/components/ui/theatrical-aurora-background";
 import SocialShareButtons from "@/components/news/social-share-buttons";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const dynamicParams = true;
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
@@ -53,13 +57,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       images: [image],
     },
   };
-}
-
-export async function generateStaticParams() {
-  const articles = getStoredArticles();
-  return articles.map((article) => ({
-    slug: article.slug,
-  }));
 }
 
 interface EditorBlock {

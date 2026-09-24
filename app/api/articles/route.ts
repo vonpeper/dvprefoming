@@ -1,13 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getStoredArticles, saveArticle, deleteArticle } from "@/lib/storage";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET() {
   try {
     const articles = getStoredArticles();
-    return NextResponse.json({
-      success: true,
-      articles,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        articles,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        },
+      }
+    );
   } catch (error) {
     console.error("[ARTICLES GET ERROR]", error);
     return NextResponse.json({ error: "Error al obtener artículos." }, { status: 500 });
@@ -22,6 +33,17 @@ export async function POST(req: NextRequest) {
     }
 
     const saved = saveArticle(body);
+
+    try {
+      revalidatePath("/");
+      revalidatePath("/noticias");
+      if (saved.slug) {
+        revalidatePath(`/noticias/${saved.slug}`);
+      }
+    } catch (e) {
+      console.warn("[REVALIDATE ERROR]", e);
+    }
+
     return NextResponse.json({
       success: true,
       article: saved,
@@ -40,7 +62,21 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "ID de artículo requerido." }, { status: 400 });
     }
 
+    const articles = getStoredArticles();
+    const target = articles.find((a) => a.id === id);
+
     const success = deleteArticle(id);
+
+    try {
+      revalidatePath("/");
+      revalidatePath("/noticias");
+      if (target?.slug) {
+        revalidatePath(`/noticias/${target.slug}`);
+      }
+    } catch (e) {
+      console.warn("[REVALIDATE ERROR]", e);
+    }
+
     return NextResponse.json({ success });
   } catch (error) {
     console.error("[ARTICLES DELETE ERROR]", error);

@@ -400,7 +400,25 @@ export function saveArticle(article: Partial<Article> & { title: string }): Arti
 
 export function getArticleBySlug(slug: string): Article | null {
   const articles = getStoredArticles();
-  return articles.find((a) => a.slug === slug || a.id === slug) || null;
+  let decoded = slug;
+  try {
+    decoded = decodeURIComponent(slug).toLowerCase().trim();
+  } catch {
+    decoded = slug.toLowerCase().trim();
+  }
+  const clean = slug.toLowerCase().trim();
+
+  return (
+    articles.find((a) => {
+      const artSlug = (a.slug || "").toLowerCase().trim();
+      return (
+        artSlug === clean ||
+        artSlug === decoded ||
+        a.id === slug ||
+        a.id.toLowerCase() === clean
+      );
+    }) || null
+  );
 }
 
 export function getRelatedArticles(currentId: string, limit = 4): Article[] {
