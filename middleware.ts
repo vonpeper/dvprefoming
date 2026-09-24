@@ -3,9 +3,61 @@ import { verifySessionToken } from "@/lib/auth";
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
+  const isPrevHost = host.toLowerCase().includes("prev.");
   const sessionCookie = req.cookies.get("dv_admin_session")?.value;
 
-  // 1. Alias /login and /dashboard/login -> /admin
+  // 1. Robots.txt block for preproduction host
+  if (isPrevHost && pathname === "/robots.txt") {
+    return new NextResponse("User-agent: *\nDisallow: /\n", {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain",
+        "X-Robots-Tag": "noindex, nofollow, noarchive, nosnippet",
+      },
+    });
+  }
+
+  // 2. Private Preproduction Protection (Basic Auth for prev. host)
+  if (isPrevHost) {
+    let hasValidSession = false;
+    if (sessionCookie) {
+      const { valid } = verifySessionToken(sessionCookie);
+      if (valid) hasValidSession = true;
+    }
+
+    if (!hasValidSession) {
+      const authHeader = req.headers.get("authorization");
+      let isAuthenticated = false;
+
+      if (authHeader && authHeader.startsWith("Basic ")) {
+        try {
+          const credentials = Buffer.from(authHeader.substring(6), "base64").toString("utf-8");
+          const [username, password] = credentials.split(":");
+          const validPassword = process.env.ADMIN_PASSWORD || "DVPerforming@2026!Admin";
+          const validUsers = ["admin", "dvp", "admin@dvperformingarts.com", "diego", "preproduccion"];
+
+          if (validUsers.includes(username?.toLowerCase()?.trim()) && password === validPassword) {
+            isAuthenticated = true;
+          }
+        } catch {
+          isAuthenticated = false;
+        }
+      }
+
+      if (!isAuthenticated) {
+        return new NextResponse("🔒 Entorno de Preproducción DV Performing Arts - Acceso Privado Requerido.", {
+          status: 401,
+          headers: {
+            "WWW-Authenticate": 'Basic realm="DV Performing Arts Preproduccion"',
+            "X-Robots-Tag": "noindex, nofollow, noarchive, nosnippet",
+          },
+        });
+      }
+    }
+  }
+
+  // 3. Alias /login and /dashboard/login -> /admin
   if (pathname === "/login" || pathname === "/dashboard/login") {
     const redirectParam = req.nextUrl.searchParams.get("redirect");
     const adminUrl = new URL("/admin", req.url);
@@ -13,7 +65,7 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(adminUrl);
   }
 
-  // 2. Admin Login page (/admin)
+  // 4. Admin Login page (/admin)
   if (pathname === "/admin") {
     if (sessionCookie) {
       const { valid, role, isJuror } = verifySessionToken(sessionCookie);
@@ -30,11 +82,11 @@ export function middleware(req: NextRequest) {
       }
     }
     const res = NextResponse.next();
-    applySecurityHeaders(res);
+    applySecurityHeaders(res, isPrevHost);
     return res;
   }
 
-  // 3. Check Dashboard Protected Routes (Strictly for ADMIN)
+  // 5. Check Dashboard Protected Routes (Strictly for ADMIN)
   if (pathname.startsWith("/dashboard")) {
     if (!sessionCookie) {
       const loginUrl = new URL("/admin", req.url);
@@ -61,13 +113,13 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  // 4. Pass request and apply Security Headers
+  // 6. Pass request and apply Security Headers
   const response = NextResponse.next();
-  applySecurityHeaders(response);
+  applySecurityHeaders(response, isPrevHost);
   return response;
 }
 
-function applySecurityHeaders(res: NextResponse) {
+function applySecurityHeaders(res: NextResponse, isPrevHost = false) {
   // Prevent clickjacking
   res.headers.set("X-Frame-Options", "SAMEORIGIN");
   // Prevent MIME-type sniffing
@@ -78,6 +130,10 @@ function applySecurityHeaders(res: NextResponse) {
   res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   // XSS filter
   res.headers.set("X-XSS-Protection", "1; mode=block");
+
+  if (isPrevHost) {
+    res.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet");
+  }
 }
 
 export const config = {
