@@ -200,64 +200,64 @@ export default function AuditionFeature() {
   };
 
   return (
-    <section id="audiciones" className="relative w-full py-20 px-4 sm:px-6 border-b-4 border-border-editorial" aria-labelledby="heading-audiciones">
+    <section id="audiciones" className="relative w-full py-16 sm:py-20 px-3 sm:px-6 border-b-4 border-border-editorial overflow-x-clip" aria-labelledby="heading-audiciones">
       <div className="mx-auto max-w-4xl flex flex-col items-center">
         
         {/* ================= URBAN STREET DANCE BRUSH GRAFFITI HEADER ================= */}
-        <div className="flex flex-col items-center text-center mb-8 relative select-none">
+        <div className="flex flex-col items-center text-center mb-6 sm:mb-8 relative select-none w-full max-w-full">
           
           {/* Top Stage Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-purple-900/40 border border-purple-500/40 rounded-full text-xs font-semibold text-purple-300 mb-4 shadow-sm backdrop-blur-md">
+          <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 bg-purple-900/40 border border-purple-500/40 rounded-full text-xs font-semibold text-purple-300 mb-3 sm:mb-4 shadow-sm backdrop-blur-md">
             <span className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse" />
-            <span className="tracking-widest uppercase text-[11px] font-bold">CONVOCATORIA DE TALENTO &bull; TEMPORADA 2026</span>
+            <span className="tracking-widest uppercase text-[10px] sm:text-[11px] font-bold">CONVOCATORIA DE TALENTO &bull; TEMPORADA 2026</span>
           </div>
 
           {/* Urban Dance Brush Graffiti Title Box */}
-          <div className="relative inline-flex items-center justify-center my-3 px-10 sm:px-14 py-4 sm:py-6">
+          <div className="relative inline-flex items-center justify-center my-2 sm:my-3 px-8 sm:px-14 py-3.5 sm:py-6 max-w-full">
             
             {/* The Authentic Purple / Magenta Street Brush Background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-700 via-fuchsia-600 to-purple-700 rounded-3xl transform -rotate-1 skew-x-[-6deg] shadow-[0_15px_45px_rgba(168,85,247,0.5)] border border-purple-400/30" />
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-700 via-fuchsia-600 to-purple-700 rounded-2xl sm:rounded-3xl transform -rotate-1 skew-x-[-6deg] shadow-[0_15px_45px_rgba(168,85,247,0.5)] border border-purple-400/30" />
             
             {/* Spray paint drips hanging down from the brush bottom */}
-            <div className="absolute -bottom-6 left-12 w-2 h-8 bg-white rounded-full opacity-90 shadow-md" />
-            <div className="absolute -bottom-10 left-24 w-1.5 h-12 bg-white rounded-full opacity-80" />
-            <div className="absolute -bottom-5 right-16 w-2 h-7 bg-white rounded-full opacity-85" />
-            <div className="absolute -bottom-9 right-32 w-1.5 h-10 bg-white rounded-full opacity-75" />
+            <div className="hidden sm:block absolute -bottom-6 left-12 w-2 h-8 bg-white rounded-full opacity-90 shadow-md" />
+            <div className="hidden sm:block absolute -bottom-10 left-24 w-1.5 h-12 bg-white rounded-full opacity-80" />
+            <div className="hidden sm:block absolute -bottom-5 right-16 w-2 h-7 bg-white rounded-full opacity-85" />
+            <div className="hidden sm:block absolute -bottom-9 right-32 w-1.5 h-10 bg-white rounded-full opacity-75" />
             
             {/* Paint Splatter & Spray Dots */}
-            <span className="absolute -top-4 right-10 w-2.5 h-2.5 rounded-full bg-white opacity-90 shadow" />
-            <span className="absolute -bottom-4 left-6 w-2 h-2 rounded-full bg-white opacity-80" />
-            <span className="absolute top-2 -left-5 w-2 h-2 rounded-full bg-purple-300 opacity-90" />
-            <span className="absolute -top-3 -right-4 w-3 h-3 rounded-full bg-fuchsia-300 opacity-90" />
+            <span className="hidden sm:block absolute -top-4 right-10 w-2.5 h-2.5 rounded-full bg-white opacity-90 shadow" />
+            <span className="hidden sm:block absolute -bottom-4 left-6 w-2 h-2 rounded-full bg-white opacity-80" />
+            <span className="absolute top-2 -left-3 sm:-left-5 w-2 h-2 rounded-full bg-purple-300 opacity-90" />
+            <span className="absolute -top-3 -right-2 sm:-right-4 w-3 h-3 rounded-full bg-fuchsia-300 opacity-90" />
 
             {/* Spray Halo ring above the title */}
-            <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-16 h-4 border-[2.5px] border-white rounded-full transform -rotate-6 shadow-sm pointer-events-none" />
+            <div className="absolute -top-4 sm:-top-5 left-1/2 -translate-x-1/2 w-14 sm:w-16 h-3.5 sm:h-4 border-[2px] sm:border-[2.5px] border-white rounded-full transform -rotate-6 shadow-sm pointer-events-none" />
 
             {/* Main Urban Brush Title: AUDICIONES */}
             <h2
               className="font-urban-brush text-white tracking-wider uppercase leading-none drop-shadow-[0_5px_15px_rgba(0,0,0,0.9)] transform -rotate-[1deg] relative z-10"
-              style={{ fontSize: "clamp(3.2rem, 8.5vw, 6.2rem)" }}
+              style={{ fontSize: "clamp(2.7rem, 8.5vw, 6.2rem)" }}
             >
               AUDICIONES
             </h2>
           </div>
 
-          <p className="text-zinc-300 text-sm sm:text-base text-center max-w-xl mt-5 font-normal leading-relaxed">
+          <p className="text-zinc-300 text-xs sm:text-base text-center max-w-xl mt-3 sm:mt-5 font-normal leading-relaxed px-2">
             Inicia tu registro oficial para formar parte de nuestras producciones en León, Gto. Te asignamos tu folio y confirmamos tu cita al instante por WhatsApp.
           </p>
         </div>
 
         {/* ================= CONSULTA DE RESULTADOS DIRECTA CON FOLIO / ID ================= */}
-        <div className="w-full max-w-xl bg-gradient-to-r from-purple-950/80 via-[#151522] to-rose-950/80 border-2 border-purple-500/60 rounded-3xl p-5 sm:p-6 mb-12 shadow-2xl flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <span className="text-2xl">🔍</span>
-              <div>
-                <h3 className="text-base font-black text-white">¿Ya realizaste tu audición?</h3>
-                <p className="text-xs text-zinc-300">Ingresa tu Folio o ID para ver tu resultado, estatus y rol asignado.</p>
+        <div className="w-full max-w-xl bg-gradient-to-r from-purple-950/80 via-[#151522] to-rose-950/80 border-2 border-purple-500/60 rounded-2xl sm:rounded-3xl p-4 sm:p-6 mb-8 sm:mb-12 shadow-2xl flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="text-xl sm:text-2xl shrink-0">🔍</span>
+              <div className="min-w-0">
+                <h3 className="text-sm sm:text-base font-black text-white leading-tight">¿Ya realizaste tu audición?</h3>
+                <p className="text-[11px] sm:text-xs text-zinc-300 leading-snug mt-0.5">Ingresa tu Folio o teléfono para ver tu resultado, estatus y rol.</p>
               </div>
             </div>
-            <span className="hidden sm:inline-block text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+            <span className="hidden sm:inline-block text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full shrink-0">
               ● Consulta en Vivo
             </span>
           </div>
@@ -265,75 +265,76 @@ export default function AuditionFeature() {
           <form onSubmit={handleQuickLookup} className="flex flex-col sm:flex-row gap-2 mt-1">
             <input
               type="text"
-              placeholder="Ej. DV-585, DV-501 o tu teléfono..."
+              placeholder="Ej. DV-502 o tus 10 dígitos..."
               value={quickFolioInput}
               onChange={(e) => setQuickFolioInput(e.target.value)}
-              className="flex-1 bg-black/60 border border-purple-500/50 focus:border-purple-400 rounded-2xl px-4 py-3 text-sm text-white font-mono font-bold placeholder-zinc-500 focus:outline-none uppercase"
+              className="flex-1 bg-black/60 border border-purple-500/50 focus:border-purple-400 rounded-xl sm:rounded-2xl px-3.5 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-white font-mono font-bold placeholder-zinc-500 focus:outline-none uppercase"
             />
             <button
               type="submit"
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg shadow-purple-950/50 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+              className="w-full sm:w-auto px-5 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white font-black text-xs uppercase tracking-wider rounded-xl sm:rounded-2xl shadow-lg shadow-purple-950/50 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
             >
               <span>Consultar Estatus</span>
               <span>→</span>
             </button>
           </form>
 
-          <div className="flex items-center justify-between text-[11px] text-zinc-400 font-mono pt-1">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-zinc-400 font-mono pt-1 gap-1.5 sm:gap-2">
             <span>¿No recuerdas tu folio? Busca con tu WhatsApp.</span>
-            <Link href="/audiciones/consulta" className="text-purple-400 hover:underline">
-              Ir a portal de consulta ↗
+            <Link href="/audiciones/consulta" className="text-purple-400 hover:underline font-semibold flex items-center gap-1">
+              <span>Ir a portal de consulta</span>
+              <span>↗</span>
             </Link>
           </div>
         </div>
 
         {/* ================= SMARTPHONE CHAT & REGISTRATION SIMULATION ================= */}
-        <div className="w-full max-w-[490px] bg-[#111118] border-4 border-[#28283C] rounded-[3.2rem] shadow-[0_30px_90px_rgba(0,0,0,0.9)] p-3 sm:p-4 relative overflow-hidden ring-1 ring-white/10">
+        <div className="w-full max-w-[490px] bg-[#111118] border-[3px] sm:border-4 border-[#28283C] rounded-[2.2rem] sm:rounded-[3.2rem] shadow-[0_20px_60px_rgba(0,0,0,0.85)] p-2 sm:p-4 relative overflow-hidden ring-1 ring-white/10">
           
           {/* Speaker / Dynamic Island Top Bar */}
-          <div className="w-28 h-4 bg-black rounded-full mx-auto mb-3 border border-white/10 flex items-center justify-center">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#20202A]" />
+          <div className="w-24 sm:w-28 h-3.5 sm:h-4 bg-black rounded-full mx-auto mb-2 sm:mb-3 border border-white/10 flex items-center justify-center">
+            <span className="w-2 h-2 rounded-full bg-[#20202A]" />
           </div>
 
           {/* Clean White Phone Screen Body */}
-          <div className="bg-[#F2F4F7] rounded-[2.5rem] p-4 sm:p-5 flex flex-col gap-3.5 border border-slate-300 shadow-inner">
+          <div className="bg-[#F2F4F7] rounded-[1.8rem] sm:rounded-[2.5rem] p-2.5 sm:p-5 flex flex-col gap-3 sm:gap-3.5 border border-slate-300 shadow-inner">
             
             {/* Phone Top Header (Clean Light Theme) */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-300/80 px-1">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white text-lg font-bold shadow-md">
+            <div className="flex items-center justify-between pb-2.5 sm:pb-3 border-b border-slate-300/80 px-1">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-purple-600 flex items-center justify-center text-white text-base sm:text-lg font-bold shadow-md shrink-0">
                   🎭
                 </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-sm font-black text-slate-900 font-display">DV Performing Arts</span>
-                  <span className="text-[11px] text-emerald-700 font-bold flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <div className="flex flex-col text-left min-w-0">
+                  <span className="text-xs sm:text-sm font-black text-slate-900 font-display truncate">DV Performing Arts</span>
+                  <span className="text-[10px] sm:text-[11px] text-emerald-700 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                     En línea &bull; Registro Oficial
                   </span>
                 </div>
               </div>
-              <span className="text-xs text-slate-500 font-mono font-semibold">León, GTO</span>
+              <span className="text-[10px] sm:text-xs text-slate-500 font-mono font-semibold shrink-0">León, GTO</span>
             </div>
 
             {/* Incoming Message 1 (Dynamic Greeting synced with selected production - Pure White) */}
-            <div className="bg-white border-2 border-slate-200 rounded-2xl rounded-tl-sm p-4 sm:p-5 text-xs text-slate-700 leading-relaxed shadow-md text-left">
+            <div className="bg-white border-2 border-slate-200 rounded-2xl rounded-tl-sm p-3.5 sm:p-5 text-xs text-slate-700 leading-relaxed shadow-md text-left">
               <p className="font-semibold text-slate-800">
                 ¡Hola! 🎭 Queremos conocer tu talento. Completa tu ficha de registro para asignarte tu folio oficial y cita de audición:
               </p>
               
               {/* Dynamic Active Production Banner that reacts to dropdown selection (Pure Crisp White / Soft Slate) */}
               {activeProduction ? (
-                <div className="mt-3 p-3.5 bg-[#F8F9FA] rounded-xl border-2 border-purple-200 flex flex-col gap-1.5 shadow-sm">
+                <div className="mt-3 p-3 sm:p-3.5 bg-[#F8F9FA] rounded-xl border-2 border-purple-200 flex flex-col gap-1.5 shadow-sm">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-purple-800 font-bold flex items-center gap-1.5 text-[11px]">
                       <span>🎬 Convocatoria Activa:</span>
                     </span>
-                    <span className="text-[10px] font-mono text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full font-bold">
+                    <span className="text-[10px] font-mono text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full font-bold shrink-0">
                       ● Abierta
                     </span>
                   </div>
-                  <span className="text-slate-900 font-black text-sm tracking-tight">{activeProduction.title}</span>
-                  <div className="flex items-center justify-between text-[10px] text-slate-600 font-mono pt-1.5 border-t border-slate-200">
+                  <span className="text-slate-900 font-black text-sm tracking-tight leading-snug">{activeProduction.title}</span>
+                  <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-slate-600 font-mono pt-1.5 border-t border-slate-200">
                     <span className="font-medium">{activeProduction.auditionDates || activeProduction.season || "Temporada 2026"}</span>
                     {activeProduction.auditionDeadline && (
                       <span className="text-purple-700 font-bold">Cierre: {activeProduction.auditionDeadline}</span>
@@ -341,7 +342,7 @@ export default function AuditionFeature() {
                   </div>
                 </div>
               ) : (
-                <div className="mt-3 p-3.5 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs font-semibold">
+                <div className="mt-3 p-3 sm:p-3.5 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs font-semibold">
                   ★ Convocatoria General para Próximos Montajes
                 </div>
               )}
@@ -356,9 +357,9 @@ export default function AuditionFeature() {
                 </div>
 
                 {/* Incoming Message: Official Ticket & WhatsApp Dispatch (Crisp White Form Container) */}
-                <div className="bg-white border-2 border-emerald-300 rounded-3xl rounded-tl-sm p-5 sm:p-6 text-xs text-slate-800 text-left flex flex-col gap-4 shadow-xl">
+                <div className="bg-white border-2 border-emerald-300 rounded-2xl sm:rounded-3xl rounded-tl-sm p-4 sm:p-6 text-xs text-slate-800 text-left flex flex-col gap-4 shadow-xl">
                   <div className="flex items-center gap-2 text-emerald-700 font-black text-sm">
-                    <span className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-sm">✓</span>
+                    <span className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-sm shrink-0">✓</span>
                     <span>¡Tu registro ha sido exitoso!</span>
                   </div>
 
@@ -369,18 +370,18 @@ export default function AuditionFeature() {
                   {/* Folio Highlight Box in Light Theme */}
                   <div className="bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-50 border-2 border-purple-300 rounded-2xl p-4 sm:p-5 text-center flex flex-col gap-1.5 shadow-md">
                     <span className="text-[11px] text-purple-900 font-mono uppercase font-bold tracking-wider">Tu Folio Único Oficial:</span>
-                    <span className="font-mono text-3xl font-black text-purple-700 tracking-widest">{submittedData.folio}</span>
+                    <span className="font-mono text-2xl sm:text-3xl font-black text-purple-700 tracking-widest break-all">{submittedData.folio}</span>
                     <span className="text-[10px] text-slate-600 mt-0.5">Presenta este código al llegar a recepción</span>
                   </div>
 
-                  <div className="text-[11px] text-slate-700 leading-relaxed border-t border-slate-200 pt-3 flex items-center gap-2">
-                    <span className="text-lg">📱</span>
+                  <div className="text-[11px] text-slate-700 leading-relaxed border-t border-slate-200 pt-3 flex items-start sm:items-center gap-2">
+                    <span className="text-lg shrink-0">📱</span>
                     <span>Hemos enviado tu número de audición, material en Google Drive y recomendaciones a tu correo y WhatsApp <strong className="text-slate-900">{submittedData.phone}</strong>.</span>
                   </div>
 
                   <a
                     href={`/audiciones/consulta?folio=${submittedData.folio}`}
-                    className="w-full py-3 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 shadow-md"
+                    className="w-full py-3 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 shadow-md active:scale-[0.99]"
                   >
                     <span>🔍</span>
                     <span>Ver Ficha y Material de Audición ↗</span>
@@ -397,7 +398,7 @@ export default function AuditionFeature() {
               </div>
             ) : (
               /* Full Audition Registration Form (Crisp Clean White Container) */
-              <form onSubmit={handleSubmit} className="bg-white border-2 border-slate-200/90 rounded-3xl p-5 sm:p-6 flex flex-col gap-4 text-left shadow-[0_10px_30px_rgba(0,0,0,0.06)]">
+              <form onSubmit={handleSubmit} className="bg-white border-2 border-slate-200/90 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 flex flex-col gap-4 text-left shadow-[0_10px_30px_rgba(0,0,0,0.06)]">
                 {errorMessage && (
                   <div className="p-3 bg-rose-50 border border-rose-300 rounded-xl text-rose-700 text-xs font-semibold">
                     ⚠️ {errorMessage}
@@ -416,7 +417,7 @@ export default function AuditionFeature() {
 
                 {/* 1. Obra en Convocatoria (Selector reactivo) */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-purple-900 flex justify-between items-center">
+                  <label className="text-xs font-bold text-purple-900 flex flex-wrap justify-between items-baseline gap-1">
                     <span>Obra / Puesta en Escena *</span>
                     <span className="text-[10px] text-purple-600 font-mono font-medium">Convocatorias vigentes</span>
                   </label>
@@ -432,7 +433,7 @@ export default function AuditionFeature() {
                         googleDriveUrl: selected ? selected.driveFolderUrl || "" : "",
                       }));
                     }}
-                    className="w-full bg-[#F8F9FA] border-2 border-purple-200 focus:border-purple-600 focus:bg-white rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-bold focus:outline-none cursor-pointer shadow-sm transition-all"
+                    className="w-full bg-[#F8F9FA] border-2 border-purple-200 focus:border-purple-600 focus:bg-white rounded-xl px-3 sm:px-3.5 py-2.5 text-xs text-slate-900 font-bold focus:outline-none cursor-pointer shadow-sm transition-all"
                   >
                     {productions.map((prod) => (
                       <option key={prod.id} value={prod.id} className="bg-white text-slate-900">
@@ -443,19 +444,19 @@ export default function AuditionFeature() {
                 </div>
 
                 {/* 2. Fotografía / Headshot del Aspirante (Móvil / Cámara) */}
-                <div className="p-3.5 bg-[#F8F9FA] border-2 border-dashed border-purple-200 rounded-2xl flex items-center justify-between gap-3">
+                <div className="p-3 sm:p-3.5 bg-[#F8F9FA] border-2 border-dashed border-purple-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-14 h-14 rounded-2xl bg-purple-100 border-2 border-purple-300 overflow-hidden flex items-center justify-center shrink-0 shadow-inner">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-purple-100 border-2 border-purple-300 overflow-hidden flex items-center justify-center shrink-0 shadow-inner">
                       {formData.headshotUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={formData.headshotUrl} alt="Foto aspirante" className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-2xl">📸</span>
+                        <span className="text-xl sm:text-2xl">📸</span>
                       )}
                     </div>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-xs font-bold text-slate-900">Foto o Selfie para Casting</span>
-                      <span className="text-[10px] text-slate-500 leading-tight">
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="text-xs font-bold text-slate-900 leading-snug">Foto o Selfie para Casting</span>
+                      <span className="text-[11px] text-slate-500 leading-normal">
                         {formData.headshotUrl ? "✓ Fotografía cargada con éxito" : "Tómate una foto o sube tu retrato desde tu celular"}
                       </span>
                     </div>
@@ -465,13 +466,13 @@ export default function AuditionFeature() {
                     type="button"
                     disabled={uploadingPhoto}
                     onClick={() => photoInputRef.current?.click()}
-                    className="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shrink-0 cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                    className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shrink-0 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 active:scale-[0.98]"
                   >
                     {uploadingPhoto ? (
                       <span className="animate-pulse">Subiendo...</span>
                     ) : (
                       <>
-                        <span>{formData.headshotUrl ? "Cambiar" : "Tomar Foto"}</span>
+                        <span>{formData.headshotUrl ? "Cambiar foto" : "Tomar Foto o Subir"}</span>
                         <span>📷</span>
                       </>
                     )}
@@ -489,7 +490,7 @@ export default function AuditionFeature() {
                     placeholder="Ej. Sofía Hernández Navarro"
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    className="w-full bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white focus:ring-2 focus:ring-purple-100 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none transition-all"
+                    className="w-full bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white focus:ring-2 focus:ring-purple-100 rounded-xl px-3 sm:px-3.5 py-2.5 text-xs text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none transition-all"
                   />
                 </div>
 
@@ -499,7 +500,7 @@ export default function AuditionFeature() {
                     Teléfono / WhatsApp (10 dígitos) *
                   </label>
                   <div className="flex items-center gap-2">
-                    <span className="bg-[#EEF2F6] border border-slate-300 px-3 py-2.5 rounded-xl text-slate-700 font-mono text-xs font-bold">
+                    <span className="shrink-0 bg-[#EEF2F6] border border-slate-300 px-2.5 sm:px-3 py-2.5 rounded-xl text-slate-700 font-mono text-xs font-bold">
                       🇲🇽 +52
                     </span>
                     <input
@@ -509,7 +510,7 @@ export default function AuditionFeature() {
                       placeholder="477 123 4567"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="flex-1 bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white focus:ring-2 focus:ring-purple-100 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-mono font-medium placeholder:text-slate-400 focus:outline-none transition-all"
+                      className="flex-1 min-w-0 bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white focus:ring-2 focus:ring-purple-100 rounded-xl px-3 sm:px-3.5 py-2.5 text-xs text-slate-900 font-mono font-medium placeholder:text-slate-400 focus:outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -524,7 +525,7 @@ export default function AuditionFeature() {
                     placeholder="aspirante@ejemplo.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white focus:ring-2 focus:ring-purple-100 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none transition-all"
+                    className="w-full bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white focus:ring-2 focus:ring-purple-100 rounded-xl px-3 sm:px-3.5 py-2.5 text-xs text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none transition-all"
                   />
                 </div>
 
@@ -536,7 +537,7 @@ export default function AuditionFeature() {
                   <select
                     value={formData.preferredSchedule}
                     onChange={(e) => setFormData({ ...formData, preferredSchedule: e.target.value })}
-                    className="w-full bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-medium focus:outline-none cursor-pointer transition-all"
+                    className="w-full bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white rounded-xl px-3 sm:px-3.5 py-2.5 text-xs text-slate-900 font-medium focus:outline-none cursor-pointer transition-all"
                   >
                     {scheduleOptions.map((sch, sIdx) => (
                       <option key={sIdx} value={sch} className="bg-white text-slate-900">
@@ -556,7 +557,7 @@ export default function AuditionFeature() {
                     placeholder="Ej. 2 años en danza urbana, estudios de canto..."
                     value={formData.experienceNotes}
                     onChange={(e) => setFormData({ ...formData, experienceNotes: e.target.value })}
-                    className="w-full bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white focus:ring-2 focus:ring-purple-100 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none resize-none transition-all"
+                    className="w-full bg-[#F8F9FA] border border-slate-300 focus:border-purple-600 focus:bg-white focus:ring-2 focus:ring-purple-100 rounded-xl px-3 sm:px-3.5 py-2.5 text-xs text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none resize-none transition-all"
                   />
                 </div>
 
@@ -564,7 +565,7 @@ export default function AuditionFeature() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-purple-700 via-fuchsia-600 to-purple-700 hover:from-purple-600 hover:to-fuchsia-500 text-white font-black uppercase tracking-wider text-xs shadow-xl shadow-purple-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-1"
+                  className="w-full py-3.5 sm:py-4 px-4 sm:px-6 rounded-xl bg-gradient-to-r from-purple-700 via-fuchsia-600 to-purple-700 hover:from-purple-600 hover:to-fuchsia-500 active:scale-[0.99] text-white font-black uppercase tracking-wider text-xs sm:text-sm shadow-xl shadow-purple-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-1"
                 >
                   {loading ? (
                     <span>Generando Folio Oficial...</span>
@@ -586,17 +587,17 @@ export default function AuditionFeature() {
         </div>
 
         {/* WhatsApp Direct Help & Audition Lookup Link */}
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs text-zinc-400">
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 text-xs text-zinc-400 w-full max-w-lg mx-auto px-2">
           <a
             href="/audiciones/consulta"
-            className="px-4 py-2 bg-[#161622] hover:bg-[#202030] text-rose-300 hover:text-white border border-rose-500/30 rounded-xl font-bold transition-all flex items-center gap-1.5 shadow-sm"
+            className="w-full sm:w-auto px-4 py-2.5 bg-[#161622] hover:bg-[#202030] text-rose-300 hover:text-white border border-rose-500/30 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm text-center"
           >
             <span>🔍</span>
-            <span>¿Ya te registraste? Consulta el estado de tu folio aquí</span>
+            <span>¿Ya te registraste? Consulta tu folio</span>
             <span>&rarr;</span>
           </a>
 
-          <span>
+          <span className="text-center text-zinc-400 text-xs">
             ¿Dudas sobre el casting?{" "}
             <a
               href="https://wa.me/524776558156?text=Hola,%20tengo%20dudas%20sobre%20las%20audiciones"
