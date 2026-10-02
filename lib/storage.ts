@@ -12,9 +12,17 @@ import {
   UserAccount,
   UserRole,
 } from "@/types/mock";
+import {
+  Script,
+  ScriptCharacter,
+  ScriptLine,
+  StudentPracticeProgress,
+} from "@/types/script";
 import { mockAuditions, mockArticles, mockPrograms, mockTeachers, mockProductions } from "@/data/mock";
 
 const DATA_DIR = path.join(process.cwd(), ".data");
+const SCRIPTS_FILE = path.join(DATA_DIR, "scripts.json");
+const SCRIPTS_PROGRESS_FILE = path.join(DATA_DIR, "scripts_progress.json");
 
 function ensureDirectoryExists() {
   if (!fs.existsSync(DATA_DIR)) {
@@ -1577,6 +1585,57 @@ export const DEFAULT_USERS: UserAccount[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
+  {
+    id: "usr_alumno_beta_activo",
+    username: "alumno.beta@dvperformingarts.com",
+    phone: "4775551234",
+    fullName: "Sofía Rodríguez (Alumna Activa)",
+    role: "ALUMNO",
+    isJuror: false,
+    password: "DV@Alumno2026",
+    title: "Alumna de Teatro Musical",
+    status: "ACTIVE",
+    studentFolio: "DV-0482",
+    subscriptionStatus: "ACTIVE",
+    hasPaidSubscription: true,
+    betaAccess: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "usr_alumno_moroso",
+    username: "moroso@dvperformingarts.com",
+    phone: "4775559876",
+    fullName: "Carlos Pérez (Mensualidad Pendiente)",
+    role: "ALUMNO",
+    isJuror: false,
+    password: "DV@Alumno2026",
+    title: "Alumno de Actuación",
+    status: "ACTIVE",
+    studentFolio: "DV-0999",
+    subscriptionStatus: "PAST_DUE",
+    hasPaidSubscription: false,
+    betaAccess: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "usr_alumno_sin_beta",
+    username: "nobeta@dvperformingarts.com",
+    phone: "4775550000",
+    fullName: "Mariana Soto (Sin Acceso Beta)",
+    role: "ALUMNO",
+    isJuror: false,
+    password: "DV@Alumno2026",
+    title: "Alumna de Canto",
+    status: "ACTIVE",
+    studentFolio: "DV-0111",
+    subscriptionStatus: "ACTIVE",
+    hasPaidSubscription: true,
+    betaAccess: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
 ];
 
 export function getStoredUsers(): UserAccount[] {
@@ -1706,6 +1765,10 @@ export function createUser(data: Omit<UserAccount, "id" | "createdAt" | "updated
     assignedDiscipline: isJuror ? (data.assignedDiscipline || (role === "ADMIN" ? "ALL" : "CANTO")) : undefined,
     attendanceStatus: isJuror ? (data.attendanceStatus || "PENDING") : undefined,
     status: data.status || "ACTIVE",
+    studentFolio: data.studentFolio?.trim(),
+    subscriptionStatus: data.subscriptionStatus || (data.hasPaidSubscription ? "ACTIVE" : "PENDING"),
+    hasPaidSubscription: data.hasPaidSubscription !== undefined ? Boolean(data.hasPaidSubscription) : (role === "ALUMNO" ? true : false),
+    betaAccess: data.betaAccess !== undefined ? Boolean(data.betaAccess) : true,
     createdAt: now,
     updatedAt: now,
   };
@@ -1744,6 +1807,10 @@ export function updateUser(id: string, updates: Partial<UserAccount>): UserAccou
     ...updates,
     role: finalRole,
     isJuror: Boolean(finalIsJuror),
+    studentFolio: updates.studentFolio !== undefined ? updates.studentFolio : current.studentFolio,
+    subscriptionStatus: updates.subscriptionStatus !== undefined ? updates.subscriptionStatus : current.subscriptionStatus,
+    hasPaidSubscription: updates.hasPaidSubscription !== undefined ? Boolean(updates.hasPaidSubscription) : current.hasPaidSubscription,
+    betaAccess: updates.betaAccess !== undefined ? Boolean(updates.betaAccess) : current.betaAccess,
     updatedAt: new Date().toISOString(),
   };
 
@@ -1804,6 +1871,10 @@ export function authenticateStoredUser(
       const uUser = u.username.toLowerCase();
       // Match username or email
       if (uUser === cleanInput || (!cleanInput.includes("@") && uUser.startsWith(cleanInput))) {
+        return true;
+      }
+      // Match student folio (e.g. DV-0482)
+      if (u.studentFolio && u.studentFolio.toLowerCase() === cleanInput) {
         return true;
       }
       // Match phone number (last 10 digits)
@@ -1910,6 +1981,358 @@ export function getStudentAuditionsHistory(query: string): {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Scripts (Libretos Teatrales & Líneas de Diálogo)
+// ---------------------------------------------------------------------------
 
+function getInitialSampleScript(): Script {
+  return {
+    id: "script_si_no_es_ahora_act1",
+    productionId: "prod_si_no_es_ahora",
+    productionTitle: "Si No Es Ahora (El Musical)",
+    title: "Acto 1 - Escena 1: El Regreso al Barrio",
+    description: "Libreto de ensayo inicial para la apertura del Acto I de Si No Es Ahora.",
+    status: "PUBLISHED",
+    totalLines: 8,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    characters: [
+      {
+        id: "char_benny",
+        name: "BENNY",
+        normalizedName: "BENNY",
+        voiceGender: "MALE",
+        voicePitch: 0.95,
+        voiceRate: 1.0,
+        colorTag: "#3b82f6",
+        totalLinesCount: 3,
+      },
+      {
+        id: "char_nina",
+        name: "NINA",
+        normalizedName: "NINA",
+        voiceGender: "FEMALE",
+        voicePitch: 1.1,
+        voiceRate: 1.0,
+        colorTag: "#ec4899",
+        totalLinesCount: 3,
+      },
+      {
+        id: "char_usnavi",
+        name: "USNAVI",
+        normalizedName: "USNAVI",
+        voiceGender: "MALE",
+        voicePitch: 1.0,
+        voiceRate: 1.05,
+        colorTag: "#10b981",
+        totalLinesCount: 2,
+      },
+    ],
+    lines: [
+      {
+        id: "line_s1_1",
+        order: 1,
+        actNumber: 1,
+        sceneNumber: 1,
+        sceneTitle: "El Amanecer en el Barrio",
+        characterName: "USNAVI",
+        direction: "abriendo la cortina metálica del local, mirando al público",
+        dialogue: "Luces arriba en el barrio. El sol apenas empieza a quemar el asfalto y ya se siente el ritmo en el pecho.",
+      },
+      {
+        id: "line_s1_2",
+        order: 2,
+        actNumber: 1,
+        sceneNumber: 1,
+        sceneTitle: "El Amanecer en el Barrio",
+        characterName: "BENNY",
+        direction: "entrando apresurado con una libreta de despachos",
+        dialogue: "¡Buenos días, Usnavi! El tráfico por el puente estuvo imposible hoy. ¿Tienes café listo?",
+      },
+      {
+        id: "line_s1_3",
+        order: 3,
+        actNumber: 1,
+        sceneNumber: 1,
+        sceneTitle: "El Amanecer en el Barrio",
+        characterName: "USNAVI",
+        direction: "sirviendo el café caliente",
+        dialogue: "Siempre listo para ti, hermano. Por cierto, ¿viste quién acaba de bajar del autobús en la esquina?",
+      },
+      {
+        id: "line_s1_4",
+        order: 4,
+        actNumber: 1,
+        sceneNumber: 1,
+        sceneTitle: "El Amanecer en el Barrio",
+        characterName: "BENNY",
+        direction: "deteniéndose en seco, girando la mirada hacia la calle",
+        dialogue: "¿Nina? No puede ser... sus clases en la universidad no terminaban hasta la próxima semana.",
+      },
+      {
+        id: "line_s1_5",
+        order: 5,
+        actNumber: 1,
+        sceneNumber: 1,
+        sceneTitle: "El Amanecer en el Barrio",
+        characterName: "NINA",
+        direction: "cargando una maleta pesada, con expresión de incertidumbre",
+        dialogue: "Hola, chicos. Sigue oliendo exactamente igual que cuando me fui.",
+      },
+      {
+        id: "line_s1_6",
+        order: 6,
+        actNumber: 1,
+        sceneNumber: 1,
+        sceneTitle: "El Amanecer en el Barrio",
+        characterName: "BENNY",
+        direction: "acercándose a ella, tomando la maleta de su mano",
+        dialogue: "¡Nina Rosario! Mírate. La chica prodigio ha vuelto. Todos en la academia han estado hablando de ti.",
+      },
+      {
+        id: "line_s1_7",
+        order: 7,
+        actNumber: 1,
+        sceneNumber: 1,
+        sceneTitle: "El Amanecer en el Barrio",
+        characterName: "NINA",
+        direction: "bajando la mirada, intentando ocultar su preocupación",
+        dialogue: "No creas todo lo que dicen, Benny. Las cosas no siempre salen como estaban en el guion.",
+      },
+      {
+        id: "line_s1_8",
+        order: 8,
+        actNumber: 1,
+        sceneNumber: 1,
+        sceneTitle: "El Amanecer en el Barrio",
+        characterName: "NINA",
+        direction: "mirando a su alrededor con nostalgia",
+        dialogue: "Pero estar aquí otra vez... se siente como volver a respirar.",
+      },
+    ],
+  };
+}
 
+export function getStoredScripts(): Script[] {
+  ensureDirectoryExists();
+  if (!fs.existsSync(SCRIPTS_FILE)) {
+    const initial = [getInitialSampleScript()];
+    fs.writeFileSync(SCRIPTS_FILE, JSON.stringify(initial, null, 2), "utf-8");
+    return initial;
+  }
+
+  try {
+    const raw = fs.readFileSync(SCRIPTS_FILE, "utf-8");
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("[getStoredScripts] Error parsing scripts.json:", error);
+    return [];
+  }
+}
+
+export function getScriptById(id: string): Script | null {
+  const scripts = getStoredScripts();
+  return scripts.find((s) => s.id === id) || null;
+}
+
+export function saveScript(scriptData: Partial<Script>): Script {
+  ensureDirectoryExists();
+  const scripts = getStoredScripts();
+  const now = new Date().toISOString();
+
+  if (scriptData.id) {
+    const index = scripts.findIndex((s) => s.id === scriptData.id);
+    if (index !== -1) {
+      const updated: Script = {
+        ...scripts[index],
+        ...scriptData,
+        updatedAt: now,
+      } as Script;
+      scripts[index] = updated;
+      fs.writeFileSync(SCRIPTS_FILE, JSON.stringify(scripts, null, 2), "utf-8");
+      return updated;
+    }
+  }
+
+  // Create new script
+  const newScript: Script = {
+    id: scriptData.id || `script_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    productionId: scriptData.productionId || "",
+    productionTitle: scriptData.productionTitle || "Producción DV",
+    title: scriptData.title || "Nuevo Guion",
+    description: scriptData.description || "",
+    characters: scriptData.characters || [],
+    lines: scriptData.lines || [],
+    totalLines: (scriptData.lines || []).length,
+    status: scriptData.status || "PUBLISHED",
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  scripts.unshift(newScript);
+  fs.writeFileSync(SCRIPTS_FILE, JSON.stringify(scripts, null, 2), "utf-8");
+  return newScript;
+}
+
+export function deleteScript(id: string): boolean {
+  ensureDirectoryExists();
+  const scripts = getStoredScripts();
+  const filtered = scripts.filter((s) => s.id !== id);
+  if (filtered.length === scripts.length) return false;
+  fs.writeFileSync(SCRIPTS_FILE, JSON.stringify(filtered, null, 2), "utf-8");
+  return true;
+}
+
+// ---------------------------------------------------------------------------
+// Student Script Progress Storage
+// ---------------------------------------------------------------------------
+
+export function getStoredScriptProgressList(scriptId?: string): StudentPracticeProgress[] {
+  ensureDirectoryExists();
+  if (!fs.existsSync(SCRIPTS_PROGRESS_FILE)) {
+    return [];
+  }
+
+  try {
+    const raw = fs.readFileSync(SCRIPTS_PROGRESS_FILE, "utf-8");
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data)) return [];
+    if (scriptId) {
+      return data.filter((p) => p.scriptId === scriptId);
+    }
+    return data;
+  } catch (error) {
+    console.error("[getStoredScriptProgressList] Error:", error);
+    return [];
+  }
+}
+
+export function getStudentScriptProgress(
+  scriptId: string,
+  studentFolio: string
+): StudentPracticeProgress | null {
+  const all = getStoredScriptProgressList(scriptId);
+  const cleanFolio = studentFolio.trim().toLowerCase();
+  return (
+    all.find(
+      (p) =>
+        p.scriptId === scriptId &&
+        p.studentFolio.trim().toLowerCase() === cleanFolio
+    ) || null
+  );
+}
+
+export function saveStudentScriptProgress(
+  progressData: Partial<StudentPracticeProgress> & {
+    scriptId: string;
+    studentFolio: string;
+  }
+): StudentPracticeProgress {
+  ensureDirectoryExists();
+  const all = getStoredScriptProgressList();
+  const now = new Date().toISOString();
+  const cleanFolio = progressData.studentFolio.trim();
+
+  const index = all.findIndex(
+    (p) =>
+      p.scriptId === progressData.scriptId &&
+      p.studentFolio.trim().toLowerCase() === cleanFolio.toLowerCase()
+  );
+
+  if (index !== -1) {
+    const existing = all[index];
+    const updated: StudentPracticeProgress = {
+      ...existing,
+      ...progressData,
+      linesLearned: Array.from(
+        new Set([...(existing.linesLearned || []), ...(progressData.linesLearned || [])])
+      ),
+      totalSessions: (existing.totalSessions || 1) + (progressData.totalSessions ? 1 : 0),
+      practiceTimeMinutes:
+        (existing.practiceTimeMinutes || 0) + (progressData.practiceTimeMinutes || 0),
+      accuracyRate:
+        progressData.accuracyRate !== undefined
+          ? Math.round((existing.accuracyRate + progressData.accuracyRate) / 2)
+          : existing.accuracyRate,
+      lastPracticedAt: now,
+    };
+    all[index] = updated;
+    fs.writeFileSync(SCRIPTS_PROGRESS_FILE, JSON.stringify(all, null, 2), "utf-8");
+    return updated;
+  }
+
+  const newProgress: StudentPracticeProgress = {
+    id: `prog_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    scriptId: progressData.scriptId,
+    studentFolio: cleanFolio,
+    studentName: progressData.studentName || "Alumno DV",
+    characterName: progressData.characterName || "",
+    linesLearned: progressData.linesLearned || [],
+    totalLines: progressData.totalLines || 0,
+    accuracyRate: progressData.accuracyRate || 0,
+    practiceTimeMinutes: progressData.practiceTimeMinutes || 0,
+    totalSessions: 1,
+    lastPracticedAt: now,
+    lineFeedback: progressData.lineFeedback || {},
+  };
+
+  all.push(newProgress);
+  fs.writeFileSync(SCRIPTS_PROGRESS_FILE, JSON.stringify(all, null, 2), "utf-8");
+  return newProgress;
+}
+
+// ---------------------------------------------------------------------------
+// Rehearsal Beta & Subscription Access Settings
+// ---------------------------------------------------------------------------
+const REHEARSAL_SETTINGS_FILE = path.join(DATA_DIR, "rehearsal_settings.json");
+
+export interface RehearsalBetaSettings {
+  isBetaActive: boolean; // Modo prueba activo (no abierto a todo el público)
+  requirePaidSubscription: boolean; // Exigir pago de suscripción/mensualidad activa
+  requireBetaFlag: boolean; // Exigir bandera betaAccess en la cuenta del alumno
+  announcementMessage?: string; // Mensaje informativo para los alumnos
+  updatedAt: string;
+}
+
+export function getRehearsalBetaSettings(): RehearsalBetaSettings {
+  ensureDirectoryExists();
+  if (!fs.existsSync(REHEARSAL_SETTINGS_FILE)) {
+    const initial: RehearsalBetaSettings = {
+      isBetaActive: true,
+      requirePaidSubscription: true,
+      requireBetaFlag: true,
+      announcementMessage: "Fase Beta de Sala de Ensayo Teatral con Voz. Acceso exclusivo para alumnos activos con mensualidad al corriente.",
+      updatedAt: new Date().toISOString(),
+    };
+    fs.writeFileSync(REHEARSAL_SETTINGS_FILE, JSON.stringify(initial, null, 2), "utf-8");
+    return initial;
+  }
+  try {
+    const raw = fs.readFileSync(REHEARSAL_SETTINGS_FILE, "utf-8");
+    return JSON.parse(raw);
+  } catch {
+    return {
+      isBetaActive: true,
+      requirePaidSubscription: true,
+      requireBetaFlag: true,
+      announcementMessage: "Fase Beta de Sala de Ensayo Teatral con Voz. Acceso exclusivo para alumnos activos con mensualidad al corriente.",
+      updatedAt: new Date().toISOString(),
+    };
+  }
+}
+
+export function updateRehearsalBetaSettings(
+  updates: Partial<RehearsalBetaSettings>
+): RehearsalBetaSettings {
+  ensureDirectoryExists();
+  const current = getRehearsalBetaSettings();
+  const updated: RehearsalBetaSettings = {
+    ...current,
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
+  fs.writeFileSync(REHEARSAL_SETTINGS_FILE, JSON.stringify(updated, null, 2), "utf-8");
+  return updated;
+}
 

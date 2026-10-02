@@ -36,7 +36,7 @@ export function middleware(req: NextRequest) {
           return NextResponse.redirect(new URL("/jurado", req.url));
         }
         if (role === "ALUMNO") {
-          return NextResponse.redirect(new URL("/", req.url));
+          return NextResponse.redirect(new URL("/estudiantes/guiones", req.url));
         }
         const redirectParam = req.nextUrl.searchParams.get("redirect");
         const destination = redirectParam && redirectParam.startsWith("/") ? redirectParam : "/dashboard";

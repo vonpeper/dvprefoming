@@ -94,6 +94,10 @@ export async function POST(req: NextRequest) {
         isJuror: Boolean(authResult.user.isJuror),
         assignedDiscipline: authResult.user.assignedDiscipline,
         title: authResult.user.title,
+        studentFolio: authResult.user.studentFolio,
+        subscriptionStatus: authResult.user.subscriptionStatus || (authResult.user.hasPaidSubscription ? "ACTIVE" : "PENDING"),
+        hasPaidSubscription: Boolean(authResult.user.hasPaidSubscription),
+        betaAccess: Boolean(authResult.user.betaAccess),
       },
     });
 

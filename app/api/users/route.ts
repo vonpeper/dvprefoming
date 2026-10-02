@@ -30,6 +30,10 @@ export async function GET(req: NextRequest) {
       createdAt: u.createdAt,
       updatedAt: u.updatedAt,
       hasPassword: Boolean(u.password),
+      studentFolio: u.studentFolio,
+      subscriptionStatus: u.subscriptionStatus || (u.hasPaidSubscription ? "ACTIVE" : "PENDING"),
+      hasPaidSubscription: Boolean(u.hasPaidSubscription),
+      betaAccess: Boolean(u.betaAccess),
     }));
 
     return NextResponse.json({ success: true, users: sanitized });
@@ -45,7 +49,21 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { username, fullName, role, isJuror, password, title, status, phone, assignedDiscipline } = body;
+    const {
+      username,
+      fullName,
+      role,
+      isJuror,
+      password,
+      title,
+      status,
+      phone,
+      assignedDiscipline,
+      studentFolio,
+      subscriptionStatus,
+      hasPaidSubscription,
+      betaAccess,
+    } = body;
 
     if (!username || !fullName || !password) {
       return NextResponse.json(
@@ -71,6 +89,10 @@ export async function POST(req: NextRequest) {
       status: status || "ACTIVE",
       phone: phone || "",
       assignedDiscipline: assignedDiscipline || "ALL",
+      studentFolio,
+      subscriptionStatus: subscriptionStatus || (hasPaidSubscription ? "ACTIVE" : "PENDING"),
+      hasPaidSubscription: Boolean(hasPaidSubscription),
+      betaAccess: Boolean(betaAccess),
     });
 
     return NextResponse.json({
@@ -87,6 +109,10 @@ export async function POST(req: NextRequest) {
         assignedDiscipline: newUser.assignedDiscipline,
         attendanceStatus: newUser.attendanceStatus,
         status: newUser.status,
+        studentFolio: newUser.studentFolio,
+        subscriptionStatus: newUser.subscriptionStatus,
+        hasPaidSubscription: newUser.hasPaidSubscription,
+        betaAccess: newUser.betaAccess,
         createdAt: newUser.createdAt,
       },
     });
@@ -102,7 +128,22 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, username, fullName, role, isJuror, password, title, status, phone, assignedDiscipline } = body;
+    const {
+      id,
+      username,
+      fullName,
+      role,
+      isJuror,
+      password,
+      title,
+      status,
+      phone,
+      assignedDiscipline,
+      studentFolio,
+      subscriptionStatus,
+      hasPaidSubscription,
+      betaAccess,
+    } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -120,6 +161,11 @@ export async function PUT(req: NextRequest) {
     if (status !== undefined) updates.status = status;
     if (phone !== undefined) updates.phone = phone;
     if (assignedDiscipline !== undefined) updates.assignedDiscipline = assignedDiscipline;
+    if (studentFolio !== undefined) updates.studentFolio = studentFolio;
+    if (subscriptionStatus !== undefined) updates.subscriptionStatus = subscriptionStatus;
+    if (hasPaidSubscription !== undefined) updates.hasPaidSubscription = Boolean(hasPaidSubscription);
+    if (betaAccess !== undefined) updates.betaAccess = Boolean(betaAccess);
+
     if (password && password.trim().length > 0) {
       if (password.length < 6) {
         return NextResponse.json(

@@ -108,6 +108,10 @@ export function createSessionToken(
     id?: string;
     isJuror?: boolean;
     assignedDiscipline?: string;
+    studentFolio?: string;
+    subscriptionStatus?: string;
+    hasPaidSubscription?: boolean;
+    betaAccess?: boolean;
   } | string
 ): string {
   const username = typeof userData === "string" ? userData : userData.username;
@@ -115,6 +119,10 @@ export function createSessionToken(
   const fullName = typeof userData === "string" ? "Administrador" : userData.fullName || username;
   const isJuror = typeof userData === "object" ? Boolean(userData.isJuror) : false;
   const assignedDiscipline = typeof userData === "object" ? userData.assignedDiscipline : undefined;
+  const studentFolio = typeof userData === "object" ? userData.studentFolio : undefined;
+  const subscriptionStatus = typeof userData === "object" ? userData.subscriptionStatus : undefined;
+  const hasPaidSubscription = typeof userData === "object" ? Boolean(userData.hasPaidSubscription) : false;
+  const betaAccess = typeof userData === "object" ? Boolean(userData.betaAccess) : false;
 
   const payload = JSON.stringify({
     user: username,
@@ -122,6 +130,10 @@ export function createSessionToken(
     fullName,
     isJuror,
     assignedDiscipline,
+    studentFolio,
+    subscriptionStatus,
+    hasPaidSubscription,
+    betaAccess,
     iat: Date.now(),
     exp: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
   });
@@ -142,6 +154,10 @@ export function verifySessionToken(token: string): {
   fullName?: string;
   isJuror?: boolean;
   assignedDiscipline?: string;
+  studentFolio?: string;
+  subscriptionStatus?: string;
+  hasPaidSubscription?: boolean;
+  betaAccess?: boolean;
 } {
   if (!token || !token.includes(".")) return { valid: false };
 
@@ -166,6 +182,10 @@ export function verifySessionToken(token: string): {
       fullName: payload.fullName,
       isJuror: Boolean(payload.isJuror),
       assignedDiscipline: payload.assignedDiscipline,
+      studentFolio: payload.studentFolio,
+      subscriptionStatus: payload.subscriptionStatus,
+      hasPaidSubscription: Boolean(payload.hasPaidSubscription),
+      betaAccess: Boolean(payload.betaAccess),
     };
   } catch {
     return { valid: false };

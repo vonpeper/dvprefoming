@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
 
-  const { valid, user, role, fullName, isJuror, assignedDiscipline } = verifySessionToken(sessionCookie);
+  const { valid, user, role, fullName, isJuror, assignedDiscipline, studentFolio, subscriptionStatus, hasPaidSubscription, betaAccess } = verifySessionToken(sessionCookie);
 
   if (!valid) {
     return NextResponse.json({ authenticated: false }, { status: 401 });
@@ -22,6 +22,10 @@ export async function GET(req: NextRequest) {
       fullName: fullName || user,
       isJuror: Boolean(isJuror),
       assignedDiscipline: assignedDiscipline,
+      studentFolio,
+      subscriptionStatus: subscriptionStatus || (hasPaidSubscription ? "ACTIVE" : "PENDING"),
+      hasPaidSubscription: Boolean(hasPaidSubscription),
+      betaAccess: Boolean(betaAccess),
     },
   });
 }

@@ -203,8 +203,15 @@ export interface UserAccount {
   attendanceStatus?: "CONFIRMED" | "PENDING" | "DECLINED"; // Confirmación de asistencia como jurado
   attendanceConfirmedAt?: string | Date;
   status: "ACTIVE" | "INACTIVE";
+  // Control de Alumnos, Pago de Mensualidad y Acceso Beta:
+  studentFolio?: string; // Folio de alumno (ej. DV-0482)
+  subscriptionStatus?: "ACTIVE" | "PENDING" | "PAST_DUE" | "EXEMPT"; // Estatus de mensualidad en la escuela
+  hasPaidSubscription?: boolean; // Booleano: mensualidad al corriente para acceder a la sala de ensayo
+  subscriptionValidUntil?: string; // Fecha hasta la que cubre su cuota
+  betaAccess?: boolean; // Habilitado para la fase de prueba Beta
   lastLogin?: string;
   createdAt: string | Date;
   updatedAt: string | Date;
 }
+
 

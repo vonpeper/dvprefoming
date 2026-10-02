@@ -42,7 +42,7 @@ function AdminLoginForm() {
         if (data.user?.role === "MAESTRO" || data.user?.role === "DOCENTE_JUEZ") {
           router.push("/jueces");
         } else if (data.user?.role === "ALUMNO") {
-          router.push("/");
+          router.push("/estudiantes/guiones");
         } else if (redirectParam && redirectParam.startsWith("/")) {
           router.push(redirectParam);
         } else {
