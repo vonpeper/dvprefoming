@@ -1887,7 +1887,7 @@ export function authenticateStoredUser(
       return false;
     });
 
-    if (found && found.password && found.password === passInput) {
+    if (found && found.password && found.password.trim() === passInput.trim()) {
       found.lastLogin = new Date().toISOString();
       saveStoredUsers(users);
       return { success: true, user: found };

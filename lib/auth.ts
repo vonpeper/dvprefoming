@@ -199,12 +199,13 @@ export async function verifyTurnstileToken(
   token?: string,
   remoteip?: string
 ): Promise<{ success: boolean; error?: string }> {
-  // If no token provided
+  // If no secret key configured on the server, allow bypass
+  if (!process.env.TURNSTILE_SECRET_KEY) {
+    return { success: true };
+  }
+
+  // If secret key is configured, token is required
   if (!token) {
-    // If no secret key configured and in development, allow bypass
-    if (!process.env.TURNSTILE_SECRET_KEY && process.env.NODE_ENV === "development") {
-      return { success: true };
-    }
     return {
       success: false,
       error: "Por favor completa la verificación de seguridad (Cloudflare Turnstile).",
