@@ -20,6 +20,11 @@ export function formatMexicanPhoneNumber(phone: string): string {
   return cleaned;
 }
 
+export function sanitizeOutgoingDomain(text?: string): string {
+  if (!text) return "";
+  return text.replace(/https?:\/\/prev\.dvperformingarts\.com/gi, "https://dvperformingarts.com");
+}
+
 /**
  * Sends a WhatsApp text message via Evolution API (or simulated in development)
  */
@@ -29,12 +34,13 @@ export async function sendWhatsAppMessage(payload: MessagePayload): Promise<Send
   const instance = process.env.EVOLUTION_INSTANCE?.trim() || "dvp";
 
   const formattedNumber = formatMexicanPhoneNumber(payload.to);
+  const sanitizedBody = sanitizeOutgoingDomain(payload.body);
   const now = new Date().toISOString();
 
   // If credentials are not configured or are placeholder, perform clean simulated response
   if (!apiUrl || apiUrl.includes("example.com") || !apiKey || apiKey.includes("apikey_")) {
     console.log(`[EVOLUTION API SIMULATED] Message sent to ${formattedNumber}:`);
-    console.log(payload.body);
+    console.log(sanitizedBody);
     return {
       success: true,
       messageId: `sim_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
@@ -55,7 +61,7 @@ export async function sendWhatsAppMessage(payload: MessagePayload): Promise<Send
       },
       body: JSON.stringify({
         number: formattedNumber,
-        text: payload.body,
+        text: sanitizedBody,
         options: {
           delay: 1200,
           presence: "composing",
@@ -96,7 +102,7 @@ export async function sendWhatsAppMessage(payload: MessagePayload): Promise<Send
 export async function sendAuditionConfirmation(data: AuditionNotificationData): Promise<SendMessageResult> {
   const settings = getNotificationSettings();
   const auditionNum = data.folio.replace(/\D/g, "").slice(-4) || "585";
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com";
+  const baseUrl = sanitizeOutgoingDomain(process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com");
   const driveLink = data.googleDriveUrl || settings.googleDriveMaterialUrl || "https://drive.google.com/drive/folders/1qadnY5yaF1ZXprIXP5NY1cmAJkvQU08C?usp=drive_link";
   const lookupUrl = `${baseUrl}/audiciones/consulta?folio=${encodeURIComponent(data.folio)}`;
   const directorSign = `${settings.directorSignatureName} — ${settings.directorSignatureTitle}`;
@@ -114,6 +120,8 @@ export async function sendAuditionConfirmation(data: AuditionNotificationData): 
   } else {
     messageBody = `🎭 *¡HOLA ${data.fullName.trim().toUpperCase()}, YA DISTE EL PRIMER PASO!* 🎭\n\nEs hora de preparar la canción que te ayudará a obtener el papel de tus sueños.\n\n📋 *Tu número de audición para "${data.productionName || "DV Performing Arts"}" es:*\n*${auditionNum}* (Folio: \`${data.folio}\`)\n\n💡 *Consejos para el día de la audición:*\n• Prepara una canción de teatro musical o contemporánea (1 minuto de duración).\n• Trae tu pista preparada. Puedes reproducirla desde tu celular.\n• Usa ropa cómoda. Después del canto, hay una audición de baile. *NO tienes que preparar ninguna coreografía previa*.\n• Lleva una botella de agua. Mantente hidratadx con pequeños sorbos.\n• Si estás nerviosx, respira profundo y recuerda que estás haciendo algo que amas.\n• No podrás entrar acompañado, pero te podrán esperar afuera de las instalaciones.\n\n${driveLink ? `📁 *Encuentra el material para realizar tu audición en este enlace:*\n${driveLink}\n\n` : ""}🔍 *Consulta o recuerda tus datos de audición en línea:*\n${lookupUrl}\n\nTodo lo mejor,\n*${directorSign}*\n*DV Performing Arts*`;
   }
+
+  messageBody = sanitizeOutgoingDomain(messageBody);
 
   return sendWhatsAppMessage({
     to: data.phone,
@@ -149,7 +157,7 @@ ${data.googleDriveUrl ? `• Material oficial en Google Drive: ${data.googleDriv
 
   return sendWhatsAppMessage({
     to: data.phone,
-    body: messageBody,
+    body: sanitizeOutgoingDomain(messageBody),
   });
 }
 
@@ -192,7 +200,7 @@ Gracias por tu interés,
 
   return sendWhatsAppMessage({
     to: data.phone,
-    body: messageBody,
+    body: sanitizeOutgoingDomain(messageBody),
   });
 }
 
@@ -208,6 +216,9 @@ export async function sendJurorInvitationWhatsApp(data: {
   venue?: string;
   confirmationUrl: string;
 }): Promise<SendMessageResult> {
+  const confirmationUrl = sanitizeOutgoingDomain(data.confirmationUrl);
+  const jurorBase = sanitizeOutgoingDomain(process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com");
+
   const messageBody = `🌟 *INVITACIÓN OFICIAL A PANEL DE JURADOS • DV PERFORMING ARTS* 🌟
 
 Estimado/a Maestro/a *${data.teacherName.trim().toUpperCase()}*,
@@ -219,17 +230,17 @@ La Dirección General te ha designado como **Jurado Oficial Evaluador** para la 
 📍 *Sede:* ${data.venue || "Auditorio Principal DV Performing Arts"}
 
 📲 *Por favor confirma tu asistencia en este enlace:*
-👉 ${data.confirmationUrl}
+👉 ${confirmationUrl}
 
 Podrás ingresar a tu panel de calificación usando tu número de WhatsApp y tu contraseña en:
-${process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com"}/jurado
+${jurorBase}/jurado
 
 ¡Agradecemos tu invaluable criterio artístico!
 *Diego Vieyra — Director General*`;
 
   return sendWhatsAppMessage({
     to: data.phone,
-    body: messageBody,
+    body: sanitizeOutgoingDomain(messageBody),
   });
 }
 
@@ -244,6 +255,8 @@ export async function sendNewProductionBroadcastWhatsApp(data: {
   auditionDates?: string;
   registrationUrl: string;
 }): Promise<SendMessageResult> {
+  const registrationUrl = sanitizeOutgoingDomain(data.registrationUrl);
+
   const messageBody = `🎭 *¡NUEVA CONVOCATORIA DE CASTING ABIERTA! • DV PERFORMING ARTS* 🎭
 
 ¡Hola *${data.candidateName.trim()}*!
@@ -255,14 +268,14 @@ ${data.synopsis ? `📖 *Sinopsis:* ${data.synopsis}\n` : ""}
 📅 *Fechas de Audición:* ${data.auditionDates || "Convocatoria abierta"}
 
 👉 *¡Inscríbete y asegura tu lugar ahora mismo en la web!*
-🔗 ${data.registrationUrl}
+🔗 ${registrationUrl}
 
 ¡Esperamos verte nuevamente en el escenario!
 *DV Performing Arts*`;
 
   return sendWhatsAppMessage({
     to: data.phone,
-    body: messageBody,
+    body: sanitizeOutgoingDomain(messageBody),
   });
 }
 
@@ -271,7 +284,7 @@ ${data.synopsis ? `📖 *Sinopsis:* ${data.synopsis}\n` : ""}
  */
 export async function sendAuditionApprovalWhatsApp(data: AuditionNotificationData): Promise<SendMessageResult> {
   const settings = getNotificationSettings();
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com";
+  const baseUrl = sanitizeOutgoingDomain(process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com");
   const lookupUrl = `${baseUrl}/audiciones/consulta?folio=${encodeURIComponent(data.folio)}`;
   const directorSign = `${settings.directorSignatureName} — ${settings.directorSignatureTitle}`;
 
@@ -287,6 +300,8 @@ export async function sendAuditionApprovalWhatsApp(data: AuditionNotificationDat
   } else {
     messageBody = `🎭 *RESULTADOS DE CASTING PUBLICADOS • DV PERFORMING ARTS* 🎭\n\nHola *${data.fullName.trim().toUpperCase()}*, te informamos que la Dirección General y el Panel de Jueces han concluido la evaluación de las audiciones para la producción:\n🎬 *"${data.productionName || "Si No Es Ahora (El Musical)"}"*\n\n📋 *Tu Folio de Consulta:* \`${data.folio}\`\n\n📲 *Consulta tu estatus oficial y resultado de casting en la plataforma:*\n👉 ${lookupUrl}\n\nIngresa al enlace desde tu celular o computadora para conocer tu resolución oficial, personaje asignado, observaciones del jurado y próximos pasos.\n\n¡Gracias por tu pasión y entrega en el escenario!\n*${directorSign}*\n*DV Performing Arts*`;
   }
+
+  messageBody = sanitizeOutgoingDomain(messageBody);
 
   return sendWhatsAppMessage({
     to: data.phone,

@@ -21,6 +21,22 @@ export interface AuditionEmailData {
 }
 
 /**
+ * Sanitizes URLs to remove any references to legacy/preproduction domains
+ */
+export function sanitizeEmailDomain(text?: string): string {
+  if (!text) return "";
+  return text.replace(/https?:\/\/prev\.dvperformingarts\.com/gi, "https://dvperformingarts.com");
+}
+
+/**
+ * Returns canonical production site URL stripped of any prev. subdomain
+ */
+export function getCanonicalSiteUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com";
+  return sanitizeEmailDomain(envUrl);
+}
+
+/**
  * Retrieves the Google Workspace App Password from settings or environment
  */
 export function getSmtpPassword(): string {
@@ -234,7 +250,7 @@ export async function sendAuditionRegistrationEmail(data: AuditionEmailData): Pr
               <!-- Online Status Check Link -->
               <p style="text-align: center; margin: 15px 0 30px 0; font-size: 12px; color: #A1A1AA;">
                 ¿Deseas consultar o recordar el estado de tu folio? 
-                <a href="${(process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com")}/audiciones/consulta?folio=${data.folio}" target="_blank" style="color: #F43F5E; text-decoration: underline;">
+                <a href="${getCanonicalSiteUrl()}/audiciones/consulta?folio=${encodeURIComponent(data.folio)}" target="_blank" style="color: #F43F5E; text-decoration: underline;">
                   Revisa tu audición en línea aquí
                 </a>
               </p>
@@ -297,8 +313,8 @@ export async function sendAuditionRegistrationEmail(data: AuditionEmailData): Pr
     const info = await transporter.sendMail({
       from: fromAddress,
       to: data.email,
-      subject: emailSubject,
-      html: htmlContent,
+      subject: sanitizeEmailDomain(emailSubject),
+      html: sanitizeEmailDomain(htmlContent),
     });
 
     console.log(`[EMAIL SENT] Audition confirmation to ${data.email} messageId: ${info.messageId}`);
@@ -415,7 +431,7 @@ export async function sendAuditionApprovalEmail(data: AuditionEmailData): Promis
               <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 25px 0; text-align: center;">
                 <tr>
                   <td align="center">
-                    <a href="${(process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com")}/audiciones/consulta?folio=${encodeURIComponent(data.folio)}" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #9333EA 0%, #E11D48 100%); color: #FFFFFF; font-size: 15px; font-weight: 900; text-decoration: none; padding: 18px 36px; border-radius: 16px; box-shadow: 0 10px 30px rgba(225,29,72,0.5); text-transform: uppercase; letter-spacing: 1px;">
+                    <a href="${getCanonicalSiteUrl()}/audiciones/consulta?folio=${encodeURIComponent(data.folio)}" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #9333EA 0%, #E11D48 100%); color: #FFFFFF; font-size: 15px; font-weight: 900; text-decoration: none; padding: 18px 36px; border-radius: 16px; box-shadow: 0 10px 30px rgba(225,29,72,0.5); text-transform: uppercase; letter-spacing: 1px;">
                       🔍 Consultar mi Estatus & Libreto en la Web ↗
                     </a>
                   </td>
@@ -503,8 +519,8 @@ export async function sendAuditionApprovalEmail(data: AuditionEmailData): Promis
     const info = await transporter.sendMail({
       from: fromAddress,
       to: data.email,
-      subject: emailSubject,
-      html: htmlContent,
+      subject: sanitizeEmailDomain(emailSubject),
+      html: sanitizeEmailDomain(htmlContent),
     });
 
     console.log(`[EMAIL SENT] Audition approval to ${data.email} messageId: ${info.messageId}`);
@@ -595,8 +611,8 @@ export async function sendAuditionMorningReminderEmail(data: AuditionEmailData):
     const info = await transporter.sendMail({
       from: fromAddress,
       to: data.email,
-      subject: `⏰ ¡Hoy es tu Audición! Folio #${auditionNum} | "${data.productionName}"`,
-      html: htmlContent,
+      subject: sanitizeEmailDomain(`⏰ ¡Hoy es tu Audición! Folio #${auditionNum} | "${data.productionName}"`),
+      html: sanitizeEmailDomain(htmlContent),
     });
     return { success: true, messageId: info.messageId, simulated: false };
   } catch (error) {
@@ -687,8 +703,8 @@ export async function sendSecondChanceVideoEmail(
     const info = await transporter.sendMail({
       from: fromAddress,
       to: data.email,
-      subject: `🎬 Segunda Oportunidad: Envía tu Video de Audición para "${data.productionName}" | Folio #${auditionNum}`,
-      html: htmlContent,
+      subject: sanitizeEmailDomain(`🎬 Segunda Oportunidad: Envía tu Video de Audición para "${data.productionName}" | Folio #${auditionNum}`),
+      html: sanitizeEmailDomain(htmlContent),
     });
     return { success: true, messageId: info.messageId, simulated: false };
   } catch (error) {
@@ -754,7 +770,7 @@ export async function sendJurorInvitationEmail(data: {
             </div>
             <p style="font-size:12px;color:#94A3B8;text-align:center;">
               Podrás acceder al panel de calificación con tu número de WhatsApp y contraseña en:<br>
-              <a href="${(process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com")}/jurado" style="color:#60A5FA;">${(process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || "https://dvperformingarts.com")}/jurado</a>
+              <a href="${getCanonicalSiteUrl()}/jurado" style="color:#60A5FA;">${getCanonicalSiteUrl()}/jurado</a>
             </p>
           </td>
         </tr>
@@ -770,8 +786,8 @@ export async function sendJurorInvitationEmail(data: {
     const info = await transporter.sendMail({
       from: fromAddress,
       to: data.email,
-      subject: `🌟 Invitación a Panel de Jurados • "${data.productionName}" (${data.discipline})`,
-      html: htmlContent,
+      subject: sanitizeEmailDomain(`🌟 Invitación a Panel de Jurados • "${data.productionName}" (${data.discipline})`),
+      html: sanitizeEmailDomain(htmlContent),
     });
     return { success: true, messageId: info.messageId, simulated: false };
   } catch (error) {
@@ -849,8 +865,8 @@ export async function sendNewProductionBroadcastEmail(data: {
     const info = await transporter.sendMail({
       from: fromAddress,
       to: data.email,
-      subject: `🎭 ¡Nueva Convocatoria Abierta! Audiciones para "${data.productionTitle}" • DV Performing Arts`,
-      html: htmlContent,
+      subject: sanitizeEmailDomain(`🎭 ¡Nueva Convocatoria Abierta! Audiciones para "${data.productionTitle}" • DV Performing Arts`),
+      html: sanitizeEmailDomain(htmlContent),
     });
     return { success: true, messageId: info.messageId, simulated: false };
   } catch (error) {

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Desplegando DV Performing Arts en prev.dvperformingarts.com..."
+echo "🚀 Desplegando DV Performing Arts en dvperformingarts.com..."
 
 # 1. Asegurar última versión del repositorio
 echo "📥 Actualizando código..."
@@ -15,4 +15,4 @@ docker compose up -d --build --force-recreate
 echo "🧹 Limpiando imágenes obsoletas..."
 docker image prune -f
 
-echo "🟢 Despliegue finalizado exitosamente en https://prev.dvperformingarts.com"
+echo "🟢 Despliegue finalizado exitosamente en https://dvperformingarts.com"
