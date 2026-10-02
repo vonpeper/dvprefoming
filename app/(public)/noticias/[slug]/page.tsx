@@ -2,7 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getArticleBySlug, getRelatedArticles, getStoredArticles } from "@/lib/storage";
+import { getArticleBySlug, getRelatedArticles, getStoredArticles, getStoredProductions } from "@/lib/storage";
 import SiteHeader from "@/components/layout/site-header";
 import SiteFooter from "@/components/layout/site-footer";
 import TheatricalAuroraBackground from "@/components/ui/theatrical-aurora-background";
@@ -75,6 +75,41 @@ export default async function SingleArticlePage({ params }: PageProps) {
   }
 
   const relatedArticles = getRelatedArticles(article.id, 4);
+
+  // Dynamic productions for sidebar widgets
+  const allProductions = getStoredProductions().filter(
+    (p) => (p.status as any) !== "ARCHIVED" && p.productionStatus !== "ARCHIVED"
+  );
+
+  const sortedProductions = [...allProductions].sort((a, b) => {
+    const dateB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+    const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+    return dateB - dateA;
+  });
+
+  // Prioritize most recent production in season, or the newest production
+  const featuredProduction =
+    sortedProductions.find((p) => p.productionStatus === "IN_SEASON") ||
+    sortedProductions[0];
+
+  const activeAudition =
+    allProductions.find((p) => p.isAuditionActive) ||
+    allProductions.find((p) => p.productionStatus === "AUDITIONS_OPEN");
+
+  const formattedEventDate = featuredProduction?.eventDate
+    ? (() => {
+        try {
+          const parts = featuredProduction.eventDate.split("-");
+          if (parts.length === 3) {
+            const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            return d.toLocaleDateString("es-MX", { day: "numeric", month: "short" });
+          }
+          return featuredProduction.eventDate;
+        } catch {
+          return featuredProduction.eventDate;
+        }
+      })()
+    : null;
 
   // Parse structured blocks or fallback to raw content
   let blocks: EditorBlock[] = [];
@@ -370,13 +405,17 @@ export default async function SingleArticlePage({ params }: PageProps) {
               <span className="text-3xl">🎭</span>
               <div className="flex flex-col gap-1">
                 <span className="text-xs font-mono font-bold text-rose-400 uppercase tracking-wider">
-                  Convocatoria Abierta 2026
+                  {activeAudition ? "Convocatoria Abierta" : "Convocatoria 2026"}
                 </span>
                 <h4 className="text-lg font-bold text-white font-display">
-                  ¿Quieres formar parte del elenco?
+                  {activeAudition
+                    ? `¿Quieres formar parte de ${activeAudition.title}?`
+                    : "¿Quieres formar parte del elenco?"}
                 </h4>
                 <p className="text-xs text-zinc-300 leading-relaxed mt-1">
-                  Inscríbete hoy en nuestro registro digital para audicionar en nuestras próximas producciones.
+                  {activeAudition?.auditionDates
+                    ? `${activeAudition.auditionDates}. Inscríbete hoy en nuestro registro digital para audicionar.`
+                    : "Inscríbete hoy en nuestro registro digital para audicionar en nuestras próximas producciones."}
                 </p>
               </div>
 
@@ -388,38 +427,64 @@ export default async function SingleArticlePage({ params }: PageProps) {
               </Link>
             </div>
 
-            {/* Widget 3: Obra en Cartelera */}
-            <div className="bg-[#121218] border border-[#252535] rounded-3xl p-6 shadow-xl flex flex-col gap-4">
-              <h3 className="text-sm font-bold text-white uppercase font-mono tracking-wider border-b border-[#252535] pb-3">
-                En Cartelera
-              </h3>
-              <div className="w-full aspect-[2/3] rounded-2xl overflow-hidden relative shadow-md border border-[#2A2A38]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/productions/galeria-show.jpg"
-                  alt="Si No Es Ahora"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-4">
-                  <span className="text-[10px] font-mono text-rose-400 font-bold uppercase">
-                    ★ Musical Original
-                  </span>
-                  <h4 className="text-sm font-bold text-white font-display">
-                    Si No Es Ahora (El Musical)
-                  </h4>
-                  <span className="text-[11px] text-zinc-300 mt-0.5">
-                    Temporada 2026 &bull; Auditorio DV
+            {/* Widget 3: Obra en Cartelera Dinámica */}
+            {featuredProduction && (
+              <div className="bg-[#121218] border border-[#252535] rounded-3xl p-6 shadow-xl flex flex-col gap-4">
+                <div className="flex items-center justify-between border-b border-[#252535] pb-3">
+                  <h3 className="text-sm font-bold text-white uppercase font-mono tracking-wider">
+                    En Cartelera
+                  </h3>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                    {featuredProduction.productionStatus === "IN_SEASON" ? "En Temporada" : "Próximamente"}
                   </span>
                 </div>
-              </div>
 
-              <Link
-                href="/#producciones"
-                className="text-center py-2.5 bg-[#1C1C26] hover:bg-[#252535] text-zinc-200 rounded-xl text-xs font-semibold border border-[#303045] transition-colors"
-              >
-                Ver Cartelera Completa &rarr;
-              </Link>
-            </div>
+                <div className="w-full aspect-[2/3] rounded-2xl overflow-hidden relative shadow-md border border-[#2A2A38] group">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={featuredProduction.imageUrl || "/images/hero/hero-stage.jpg"}
+                    alt={featuredProduction.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-4">
+                    <span className="text-[10px] font-mono text-rose-400 font-bold uppercase tracking-wider">
+                      ★ {featuredProduction.season || "Temporada Oficial"}
+                    </span>
+                    <h4 className="text-base font-bold text-white font-display leading-snug drop-shadow-sm">
+                      {featuredProduction.title}
+                    </h4>
+                    {(featuredProduction.venueName || formattedEventDate) && (
+                      <span className="text-[11px] text-zinc-300 mt-1 line-clamp-1">
+                        {featuredProduction.venueName || "Auditorio DV"}
+                        {formattedEventDate ? ` • ${formattedEventDate}` : ""}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2 pt-1">
+                  {featuredProduction.ticketUrl && (
+                    <a
+                      href={featuredProduction.ticketUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-rose-950/40 text-center transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <span>🎟️ Comprar Boletos</span>
+                      <span className="text-xs">&rarr;</span>
+                    </a>
+                  )}
+
+                  <Link
+                    href="/#producciones"
+                    className="text-center py-2.5 bg-[#1C1C26] hover:bg-[#252535] text-zinc-200 rounded-xl text-xs font-semibold border border-[#303045] transition-colors"
+                  >
+                    Ver Cartelera Completa &rarr;
+                  </Link>
+                </div>
+              </div>
+            )}
 
           </aside>
 
