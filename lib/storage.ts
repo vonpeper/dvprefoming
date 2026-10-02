@@ -2299,10 +2299,10 @@ export function getRehearsalBetaSettings(): RehearsalBetaSettings {
   ensureDirectoryExists();
   if (!fs.existsSync(REHEARSAL_SETTINGS_FILE)) {
     const initial: RehearsalBetaSettings = {
-      isBetaActive: true,
-      requirePaidSubscription: true,
-      requireBetaFlag: true,
-      announcementMessage: "Fase Beta de Sala de Ensayo Teatral con Voz. Acceso exclusivo para alumnos activos con mensualidad al corriente.",
+      isBetaActive: false,
+      requirePaidSubscription: false,
+      requireBetaFlag: false,
+      announcementMessage: "Sala de Ensayo Teatral con Voz. Carga tu guion en PDF o selecciona un libreto para comenzar a estudiar tus líneas.",
       updatedAt: new Date().toISOString(),
     };
     fs.writeFileSync(REHEARSAL_SETTINGS_FILE, JSON.stringify(initial, null, 2), "utf-8");
@@ -2313,10 +2313,10 @@ export function getRehearsalBetaSettings(): RehearsalBetaSettings {
     return JSON.parse(raw);
   } catch {
     return {
-      isBetaActive: true,
-      requirePaidSubscription: true,
-      requireBetaFlag: true,
-      announcementMessage: "Fase Beta de Sala de Ensayo Teatral con Voz. Acceso exclusivo para alumnos activos con mensualidad al corriente.",
+      isBetaActive: false,
+      requirePaidSubscription: false,
+      requireBetaFlag: false,
+      announcementMessage: "Sala de Ensayo Teatral con Voz. Carga tu guion en PDF o selecciona un libreto para comenzar a estudiar tus líneas.",
       updatedAt: new Date().toISOString(),
     };
   }

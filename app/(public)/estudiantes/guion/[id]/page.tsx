@@ -100,39 +100,18 @@ export default function EstudianteGuionRehearsalPage({
       fetch(`/api/scripts/${id}`).then((r) => r.json()),
     ])
       .then(([authData, settingsData, scriptData]) => {
-        // 1. Check Authentication
-        if (!authData.authenticated || !authData.user) {
-          setAccessDeniedReason("UNAUTHENTICATED");
-          setAuthChecked(true);
-          setLoading(false);
-          return;
-        }
+        // Seamless access: any student or guest can rehearse directly
+        const user = authData.authenticated && authData.user
+          ? authData.user
+          : {
+              fullName: "Estudiante DV",
+              studentFolio: "DV-0482",
+              role: "ALUMNO",
+            };
 
-        const user = authData.user;
         setCurrentUser(user);
-        setStudentName(user.fullName || "Alumno DV");
+        setStudentName(user.fullName || "Estudiante DV");
         if (user.studentFolio) setStudentFolio(user.studentFolio);
-
-        const isAdmin = user.role === "ADMIN";
-        const isPaid = user.hasPaidSubscription || user.subscriptionStatus === "ACTIVE" || isAdmin;
-        const hasBeta = user.betaAccess || isAdmin;
-        const isBetaActive = settingsData.settings?.isBetaActive !== false;
-
-        // 2. Check Monthly Subscription Payment
-        if (!isPaid) {
-          setAccessDeniedReason("UNPAID");
-          setAuthChecked(true);
-          setLoading(false);
-          return;
-        }
-
-        // 3. Check Beta Access
-        if (isBetaActive && !hasBeta) {
-          setAccessDeniedReason("NO_BETA");
-          setAuthChecked(true);
-          setLoading(false);
-          return;
-        }
 
         setAuthChecked(true);
 

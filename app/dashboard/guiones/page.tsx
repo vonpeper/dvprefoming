@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Script, ScriptCharacter, ScriptLine } from "@/types/script";
 import { Production, AuditionRegistration } from "@/types/mock";
@@ -14,9 +14,9 @@ export default function GuionesDashboardPage() {
     requirePaidSubscription: boolean;
     requireBetaFlag: boolean;
   }>({
-    isBetaActive: true,
-    requirePaidSubscription: true,
-    requireBetaFlag: true,
+    isBetaActive: false,
+    requirePaidSubscription: false,
+    requireBetaFlag: false,
   });
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -33,6 +33,8 @@ export default function GuionesDashboardPage() {
   const [formDescription, setFormDescription] = useState("");
   const [formRawText, setFormRawText] = useState("");
   const [useAI, setUseAI] = useState(false);
+  const [formFile, setFormFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Extracted data preview
   const [parsedCharacters, setParsedCharacters] = useState<ScriptCharacter[]>([]);
@@ -131,6 +133,45 @@ export default function GuionesDashboardPage() {
     }
   };
 
+  const handleParseFile = async (file: File) => {
+    setFormFile(file);
+    setIsParsing(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      if (formTitle.trim()) formData.append("title", formTitle);
+      formData.append("useAI", String(useAI));
+
+      const res = await fetch("/api/scripts/parse", {
+        method: "POST",
+        body: formData,
+      });
+
+      const json = await res.json();
+      if (json.success && json.data) {
+        if (!formTitle && json.inferredTitle) {
+          setFormTitle(json.inferredTitle);
+        }
+        if (json.rawText) {
+          setFormRawText(json.rawText);
+        }
+        setParsedCharacters(json.data.characters || []);
+        setParsedLines(json.data.lines || []);
+        setStep("REVIEW");
+        showToast(
+          `✓ Libreto procesado desde PDF: ${json.data.characters.length} personajes y ${json.data.totalLines} parlamentos detectados.`
+        );
+      } else {
+        alert(json.error || "No se pudo procesar el archivo PDF.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error al procesar el archivo PDF.");
+    } finally {
+      setIsParsing(false);
+    }
+  };
+
   const handleSaveScript = async () => {
     if (!formTitle.trim()) {
       alert("El título de la obra / escena es requerido.");
@@ -195,6 +236,7 @@ export default function GuionesDashboardPage() {
     setFormProductionId(productions[0]?.id || "");
     setFormDescription("");
     setFormRawText("");
+    setFormFile(null);
     setParsedCharacters([]);
     setParsedLines([]);
     setStep("INPUT");
@@ -696,6 +738,48 @@ export default function GuionesDashboardPage() {
                       onChange={(e) => setFormDescription(e.target.value)}
                       className="w-full bg-[#0D1117] border border-[#30363D] px-3.5 py-2 rounded-lg text-sm text-white focus:outline-none focus:border-amber-500"
                     />
+                  </div>
+
+                  {/* File Upload Dropzone */}
+                  <div>
+                    <label className="block text-xs font-semibold uppercase text-slate-300 mb-1">
+                      Cargar Archivo del Guion (PDF o TXT)
+                    </label>
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="border-2 border-dashed border-[#30363D] hover:border-amber-500/60 rounded-xl p-4 text-center cursor-pointer bg-[#0D1117]/60 hover:bg-[#0D1117] transition-all"
+                    >
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf,.txt,application/pdf,text/plain"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            handleParseFile(e.target.files[0]);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                      <div className="flex items-center justify-center gap-3">
+                        <span className="text-2xl">📄</span>
+                        <div className="text-left">
+                          <span className="text-xs font-bold text-white block">
+                            {formFile ? formFile.name : "Selecciona o arrastra aquí tu PDF del guion"}
+                          </span>
+                          <span className="text-[11px] text-slate-400 block">
+                            Extrae automáticamente los personajes, parlamentos y acotaciones.
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="relative flex py-1 items-center">
+                    <div className="flex-grow border-t border-[#30363D]"></div>
+                    <span className="flex-shrink mx-3 text-[10px] uppercase tracking-wider text-slate-500 font-mono">
+                      O escribe / pega el texto manualmente
+                    </span>
+                    <div className="flex-grow border-t border-[#30363D]"></div>
                   </div>
 
                   <div>

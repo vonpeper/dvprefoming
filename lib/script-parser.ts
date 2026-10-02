@@ -66,7 +66,10 @@ export function parseScriptText(rawText: string): ParsedScriptResult {
     };
   }
 
-  const rawLines = rawText.split(/\r?\n/);
+  const cleanedText = rawText
+    .replace(/\f/g, "\n\n")
+    .replace(/^[ \t]*(\d+|p[aá]g(?:ina)?\.?\s*\d+(?:\s*(?:de|\/)\s*\d+)?)[ \t]*$/gim, "");
+  const rawLines = cleanedText.split(/\r?\n/);
   const parsedLines: ScriptLine[] = [];
   const characterCountMap = new Map<string, number>();
 
